@@ -107,7 +107,7 @@ probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right
 
 ######################## init_ structure######################
 models srh temperature=@temp
-models region=6 fermidirac incomplete ioniz
+models region=6 fermidirac incomplete ioniz bbt.kl trap.tunnel
 solve init
 output qfn qfp con.band val.band Band.param t.quantum
 save outf=T77K_SONOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
@@ -151,7 +151,7 @@ solve init sonos
 ################## Retention ######################
 
 models mos srh pf.nitride temperature=@temp
-models region=6 fermidirac incomplete ioniz
+models region=6 fermidirac incomplete ioniz bbt.kl trap.tunnel
 
 solve init sonos
 
@@ -172,7 +172,7 @@ log off
 ################ Tranfer curve after Retention ############
 
 models srh mos temperature=@temp
-models region=6 fermidirac incomplete ioniz
+models region=6 fermidirac incomplete ioniz bbt.kl trap.tunnel
 solve init sonos
 solve prev
 

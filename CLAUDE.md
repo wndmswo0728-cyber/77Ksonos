@@ -24,7 +24,7 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   The 300 K and 77 K decks differ only in `set temp=` and output prefixes. Temperature
   models are ADDED to the originals (pf.nitride, fermidirac, incomplete ioniz, cvt,
   bbt.kl, trap.tunnel, temperature= on every MODELS). Other changes: solve init sonos,
-  common read sweep -2..12 V / 0.02 V, extract lines, output names T<T>K_<PE|RET>_...
+  common read sweep -2..12 V / 0.1 V (speed), extract lines, output names T<T>K_<PE|RET>_...
 - `python_cryo/cryo_model.py` 1-D trap model (v3): activated hopping, multiphonon
   (Makram-Ebeid & Lannoo) trap ionization above PF, Franck-Condon trap<->electrode
   tunneling (fc_tunnel), retention-only mode, ATLAS device values.
@@ -46,6 +46,7 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   before CONTACT/METHOD (manual 2.5.2 order); VD=0.1 V in one step diverged, a small VD
   ramp works. With both fixes the 77 K DYNASONOS deck reaches VD=0.1 V, VG=1 V (diag H2,
   26.9 min, -160 precision). Starting at 300 K and lowering T inside one run diverged.
+  Production 77 K decks use default precision (faster); -160 is a commented fallback.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

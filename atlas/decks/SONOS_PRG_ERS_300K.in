@@ -27,7 +27,7 @@ set Retime=3e8
 set temp=300
 set Vrd_lo=-2
 set Vrd_hi=12
-set Vrd_step=0.02
+set Vrd_step=0.1
 # read sweep: Vg from Vrd_lo to Vrd_hi in Vrd_step (V), VD=0.1 V, same for every state
 
 

@@ -18,7 +18,7 @@ SRC = HERE / "original_300K"
 OUT = HERE / "decks"
 
 # Read-sweep settings shared by every Id-Vg read (VD = 0.1 V).
-READ_HEADER = ("set Vrd_lo=-2\nset Vrd_hi=12\nset Vrd_step=0.02\n"
+READ_HEADER = ("set Vrd_lo=-2\nset Vrd_hi=12\nset Vrd_step=0.1\n"
                "# read sweep: Vg from Vrd_lo to Vrd_hi in Vrd_step (V), VD=0.1 V, same for every state\n")
 # Temperature-dependent Si models added to the team's 300 K SONOS deck, used
 # identically at every temperature:
@@ -40,7 +40,10 @@ def numerics(s, T):
     - NI.MIN (MATERIAL) floors n_i of those insulators. Added at both temperatures."""
     s = re.sub(r"^(material material=\S+ semiconductor.*?)\s*$", rf"\1 ni.min={NI_MIN}", s, flags=re.M)
     if T < 200:
-        s, k = re.subn(r"^go atlas\s*$", 'go atlas simflags="-160"', s, flags=re.M)
+        # Default 64-bit precision for speed: the 77 K SOLVE INIT failure was caused by the
+        # MODELS position, not by precision (diag H). If a 77 K run fails with NaN, use
+        # the commented line below instead of "go atlas" (manual 21.11).
+        s, k = re.subn(r"^(go atlas)\s*$", '# fallback if 77 K diverges: go atlas simflags="-160"\n\\1', s, flags=re.M)
         if k != 1:
             sys.exit("go atlas line not found")
     return s

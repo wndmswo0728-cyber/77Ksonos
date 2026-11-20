@@ -3,7 +3,8 @@
 assign name=xs n.value=1.0e-14 ratio=0.1
 
 
-go atlas simflags="-160"
+# fallback if 77 K diverges: go atlas simflags="-160"
+go atlas
 TITLE planar device simulation
 #
 set Nsub=1e17
@@ -27,7 +28,7 @@ set Retime=3e8
 set temp=77
 set Vrd_lo=-2
 set Vrd_hi=12
-set Vrd_step=0.02
+set Vrd_step=0.1
 # read sweep: Vg from Vrd_lo to Vrd_hi in Vrd_step (V), VD=0.1 V, same for every state
 
 

@@ -4,3 +4,4 @@ archive/python_qf_path/atlas_results/**/*.log
 archive/python_qf_path/atlas_results/**/*.str
 results/atlas/*.log
 results/atlas/*.str
+python_cryo/results/**/run.log

@@ -49,6 +49,12 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   77 K decks need simflags -160: with 64-bit the read converged but the first Program
   time step failed with "NaN or Inf in SONOS tunnel current" (exp(E/kT) overflow).
 
+- Program transient "NaN or Inf in SONOS tunnel current" (also at 300 K, diag P6) came from
+  the deck changes: PF.NITRIDE with NT.P>0 needs HOLE.DEPTH (default -999 eV) -> set
+  hole.depth=@Enit; and the 1 ns gate ramp needs METHOD DT.MAX=2e-11 (time step jumped to
+  0.6 ns near 13 V). With both (diag P11a/P11c) the 300 K SONOS Program reaches 16 V / 10 ns
+  with all added models. MODELS now sits after NITRIDECHARGE and before METHOD.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

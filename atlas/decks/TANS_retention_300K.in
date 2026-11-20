@@ -95,12 +95,12 @@ material material=$toxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=
 #bottom oxide
 material material=SiO2 semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 ni.min=1e-60
 material material=nitride semiconductor nc300=1e19 nv300=1e19 mun=1.0e-1 mup=1.0e-2 mc=1.0 mv=1.0 taun0=1.0 taup0=1.0 ni.min=1e-60
-models srh temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
 contact name=cgate workf=$cwf				
 
-nitridecharge nt.p=0.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit sigmat.n=${xs} sigman.p=0.0 sigmap.n=0.0
+nitridecharge nt.p=0.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit hole.depth=@Enit sigmat.n=${xs} sigman.p=0.0 sigmap.n=0.0
 
+models srh temperature=@temp
+models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
 method carriers=2
 
 probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg+$Ttox y.max=-0.1+$Tpg+$Ttox+$Tnit

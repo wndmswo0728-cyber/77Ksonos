@@ -53,6 +53,32 @@ DRAIN_RAMP = ("solve vdrain=0.0001\nsolve vdrain=0.001\n"
               "solve name=drain vstep=0.001 vfinal=0.01\nsolve name=drain vstep=0.005 vfinal=0.1\n")
 
 
+def models_before_method(s, block):
+    """MODELS after NITRIDECHARGE and before METHOD (diag P8-P11).
+    - Before METHOD: at 77 K SOLVE INIT oscillated while MODELS followed METHOD (diag A-H).
+    - After NITRIDECHARGE: keeps the original order relative to the trap definition."""
+    if s.count("models srh\n") != 1 or s.count("method carriers=2") != 1:
+        sys.exit("models/method line not found")
+    s = s.replace("models srh\n", "")
+    if s.index("nitridecharge") > s.index("method carriers=2"):
+        sys.exit("nitridecharge after method")
+    return s.replace("method carriers=2", block + "method carriers=2")
+
+
+def transient_fixes(s):
+    """(a) HOLE.DEPTH: with PF.NITRIDE and NT.P > 0 the default HOLE.DEPTH (-999 eV) gives
+    an infinite hole emission ("NaN or Inf in SONOS tunnel current" at the first Program
+    step, diag P9/P10). Set equal to the electron trap depth (Enit).
+    (b) DT.MAX 2e-11 s during the 1 ns gate ramps: the time step jumped to ~0.6 ns near
+    Vg = 13 V and the solution diverged (diag P10d); with the cap it reaches 16 V (P11a/c)."""
+    s, k = re.subn(r"elec\.depth=@Enit(?! hole)", "elec.depth=@Enit hole.depth=@Enit", s)
+    if k != 1:
+        sys.exit("nitridecharge elec.depth not found")
+    s, k = re.subn(r"(solve vcgate=\$[ve]cgate ramptime=1e-9 tstep=1e-12 tfinal=1e-9(?: proj)?\n)method dt\.min=1\.0e-9\n",
+                   r"method dt.max=2e-11\n\1method dt.max=1e-3 dt.min=1.0e-9\n", s)
+    return s, k
+
+
 def models_before_contact(s, block):
     """Manual 2.5.2: MATERIAL -> MODELS -> CONTACT -> INTERFACE -> METHOD -> SOLVE.
     The originals put MODELS after METHOD/PROBE; at 300 K (= ATLAS default T) this
@@ -97,7 +123,10 @@ def prg_ers(src, T, dev):
     # (1) temperature: the original never applies $temp in this deck (ATLAS default 300 K).
     # (2) 77 K Si statistics (Fermi-Dirac + freeze-out, IONIZ keeps 5e20 S/D ionized).
     # (3) PF.NITRIDE: temperature-dependent trap emission instead of the constant TAU only.
-    s = models_before_contact(s, f"models srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
+    s = models_before_method(s, f"models srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
+    s, k = transient_fixes(s)
+    if k != 2:
+        sys.exit(f"expected 2 gate ramps (PGM, ERS), found {k}")
     # (4) initial read: fixed range/step + VT extraction
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1\nsolve vdrain=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
@@ -122,6 +151,12 @@ def prg_ers(src, T, dev):
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
     s = sub(s, "solve vcgate=-2 vstep=0.1 name=cgate vfinal=7\n",
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("ERS", tag, KIND))
+    # (c) start each P/E transient from a full carrier solution at 0 V, as in the
+    # validated diag P11a/c (SOLVE INIT is a zero-carrier initial guess only).
+    s = sub(s, "#################### PROGRAM #######################\n\nsolve init\n",
+            "#################### PROGRAM #######################\n\nsolve init\nsolve prev\n")
+    s = sub(s, "#################### Erase #########################\nsolve init sonos\n",
+            "#################### Erase #########################\nsolve init sonos\nsolve prev\n")
     s = drain_ramp(s)
     return prefix_outputs(s, tag, KIND)
 
@@ -134,7 +169,8 @@ def retention(src, T, dev):
     s = numerics(s, T)
     # (1)+(2): every MODELS statement carries the temperature (persistence between
     # MODELS statements is not documented) and the 77 K Si statistics.
-    s = models_before_contact(s, f"models srh temperature=@temp\n{SI_MODELS}\n")
+    s = models_before_method(s, f"models srh temperature=@temp\n{SI_MODELS}\n")
+    s, _ = transient_fixes(s)
     s = sub(s, "models mos srh pf.nitride temperature=@temp\n",
             f"models mos srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
     s = sub(s, "models srh mos\n", f"models srh mos temperature=@temp\n{SI_MODELS}\n")

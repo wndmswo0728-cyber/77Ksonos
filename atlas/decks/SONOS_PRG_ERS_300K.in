@@ -95,12 +95,12 @@ material material=$toxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=
 #bottom oxide
 material material=oxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 ni.min=1e-60
 material material=nitride semiconductor nc300=1e19 nv300=1e19 mun=1.0e-1 mup=1.0e-2 mc=1.0 mv=1.0 taun0=1.0 taup0=1.0 ni.min=1e-60
-models srh pf.nitride temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
 contact name=cgate workf=$cwf		
 
-nitridecharge nt.p=1.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit sigmat.n=$xs sigman.p=0.0 sigmap.n=0.0
+nitridecharge nt.p=1.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit hole.depth=@Enit sigmat.n=$xs sigman.p=0.0 sigmap.n=0.0
 
+models srh pf.nitride temperature=@temp
+models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
 method carriers=2
 
 probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tnit-$Tbox y.max=-$Tbox
@@ -127,11 +127,13 @@ log off
 #################### PROGRAM #######################
 
 solve init
+solve prev
 
 # Charge up the Nitride region
 log outf=T300K_PE_TRNS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
+method dt.max=2e-11
 solve vcgate=$vcgate ramptime=1e-9 tstep=1e-12 tfinal=1e-9 proj
-method dt.min=1.0e-9
+method dt.max=1e-3 dt.min=1.0e-9
 solve tstop=1.0e-8 proj
 solve tstop=1.0e-7 proj
 method dt.min=1.0e-8
@@ -164,11 +166,13 @@ solve init sonos
 
 #################### Erase #########################
 solve init sonos
+solve prev
 
 #Charge out the Nitride region
 log outf=T300K_PE_TRNS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
+method dt.max=2e-11
 solve vcgate=$ecgate ramptime=1e-9 tstep=1e-12 tfinal=1e-9
-method dt.min=1.0e-9
+method dt.max=1e-3 dt.min=1.0e-9
 solve tstop=1.0e-8 proj
 solve tstop=1.0e-7 proj
 method dt.min=1.0e-8

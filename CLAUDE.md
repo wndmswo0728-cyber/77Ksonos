@@ -42,6 +42,11 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
 - 4-plane v1 Python results were grid-dependent (the SONOS PGM/ERS inversion was a
   numerical artifact). Use planes >= 8 (default 16).
 
+- 77 K convergence (diag decks in atlas/diag): SOLVE INIT failed until MODELS was moved
+  before CONTACT/METHOD (manual 2.5.2 order); VD=0.1 V in one step diverged, a small VD
+  ramp works. With both fixes the 77 K DYNASONOS deck reaches VD=0.1 V, VG=1 V (diag H2,
+  26.9 min, -160 precision). Starting at 300 K and lowering T inside one run diverged.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

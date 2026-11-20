@@ -1,5 +1,12 @@
 # 77 K 플래시 메모리 덱과 점검 결과
 
+## 2026-11-20 추가 사항 (먼저 읽기)
+
+- `VERIFICATION_77K_KO.md`: 읽기 VT 검증 현황. 실제 ATLAS 결과가 아직 없어 ATLAS VT는 미검증 상태다. 질화막 plane 수에 따른 격자 수렴 문제도 이 문서에 정리했다. SONOS 역전은 4 plane에서만 나타난다.
+- 각 읽기 덱에 `<tag>_Vt_vd2.dat`(VD/2 보정 VT)와 `<tag>_IdVg.dat`(Id–Vg 텍스트) 출력을 추가했다.
+- `analyze_reads.py`: ATLAS 실행 후 `python analyze_reads.py --dir generated`를 실행하면 상태별 VT, 부호를 유지한 VT,PGM−VT,ERS, 역전 여부, Python 예측과의 차이를 표로 정리한다.
+- `flash_transport.py --planes N`, `audit/grid_study.py`: 격자 수렴 점검. 기본값 4에서는 기존 결과와 같다.
+
 ## 바로 실행하기
 
 ZIP을 풀고 DeckBuild의 작업 디렉터리를 generated로 맞춘다. RUN_SONOS.in, RUN_TANOS.in, RUN_TANS.in을 각각 실행한다. 각 파일은 다섯 상태를 독립적인 ATLAS 세션에서 읽는다. 상태별 .in 파일 하나만 실행해도 된다. 상대경로 입력이나 별도의 .str 입력이 필요하지 않다. 결과는 실행 작업 디렉터리에 기록된다. 서로 다른 실험 폴더의 덱을 돌릴 때 작업 디렉터리도 바꾼다. 동일 이름으로 다시 돌리는 경우 기존 결과는 백업한다.

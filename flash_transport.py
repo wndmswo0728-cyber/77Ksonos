@@ -28,6 +28,7 @@ class Options:
     depth_e: float = 1.2
     depth_h: float = 1.2
     no_erase_hopping: bool = False
+    planes: int = 4  # nitride discretisation; 4 reproduces the audited package
 
 
 PATHS = ("Si_band_e","Si_band_h","gate_band_e","gate_band_h",
@@ -46,10 +47,10 @@ def tans(options=Options()):
 
 
 def simulate(device, opt):
-    if not 77 <= opt.temperature <= 300 or opt.retention_s <= 0:
+    if not 77 <= opt.temperature <= 300 or opt.retention_s <= 0 or opt.planes < 2:
         raise ValueError("Expected 77–300 K and positive retention time.")
     # Effective trap-site planes; each plane represents an ensemble, not a TCAD mesh.
-    n = 4
+    n = opt.planes
     dx = 7e-9 / n
     x = (np.arange(n) + 0.5) * dx
     cap = opt.density * dx
@@ -265,7 +266,7 @@ def write(device, options, folder):
     with (folder/f"{device}_history.csv").open("w",newline="") as f:
         writer=csv.writer(f)
         writer.writerow(["stage","stage_time_s","stack_voltage_V","Q_C_m2","deltaVt_V","equiv_Qf_cm-2",
-                         *[f"{s}_plane{i}" for s in ("electron","hole") for i in range(1,5)],"psi_s_V","dQdt_A_m2","balance_error_A_m2",*PATHS])
+                         *[f"{s}_plane{i}" for s in ("electron","hole") for i in range(1,options.planes+1)],"psi_s_V","dQdt_A_m2","balance_error_A_m2",*PATHS])
         writer.writerows(history)
     template=(Path(__file__).parent/"templates"/f"{device}.txt").read_text()
     for state,(_,qf) in states.items():
@@ -312,7 +313,8 @@ if __name__=="__main__":
     for flag in ("fn","hopping","pf"):
         parser.add_argument("--no-"+flag,action="store_true")
     parser.add_argument("--no-erase-hopping", action="store_true")
+    parser.add_argument("--planes", type=int, default=4, help="number of nitride trap planes (grid study)")
     args=parser.parse_args()
-    config=Options(args.temperature,args.retention,not args.no_hopping,not args.no_fn,not args.no_pf, sio2_me=args.sio2_me, sio2_mh=args.sio2_mh, no_erase_hopping=args.no_erase_hopping)
+    config=Options(args.temperature,args.retention,not args.no_hopping,not args.no_fn,not args.no_pf, sio2_me=args.sio2_me, sio2_mh=args.sio2_mh, no_erase_hopping=args.no_erase_hopping, planes=args.planes)
     for name in ("SONOS","TANOS","TANS"):
         print(name,write(name,config,args.out))

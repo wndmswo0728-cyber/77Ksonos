@@ -51,6 +51,8 @@ solve name=cgate vstep=0.01 vfinal=8
 log off
 extract init infile="TANS_noBTBT_77K_fresh_read.log"
 extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANS_noBTBT_77K_fresh_Vt.dat"
+extract name="Vt_gm_vd2" (xintercept(maxslope(curve(v."cgate",i."drain"))) - abs(ave(v."drain"))/2.0) datafile="TANS_noBTBT_77K_fresh_Vt_vd2.dat"
+extract name="IdVg" curve(v."cgate",i."drain") outfile="TANS_noBTBT_77K_fresh_IdVg.dat"
 
 # TANS_noBTBT_77K_programmed. Reference geometry, uncalibrated parameters.
 go atlas
@@ -105,6 +107,8 @@ solve name=cgate vstep=0.01 vfinal=8
 log off
 extract init infile="TANS_noBTBT_77K_programmed_read.log"
 extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANS_noBTBT_77K_programmed_Vt.dat"
+extract name="Vt_gm_vd2" (xintercept(maxslope(curve(v."cgate",i."drain"))) - abs(ave(v."drain"))/2.0) datafile="TANS_noBTBT_77K_programmed_Vt_vd2.dat"
+extract name="IdVg" curve(v."cgate",i."drain") outfile="TANS_noBTBT_77K_programmed_IdVg.dat"
 
 # TANS_noBTBT_77K_erased. Reference geometry, uncalibrated parameters.
 go atlas
@@ -159,6 +163,8 @@ solve name=cgate vstep=0.01 vfinal=8
 log off
 extract init infile="TANS_noBTBT_77K_erased_read.log"
 extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANS_noBTBT_77K_erased_Vt.dat"
+extract name="Vt_gm_vd2" (xintercept(maxslope(curve(v."cgate",i."drain"))) - abs(ave(v."drain"))/2.0) datafile="TANS_noBTBT_77K_erased_Vt_vd2.dat"
+extract name="IdVg" curve(v."cgate",i."drain") outfile="TANS_noBTBT_77K_erased_IdVg.dat"
 
 # TANS_noBTBT_77K_program_retained. Reference geometry, uncalibrated parameters.
 go atlas
@@ -213,6 +219,8 @@ solve name=cgate vstep=0.01 vfinal=8
 log off
 extract init infile="TANS_noBTBT_77K_program_retained_read.log"
 extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANS_noBTBT_77K_program_retained_Vt.dat"
+extract name="Vt_gm_vd2" (xintercept(maxslope(curve(v."cgate",i."drain"))) - abs(ave(v."drain"))/2.0) datafile="TANS_noBTBT_77K_program_retained_Vt_vd2.dat"
+extract name="IdVg" curve(v."cgate",i."drain") outfile="TANS_noBTBT_77K_program_retained_IdVg.dat"
 
 # TANS_noBTBT_77K_erase_retained. Reference geometry, uncalibrated parameters.
 go atlas
@@ -267,4 +275,6 @@ solve name=cgate vstep=0.01 vfinal=8
 log off
 extract init infile="TANS_noBTBT_77K_erase_retained_read.log"
 extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANS_noBTBT_77K_erase_retained_Vt.dat"
+extract name="Vt_gm_vd2" (xintercept(maxslope(curve(v."cgate",i."drain"))) - abs(ave(v."drain"))/2.0) datafile="TANS_noBTBT_77K_erase_retained_Vt_vd2.dat"
+extract name="IdVg" curve(v."cgate",i."drain") outfile="TANS_noBTBT_77K_erase_retained_IdVg.dat"
 quit

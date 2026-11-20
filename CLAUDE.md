@@ -55,6 +55,10 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   0.6 ns near 13 V). With both (diag P11a/P11c) the 300 K SONOS Program reaches 16 V / 10 ns
   with all added models. MODELS now sits after NITRIDECHARGE and before METHOD.
 
+- 77 K P11d diverged at t = 51 ps (Vg ~0.8 V ~ VT; SS ~20 mV/dec). All decks now split the
+  1 ns gate ramp at Vg/10 (first 0.1 ns with DT.MAX 2e-12, same ramp rate). Diag P12 at
+  300 K reproduces P11c exactly (16 V / 10 ns). 77 K P12 pending.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

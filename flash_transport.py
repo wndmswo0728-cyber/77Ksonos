@@ -314,7 +314,8 @@ if __name__=="__main__":
         parser.add_argument("--no-"+flag,action="store_true")
     parser.add_argument("--no-erase-hopping", action="store_true")
     parser.add_argument("--planes", type=int, default=4, help="number of nitride trap planes (grid study)")
+    parser.add_argument("--devices", default="SONOS,TANOS,TANS", help="comma list, e.g. SONOS")
     args=parser.parse_args()
     config=Options(args.temperature,args.retention,not args.no_hopping,not args.no_fn,not args.no_pf, sio2_me=args.sio2_me, sio2_mh=args.sio2_mh, no_erase_hopping=args.no_erase_hopping, planes=args.planes)
-    for name in ("SONOS","TANOS","TANS"):
+    for name in args.devices.upper().split(","):
         print(name,write(name,config,args.out))

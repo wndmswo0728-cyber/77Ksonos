@@ -4,7 +4,7 @@ VT 열은 VD/2 보정 전 값, VT−VD/2 열은 0.05 V를 뺀 값이다. 창(win
 
 | 구조 | 모델 | 상태 | 입력 | VT (V) | VT−VD/2 (V) | Vg@gm,max (V) | DeckBuild VT (V) | Python ΔVT (V) | 상태 |
 |---|---|---|---|---:|---:|---:|---:|---:|---|
-| SONOS | BTBT | fresh | — | — | — | — | — | +0.0000 | 미실행(파일 없음) |
+| SONOS | BTBT | fresh | SONOS_77K_fresh_IdVg.dat | +0.7542 | +0.7042 | +0.985 | +0.7542 | +0.0000 | 추출됨 |
 | SONOS | BTBT | programmed | SONOS_77K_programmed_IdVg.dat | +1.2199 | +1.1699 | +1.445 | +1.2199 | +0.4656 | 추출됨 |
 | SONOS | BTBT | erased | — | — | — | — | — | +0.5151 | 미실행(파일 없음) |
 | SONOS | BTBT | program_retained | — | — | — | — | — | +0.4230 | 미실행(파일 없음) |

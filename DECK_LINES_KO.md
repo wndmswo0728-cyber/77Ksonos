@@ -4,12 +4,12 @@
 
 | 파일 | fresh | programmed | erased | program_retained | erase_retained |
 |---|---:|---:|---:|---:|---:|
-| RUN_SONOS.in | 2 | 60 | 118 | 176 | 234 |
-| RUN_SONOS_noBTBT.in | 2 | 60 | 118 | 176 | 234 |
-| RUN_TANOS.in | 2 | 61 | 120 | 179 | 238 |
-| RUN_TANOS_noBTBT.in | 2 | 61 | 120 | 179 | 238 |
-| RUN_TANS.in | 2 | 58 | 114 | 170 | 226 |
-| RUN_TANS_noBTBT.in | 2 | 58 | 114 | 170 | 226 |
+| RUN_SONOS.in | 2 | 61 | 120 | 179 | 238 |
+| RUN_SONOS_noBTBT.in | 2 | 61 | 120 | 179 | 238 |
+| RUN_TANOS.in | 2 | 62 | 122 | 182 | 242 |
+| RUN_TANOS_noBTBT.in | 2 | 62 | 122 | 182 | 242 |
+| RUN_TANS.in | 2 | 59 | 116 | 173 | 230 |
+| RUN_TANS_noBTBT.in | 2 | 59 | 116 | 173 | 230 |
 
 단일 상태 덱도 동일한 명령을 사용한다. noBTBT 덱은 파일 이름에 noBTBT를 넣고 Si의 bbt.kl 키워드를 뺀 대조군이다. BIAS는 양·음 펄스의 말단 전압에서 접합을 보는 별도 DC 진단이다.
 
@@ -72,9 +72,10 @@
 | 53 | `log off` | 열린 전기적 로그를 닫는다. |
 | 54 | `extract init infile="SONOS_77K_programmed_read.log"` | 방금 저장한 읽기 로그를 추출 입력으로 연다. |
 | 55 | `extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="SONOS_77K_programmed_Vt.dat"` | 선형 Id–Vg 곡선의 최대 기울기 접선과 Vg축의 교점을 구해 파일에 기록한다. Vd/2 보정은 적용하지 않는다. |
-| 56 | `extract name="Vt_gm_vd2" (xintercept(maxslope(curve(v."cgate",i."drain"))) - abs(ave(v."drain"))/2.0) datafile="SONOS_77K_programmed_Vt_vd2.dat"` | 같은 최대 gm 접선 절편에서 VD/2(=0.05 V)를 뺀 값을 기록한다. PGM−ERS 창에는 영향이 없다. |
-| 57 | `extract name="IdVg" curve(v."cgate",i."drain") outfile="SONOS_77K_programmed_IdVg.dat"` | 읽기 Id–Vg 곡선을 텍스트로 내보낸다. analyze_reads.py가 이 파일로 VT를 다시 추출한다. |
-| 58 | `quit` | DeckBuild 입력의 실행을 끝낸다. |
+| 56 | `extract name="Vt_gm_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="SONOS_77K_programmed_Vt_vd2.dat"` | DeckBuild 설명서 §5.5의 예제와 같은 형식으로, 최대 gm 접선 절편에서 ave(v."drain")/2(=0.05 V)를 뺀 값을 기록한다. PGM−ERS 창에는 영향이 없다. |
+| 57 | `extract name="IdVg" curve(v."cgate",i."drain") outfile="SONOS_77K_programmed_IdVg.dat"` | 읽기 Id–Vg 곡선을 텍스트로 내보낸다(DeckBuild 설명서의 curve(...) outfile= 문법). analyze_reads.py가 이 파일로 VT를 다시 추출한다. |
+| 58 | `extract name="gm" deriv(v."cgate",i."drain") outfile="SONOS_77K_programmed_gm.dat"` | deriv()로 gm = dId/dVg 곡선을 내보낸다. 최대 gm 위치를 눈으로 확인하는 용도다. |
+| 59 | `quit` | DeckBuild 입력의 실행을 끝낸다. |
 
 ## generated/TANOS_77K_programmed.in
 
@@ -136,9 +137,10 @@
 | 54 | `log off` | 열린 전기적 로그를 닫는다. |
 | 55 | `extract init infile="TANOS_77K_programmed_read.log"` | 방금 저장한 읽기 로그를 추출 입력으로 연다. |
 | 56 | `extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANOS_77K_programmed_Vt.dat"` | 선형 Id–Vg 곡선의 최대 기울기 접선과 Vg축의 교점을 구해 파일에 기록한다. Vd/2 보정은 적용하지 않는다. |
-| 57 | `extract name="Vt_gm_vd2" (xintercept(maxslope(curve(v."cgate",i."drain"))) - abs(ave(v."drain"))/2.0) datafile="TANOS_77K_programmed_Vt_vd2.dat"` | 같은 최대 gm 접선 절편에서 VD/2(=0.05 V)를 뺀 값을 기록한다. PGM−ERS 창에는 영향이 없다. |
-| 58 | `extract name="IdVg" curve(v."cgate",i."drain") outfile="TANOS_77K_programmed_IdVg.dat"` | 읽기 Id–Vg 곡선을 텍스트로 내보낸다. analyze_reads.py가 이 파일로 VT를 다시 추출한다. |
-| 59 | `quit` | DeckBuild 입력의 실행을 끝낸다. |
+| 57 | `extract name="Vt_gm_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="TANOS_77K_programmed_Vt_vd2.dat"` | DeckBuild 설명서 §5.5의 예제와 같은 형식으로, 최대 gm 접선 절편에서 ave(v."drain")/2(=0.05 V)를 뺀 값을 기록한다. PGM−ERS 창에는 영향이 없다. |
+| 58 | `extract name="IdVg" curve(v."cgate",i."drain") outfile="TANOS_77K_programmed_IdVg.dat"` | 읽기 Id–Vg 곡선을 텍스트로 내보낸다(DeckBuild 설명서의 curve(...) outfile= 문법). analyze_reads.py가 이 파일로 VT를 다시 추출한다. |
+| 59 | `extract name="gm" deriv(v."cgate",i."drain") outfile="TANOS_77K_programmed_gm.dat"` | deriv()로 gm = dId/dVg 곡선을 내보낸다. 최대 gm 위치를 눈으로 확인하는 용도다. |
+| 60 | `quit` | DeckBuild 입력의 실행을 끝낸다. |
 
 ## generated/TANS_77K_programmed.in
 
@@ -197,9 +199,10 @@
 | 51 | `log off` | 열린 전기적 로그를 닫는다. |
 | 52 | `extract init infile="TANS_77K_programmed_read.log"` | 방금 저장한 읽기 로그를 추출 입력으로 연다. |
 | 53 | `extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANS_77K_programmed_Vt.dat"` | 선형 Id–Vg 곡선의 최대 기울기 접선과 Vg축의 교점을 구해 파일에 기록한다. Vd/2 보정은 적용하지 않는다. |
-| 54 | `extract name="Vt_gm_vd2" (xintercept(maxslope(curve(v."cgate",i."drain"))) - abs(ave(v."drain"))/2.0) datafile="TANS_77K_programmed_Vt_vd2.dat"` | 같은 최대 gm 접선 절편에서 VD/2(=0.05 V)를 뺀 값을 기록한다. PGM−ERS 창에는 영향이 없다. |
-| 55 | `extract name="IdVg" curve(v."cgate",i."drain") outfile="TANS_77K_programmed_IdVg.dat"` | 읽기 Id–Vg 곡선을 텍스트로 내보낸다. analyze_reads.py가 이 파일로 VT를 다시 추출한다. |
-| 56 | `quit` | DeckBuild 입력의 실행을 끝낸다. |
+| 54 | `extract name="Vt_gm_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="TANS_77K_programmed_Vt_vd2.dat"` | DeckBuild 설명서 §5.5의 예제와 같은 형식으로, 최대 gm 접선 절편에서 ave(v."drain")/2(=0.05 V)를 뺀 값을 기록한다. PGM−ERS 창에는 영향이 없다. |
+| 55 | `extract name="IdVg" curve(v."cgate",i."drain") outfile="TANS_77K_programmed_IdVg.dat"` | 읽기 Id–Vg 곡선을 텍스트로 내보낸다(DeckBuild 설명서의 curve(...) outfile= 문법). analyze_reads.py가 이 파일로 VT를 다시 추출한다. |
+| 56 | `extract name="gm" deriv(v."cgate",i."drain") outfile="TANS_77K_programmed_gm.dat"` | deriv()로 gm = dId/dVg 곡선을 내보낸다. 최대 gm 위치를 눈으로 확인하는 용도다. |
+| 57 | `quit` | DeckBuild 입력의 실행을 끝낸다. |
 
 ## generated/BIAS_SONOS.in
 

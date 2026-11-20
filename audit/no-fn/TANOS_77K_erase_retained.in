@@ -54,6 +54,7 @@ solve name=cgate vstep=0.01 vfinal=8
 log off
 extract init infile="TANOS_77K_erase_retained_read.log"
 extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANOS_77K_erase_retained_Vt.dat"
-extract name="Vt_gm_vd2" (xintercept(maxslope(curve(v."cgate",i."drain"))) - abs(ave(v."drain"))/2.0) datafile="TANOS_77K_erase_retained_Vt_vd2.dat"
+extract name="Vt_gm_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="TANOS_77K_erase_retained_Vt_vd2.dat"
 extract name="IdVg" curve(v."cgate",i."drain") outfile="TANOS_77K_erase_retained_IdVg.dat"
+extract name="gm" deriv(v."cgate",i."drain") outfile="TANOS_77K_erase_retained_gm.dat"
 quit

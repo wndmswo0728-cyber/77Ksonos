@@ -2,7 +2,7 @@
 
 ## 1. 결론 요약
 
-1. **실제 ATLAS 실행 결과가 아직 없다.** 받은 ZIP에는 `*_read.log`, `*_Vt.dat`, `*_zero.str`가 없다. 그래서 ATLAS 읽기 곡선에서 뽑은 VT, 실제 수렴 여부, 첫 오류 줄은 **미검증**이다. 아래 숫자는 모두 Python 계산값이거나, 그 값으로부터 예측한 값이다.
+1. **실제 ATLAS 실행 결과가 아직 없다.** 덱 문법은 ATLAS·DeckBuild 설명서와 대조해 확인했다(§4-1). 받은 ZIP에는 `*_read.log`, `*_Vt.dat`, `*_zero.str`가 없다. 그래서 ATLAS 읽기 곡선에서 뽑은 VT, 실제 수렴 여부, 첫 오류 줄은 **미검증**이다. 아래 숫자는 모두 Python 계산값이거나, 그 값으로부터 예측한 값이다.
 2. **ATLAS 읽기 덱만으로는 역전 여부를 따로 확인할 수 없다.** 덱은 Python이 계산한 ΔVT를 Si 계면의 고정전하 `qf`로 바꿔 넣는다. 고정 계면전하는 평탄대 전압만 −q·qf/C_stack만큼 옮긴다. 따라서 ATLAS에서 얻는 VT,PGM − VT,ERS는 Python 값을 몇 mV 이내로 다시 보여 줄 뿐이다. SONOS에서 ATLAS가 −0.049 V의 역전을 보여도 이는 Python 결과를 그대로 옮긴 것이다. ATLAS가 독립적으로 확인한 결과가 아니다.
 3. **SONOS의 역전은 격자 수에 따라 생기거나 사라진다.** 질화막을 몇 개의 plane으로 나누느냐(`--planes`)만 바꿔도 결과가 달라진다. 역전(P−E < 0)은 기존 기본값인 4 plane에서만 나타난다. 2, 8, 16 plane에서는 나타나지 않는다. hopping을 켠 SONOS의 Program ΔVT도 0.47 → 0.10 → 0.03 V로 수렴하지 않는다. 그래서 현재 모델의 "Erase 중 hopping에 의한 역전"은 물리적 결론으로 쓸 수 없다. 이산화 방식이 만든 결과로 봐야 한다(§3).
 
@@ -52,17 +52,46 @@ PF 장벽 저하 √(qE/(πε₀ε_r))에 광학 유전상수 ε_r = 4를 쓴 �
 
 | 파일 | 바뀐 줄 | 물리적·추출 의미 |
 |---|---|---|
-| `templates/SONOS.txt` 56–57, `TANOS.txt` 57–58, `TANS.txt` 54–55, 그리고 이 템플릿으로 다시 만든 `generated/*.in`, `audit/*/*.in` | `extract name="Vt_gm_vd2" (xintercept(maxslope(curve(v."cgate",i."drain"))) - abs(ave(v."drain"))/2.0) datafile="<tag>_Vt_vd2.dat"` | 같은 최대 gm 접선 절편에서 VD/2(0.05 V)를 뺀 VT. Silvaco 예제의 관례적인 보정이다. 창에는 영향이 없다. |
-| 위와 같음 | `extract name="IdVg" curve(v."cgate",i."drain") outfile="<tag>_IdVg.dat"` | 읽기 Id–Vg 곡선을 텍스트로 내보낸다. `analyze_reads.py`가 DeckBuild와 별도로 VT를 다시 계산해 서로 비교할 수 있다. |
+| `templates/SONOS.txt` 56–58, `TANOS.txt` 57–59, `TANS.txt` 54–56, 그리고 이 템플릿으로 다시 만든 `generated/*.in`, `audit/*/*.in` | `extract name="Vt_gm_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="<tag>_Vt_vd2.dat"` | 같은 최대 gm 접선 절편에서 VD/2(0.05 V)를 뺀 VT. DeckBuild 설명서 §5.5의 Vt 예제와 같은 형식이다. 창에는 영향이 없다. |
+| 위와 같음 | `extract name="IdVg" curve(v."cgate",i."drain") outfile="<tag>_IdVg.dat"` | 읽기 Id–Vg 곡선을 텍스트로 내보낸다(`<CURVE_FUNC>(...) [outfile=]` 문법). `analyze_reads.py`가 DeckBuild와 별도로 VT를 다시 계산해 서로 비교한다. |
+| 위와 같음 | `extract name="gm" deriv(v."cgate",i."drain") outfile="<tag>_gm.dat"` | gm = dId/dVg 곡선. 최대 gm 위치를 TonyPlot에서 확인하는 용도다. |
 | `flash_transport.py` 31, 50, 53, 269, 316, 318 | `planes` 옵션 추가(기본 4) | 격자 수렴 점검용이다. 기본값에서는 기존 CSV·qf와 비트 단위로 같다(재생성 후 diff로 확인). |
 
-ATLAS 물리 모델 줄(models, interface, material, solve)은 바꾸지 않았다. 실제 오류 로그가 없는 상태에서 고치면 추측에 의한 수정이 되기 때문이다. 새로 생기는 출력 파일은 상태마다 `<tag>_Vt_vd2.dat`와 `<tag>_IdVg.dat` 두 개다.
+ATLAS 물리 모델 줄(models, interface, material, solve)은 바꾸지 않았다. 아래 §4-1의 설명서 대조에서 문법 오류가 나오지 않았기 때문이다. 새로 생기는 출력 파일은 상태마다 `<tag>_Vt_vd2.dat`, `<tag>_IdVg.dat`, `<tag>_gm.dat` 세 개다.
 
-### ATLAS 실행 시 먼저 볼 위험 지점 (설명서 대조 필요, 미검증)
+### 4-1. ATLAS·DeckBuild 설명서 대조 결과 (저장소 silvaco-manuals의 atlas_users1.pdf 1822쪽, deckbuild_users1.pdf 256쪽)
 
-1. **77 K 수치 정밀도**: 77 K에서 Si의 n_i는 약 10⁻²⁰ cm⁻³ 수준이다. 그래서 수렴이 잘 되지 않거나 "negative concentration"류 오류가 날 수 있다. Silvaco는 저온·광대역갭 계산에 확장 정밀도(`go atlas simflags="-80"` 또는 `"-128"`)를 쓰라고 안내한다. 실패하면 이것을 먼저 시도한다. 정확한 옵션 이름은 ATLAS 설명서의 "extended precision" 항목과 대조해야 한다.
-2. `probe ... r.bbt`, `models ... incomplete ioniz` 키워드가 5.36.0.R에 있는지는 설명서 PROBE·MODELS 표와 대조해야 한다. 첫 오류가 이 줄에서 나면 해당 키워드만 빼고 다시 실행한다.
-3. 이동도는 `analytic`만 지정되어 있고 표면 산란 모델(CVT 등)이 없다. 그래서 gm 최대점의 위치가 실제 소자와 다를 수 있다. 하지만 PGM/ERS 창은 같은 모델을 쓰는 두 곡선의 차이라서 영향이 작다.
+**문법**: `templates/*.txt`와 `reference/*.in`에 쓰인 모든 문장과 파라미터를 Chapter 22 각 문장의 파라미터 표와 맞춰 봤다. 모두 정식 이름이거나 §2.5.1 규칙("같은 문장 안에서 다른 파라미터와 구별될 만큼의 글자만 쓰면 된다")에 맞는 **유일한 약어**다.
+
+| 덱에서 쓴 이름 | 설명서상 이름 |
+|---|---|
+| `x.r`, `x.l` (DOPING) | X.RIGHT, X.LEFT |
+| `char`, `conc`, `reg`, `gauss` (DOPING) | CHARACTERISTIC, CONCENTRATION, REGION, GAUSSIAN |
+| `workf` (CONTACT) | WORKFUN |
+| `temp` (MODELS) | TEMPERATURE |
+| `num` (REGION) | NUMBER |
+| `outf` (LOG·SAVE) | OUTFILE |
+| `init` (SOLVE) | INITIAL |
+| `integrate` (PROBE) | INTEGRATED |
+| `vdrain`, `vcgate` | SOLVE의 `V<name>` |
+
+| 항목 | 설명서 근거 | 판정 |
+|---|---|---|
+| `models region=6 fermidirac incomplete ioniz analytic bbt.kl` | MODELS 표·Table 2-2(Carrier Statistics Models): IONIZ는 "INCOMPLETE와 함께 써서 고농도 Si를 완전 이온화" | 맞음. 5×10²⁰ S/D가 77 K에서 동결되지 않도록 하는 설명서 권장 조합이다. |
+| `interface qf=...` (x/y 범위) | INTERFACE: "QF = 반도체–절연체 계면의 고정 산화막 전하(cm⁻²). 범위 상자 안의 반도체/절연체 계면에 적용" | 맞음. TANS의 Si/질화막 계면도 읽기 덱에서는 질화막이 절연체라 적용된다. |
+| `probe ... r.bbt`, `output ... u.bbt`, `sonos.rates`, `log ... sonos.curr` | PROBE·OUTPUT·LOG 표에 있음 | 맞음 |
+| 재료 `air`, `conductor`, `Al2O3`, `oxide`, `nitride` | Table B-1 Atlas Materials | 모두 있음 |
+| reference 덱 `interface n.i dynasonos`, `material ... semiconductor`, `nitridecharge ...`, `pf.nitride` | §3 DYNASONOS: N.I로 활성화. INTERFACE는 구조 정의 그룹의 끝에 둔다. 게이트 스택 절연막은 모두 SEMICONDUCTOR로 바꾸고 질량·이동도·상태밀도를 지정한다. | 덱이 이 요구를 모두 따른다. |
+| DeckBuild `extract init infile=`, `xintercept(maxslope(curve()))`, `ave()`, `deriv()`, `outfile=` | DeckBuild 설명서 §5 Extract 문법·예제 | 맞음. VD/2 줄은 처음에 `abs(ave(...))/2.0` 형태로 넣었으나, 설명서 예제와 같은 `- ave(v."drain")/2`로 바꿨다. |
+
+**77 K에서 주의할 점 (설명서 근거)**
+
+1. §3.3.3 Low Temperature Simulations: Fermi–Dirac과 불순물 동결을 함께 쓰면 "50 K까지는 이차 수렴을 잃지 않는다"고 되어 있다. 따라서 77 K는 기본 정밀도로 먼저 실행해 본다. 소수 캐리어가 언더플로하면 quasi-Fermi 준위에 "spurious glitch"가 생길 수 있다고도 적혀 있다.
+2. §21.11 Numerical Precision의 식 21-68은 P ≥ E_G/(ln2·kT)이다. Si, 77 K에서는 약 253 bit가 나온다. 기본 double(유효 53 bit)보다 크지만, 설명서는 이 값을 "느슨한 상한"이라고 한다. §3.3.3은 저온 계산에 **160-bit**가 매우 효과적이라고 한다. **수렴이 안 되거나 Id가 바닥에서 튀면** 각 블록의 `go atlas`를 `go atlas simflags="-160"`으로 바꾼다. 그래도 안 되면 `"-256"`을 쓴다. 정밀도를 올리면 계산 시간과 메모리가 늘어난다(Table 21-6).
+3. 선택 사항: MATERIAL의 `NI.MIN`으로 n_i 언더플로를 막을 수 있다(열 생성률은 틀어질 수 있음). 50 K 미만에서는 METHOD `ITLIMIT`를 늘린다. METHOD `MIN.TEMP`(기본 120 K)는 격자온도 방정식을 풀 때만 해당하므로 이 덱과는 관계없다.
+4. PF 식의 차이: ATLAS PF.NITRIDE(식 3-590)의 ε는 "질화막의 유전율"이다. 따로 지정하지 않으면 정적 유전율 7.5를 쓴다. Python은 리뷰 논문의 권고대로 광학 유전율 4를 쓴다. 같은 전계에서 ATLAS의 장벽 저하는 √(4/7.5) ≈ 0.73배로 더 작다. reference 결과와 Python을 비교할 때 이 차이를 감안해야 한다.
+5. TANS reference: 설명서는 DYNASONOS의 터널 경로를 "질화막–터널 절연막 계면에서 채널까지"로 정의한다. 터널 산화막이 없는 TANS는 이 정의 밖에 있으므로 Si↔질화막 직접 교환이 의도대로 계산된다는 보장이 없다.
+6. 참고: SOLVE의 `NIT.N`/`NIT.P`(NIT.XMIN–YMAX 범위, 여러 번 누적 가능)를 쓰면 질화막 안에 깊이별 포획 전하를 직접 넣을 수 있다. 다만 DYNASONOS 구조가 필요하다. 읽기 VT는 선형 정전기라 등가 qf와 결과가 같다. 질화막 내부의 전계나 밴드를 봐야 할 때만 이 방법이 의미가 있다.
 
 ## 5. ATLAS 실행 후 절차
 
@@ -83,6 +112,7 @@ ATLAS 물리 모델 줄(models, interface, material, solve)은 바꾸지 않았�
 | `check_results.py` | PASS |
 | VT 추출 코드 (합성 곡선) | 검증됨 (selftest PASS) |
 | 격자 수렴 | **실패**: SONOS 역전과 TANS Erase 크기가 plane 수에 따라 달라짐 |
-| ATLAS 문법, 수렴, .log/.str 생성 | 미검증 (ATLAS 실행 결과 없음) |
+| ATLAS·DeckBuild 문법 (설명서 대조) | 검증됨 (§4-1). VD/2 extract 줄 1곳 수정 |
+| ATLAS 수렴, .log/.str 생성 | 미검증 (ATLAS 실행 결과 없음) |
 | ATLAS 읽기 곡선의 VT, 실제 역전 여부 | 미검증 (예측값만 있음) |
 | TANOS·TANS에 같은 절차 적용 | 도구는 준비됨. ATLAS 결과가 오면 위 명령 하나로 처리됨 |

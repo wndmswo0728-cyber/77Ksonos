@@ -292,23 +292,24 @@ def simulate(device, opt):
 
 def write(device, options, folder):
     history, states = {"SONOS":sonos,"TANOS":tanos,"TANS":tans}[device](options)
+    label = f"{device}_v2"  # v2 outputs never collide with v1 file names
     folder.mkdir(exist_ok=True,parents=True)
-    with (folder/f"{device}_history.csv").open("w",newline="") as f:
+    with (folder/f"{label}_history.csv").open("w",newline="") as f:
         writer=csv.writer(f)
         writer.writerow(["stage","stage_time_s","stack_voltage_V","Q_C_m2","deltaVt_V","equiv_Qf_cm-2",
                          *[f"{s}_plane{i}" for s in ("electron","hole") for i in range(1,options.planes+1)],"psi_s_V","dQdt_A_m2","balance_error_A_m2",*PATHS])
         writer.writerows(history)
     template=(Path(__file__).parent/"templates"/f"{device}.txt").read_text()
     for state,(_,qf) in states.items():
-        tag=f"{device}_{options.temperature:g}K_{state}"
+        tag=f"{label}_{options.temperature:g}K_{state}"
         (folder/f"{tag}.in").write_text(template.format(tag=tag,qf=f"{qf:.15g}",temperature=options.temperature))
     # One standalone DeckBuild input per device for all five read states.
     combined = []
     for state in states:
-        stem = f"{device}_{options.temperature:g}K_{state}"
+        stem = f"{label}_{options.temperature:g}K_{state}"
         body = (folder/f"{stem}.in").read_text().removesuffix("quit\n")
         combined.append(body)
-    (folder/f"RUN_{device}.in").write_text("\n".join(combined)+"quit\n")
+    (folder/f"RUN_{label}.in").write_text("\n".join(combined)+"quit\n")
 
     # Sample the actual final hold row, before the 1 ns return to zero.
     # Fixed-Qf DC bias ramps expose the Si junction rate under the pulse bias.
@@ -316,19 +317,19 @@ def write(device, options, folder):
     diagnostics = []
     for phase, voltage in (("program",16),("erase",-12)):
         row = next(row for row in reversed(history) if row[0] == phase+"_hold")
-        tag = f"{device}_{options.temperature:g}K_{phase}_hold"
+        tag = f"{label}_{options.temperature:g}K_{phase}_hold"
         setup = template.format(tag=tag,qf=f"{row[5]:.15g}",temperature=options.temperature)
         setup = setup.split("solve init\n",1)[0]
         step = 0.05 if voltage>0 else -0.05
         diagnostics.append(setup+f"solve init\nlog outf={tag}_bias.log\nsolve vcgate=0\n"
                            f"solve name=cgate vstep={step} vfinal={voltage}\n"
                            f"log off\nsave outf={tag}.str\n")
-    (folder/f"BIAS_{device}.in").write_text("\n".join(diagnostics)+"quit\n")
+    (folder/f"BIAS_{label}.in").write_text("\n".join(diagnostics)+"quit\n")
     # Matched BTBT-off controls, with separate output names.
     for kind in ("RUN", "BIAS"):
-        name = f"{kind}_{device}"
+        name = f"{kind}_{label}"
         positive = (folder/f"{name}.in").read_text()
-        negative = positive.replace(" bbt.kl print"," print").replace(f"{device}_",f"{device}_noBTBT_")
+        negative = positive.replace(" bbt.kl print"," print").replace(f"{label}_",f"{label}_noBTBT_")
         (folder/f"{name}_noBTBT.in").write_text(negative)
     return states
 

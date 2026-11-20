@@ -46,7 +46,8 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   before CONTACT/METHOD (manual 2.5.2 order); VD=0.1 V in one step diverged, a small VD
   ramp works. With both fixes the 77 K DYNASONOS deck reaches VD=0.1 V, VG=1 V (diag H2,
   26.9 min, -160 precision). Starting at 300 K and lowering T inside one run diverged.
-  Production 77 K decks use default precision (faster); -160 is a commented fallback.
+  77 K decks need simflags -160: with 64-bit the read converged but the first Program
+  time step failed with "NaN or Inf in SONOS tunnel current" (exp(E/kT) overflow).
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

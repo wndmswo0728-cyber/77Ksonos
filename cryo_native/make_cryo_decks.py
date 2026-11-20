@@ -1,11 +1,13 @@
 """Make temperature-matched ATLAS-native (DYNASONOS) decks from the team's 300 K decks.
 
-The 300 K originals in original_300K/ are never modified and remain the 300 K
-baseline (run as they are). This script writes only the 77 K decks <name>_77K.in. Every edit is listed
-in EDITS below with its reason; the script stops if an expected line is missing,
+Base = the team's 300 K decks in original_300K/ (kept unchanged as the
+original-model reference). Temperature-dependent models are ADDED to them and the
+same derived deck is written for every temperature: <name>_300K.in and
+<name>_77K.in differ only in `set temp=` and the T<T>K_ output prefix. Every edit
+is listed below with its reason; the script stops if an expected line is missing,
 so nothing changes silently.
 
-Usage:  python cryo_native/make_cryo_decks.py            (SONOS, 77 K)
+Usage:  python cryo_native/make_cryo_decks.py            (SONOS, 300 K and 77 K)
 """
 import re
 import sys
@@ -17,10 +19,13 @@ SRC = HERE / "original_300K"
 # Read-sweep settings shared by every Id-Vg read (VD = 0.1 V).
 READ_HEADER = ("set Vrd_lo=-2\nset Vrd_hi=12\nset Vrd_step=0.02\n"
                "# read sweep: Vg from Vrd_lo to Vrd_hi in Vrd_step (V), VD=0.1 V, same for every state\n")
-# 77 K Si models. Low-T statistics (negligible at 300 K) + extra Si loss/generation
-# channels (BTBT, trap-assisted tunneling). The extra channels can only add charge
-# loss, so including them only at 77 K is the conservative choice.
-SI_MODELS = "models region=6 fermidirac incomplete ioniz bbt.kl trap.tunnel"
+# Temperature-dependent Si models added to the team's 300 K SONOS deck, used
+# identically at every temperature:
+#   fermidirac, incomplete+ioniz : carrier statistics and dopant freeze-out
+#   cvt                          : temperature-dependent inversion-layer mobility
+#   bbt.kl                       : band-to-band tunneling (via Eg(T))
+#   trap.tunnel                  : trap-assisted (phonon-assisted) tunneling in Si
+SI_MODELS = "models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel"
 
 
 def vt_extract(state, tag):
@@ -108,7 +113,7 @@ def prefix_outputs(s, tag):
     return s
 
 
-def main(devices=(("SONOS", "SONOS_PRG_ERS.in", "SONOS_retention.in"),), temps=(77,)):
+def main(devices=(("SONOS", "SONOS_PRG_ERS.in", "SONOS_retention.in"),), temps=(300, 77)):
     for dev, pe, ret in devices:
         for T in temps:
             (HERE / f"{dev}_PRG_ERS_{T}K.in").write_text(prg_ers((SRC / pe).read_text(), T, dev))

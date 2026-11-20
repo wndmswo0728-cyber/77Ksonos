@@ -74,8 +74,21 @@ def transient_fixes(s):
     s, k = re.subn(r"elec\.depth=@Enit(?! hole)", "elec.depth=@Enit hole.depth=@Enit", s)
     if k != 1:
         sys.exit("nitridecharge elec.depth not found")
-    s, k = re.subn(r"(solve vcgate=\$[ve]cgate ramptime=1e-9 tstep=1e-12 tfinal=1e-9(?: proj)?\n)method dt\.min=1\.0e-9\n",
-                   r"method dt.max=2e-11\n\1method dt.max=1e-3 dt.min=1.0e-9\n", s)
+    # (c) The 1 ns linear ramp is split at 10 % of the final voltage (0.1 ns), same ramp
+    # rate: at 77 K the gate passes VT (~0.8 V) where the channel charge changes by
+    # ~16 decades per 0.32 V (SS ~20 mV/dec) and Newton diverged at t = 51 ps with
+    # DT.MAX 2e-11 (diag P11d). First segment DT.MAX 2e-12 (0.032 V per step).
+    def split(m):
+        v = m.group(1)                       # vcgate or ecgate
+        proj = m.group(2) or ""
+        return (f"set {v}_split=${v}/10\n"
+                f"method dt.max=2e-12\n"
+                f"solve vcgate=${v}_split ramptime=1e-10 tstep=1e-12 tfinal=1e-10{proj}\n"
+                f"method dt.max=2e-11\n"
+                f"solve vcgate=${v} ramptime=9e-10 tstep=2e-12 tfinal=1e-9{proj}\n"
+                f"method dt.max=1e-3 dt.min=1.0e-9\n")
+    s, k = re.subn(r"solve vcgate=\$([ve]cgate) ramptime=1e-9 tstep=1e-12 tfinal=1e-9( proj)?\nmethod dt\.min=1\.0e-9\n",
+                   split, s)
     return s, k
 
 

@@ -1,0 +1,116 @@
+# DIAGNOSTIC (77 K, x mesh 0.005 um at S/D and gate edges). Stops after the initial solution; purpose: find why SOLVE INIT fails at 77 K.
+			
+# (c) Silvaco Inc., 2015
+assign name=xs n.value=1.0e-14 ratio=0.1
+
+
+go atlas simflags="-160"
+TITLE planar device simulation
+#
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set toxide=sio2  
+#sio2,al2o3, hfo2
+set cwf=4.05
+
+set Ttox=0.008	
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set temp=77
+set Vrd_lo=-2
+set Vrd_hi=12
+set Vrd_step=0.02
+# read sweep: Vg from Vrd_lo to Vrd_hi in Vrd_step (V), VD=0.1 V, same for every state
+
+
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+
+set Lsc = $Lgate_left*2/3		
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+
+mesh   width = 1	
+
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls   spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld   spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+
+
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=conductor
+
+#Oxide on the nitride
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=$toxide
+
+#nitride
+region number=4  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tnit-$Tbox y.max=-$Tbox material=nitride
+
+#Oxide under the nitride
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=oxide
+
+#Substrate
+region number=6  y.min=0   material=silicon
+
+
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0 
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0 
+electrode name=substrate bottom
+
+doping uniform conc=@Nsub p.type reg=6
+doping uniform conc=1e21 n.type reg=2
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+interface n.i dynasonos
+
+#top oxide
+material material=$toxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 ni.min=1e-60
+#bottom oxide
+material material=oxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 ni.min=1e-60
+material material=nitride semiconductor nc300=1e19 nv300=1e19 mun=1.0e-1 mup=1.0e-2 mc=1.0 mv=1.0 taun0=1.0 taup0=1.0 ni.min=1e-60
+contact name=cgate workf=$cwf		
+
+nitridecharge nt.p=1.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit sigmat.n=$xs sigman.p=0.0 sigmap.n=0.0
+
+method carriers=2
+
+probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tnit-$Tbox y.max=-$Tbox
+
+######## init_ structure####
+models srh pf.nitride temperature=@temp
+models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+solve init
+solve prev
+solve vdrain=0.1
+solve vcgate=1
+quit

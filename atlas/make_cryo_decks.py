@@ -46,6 +46,31 @@ def numerics(s, T):
     return s
 
 
+DRAIN_RAMP = ("solve vdrain=0.0001\nsolve vdrain=0.001\n"
+              "solve name=drain vstep=0.001 vfinal=0.01\nsolve name=drain vstep=0.005 vfinal=0.1\n")
+
+
+def models_before_contact(s, block):
+    """Manual 2.5.2: MATERIAL -> MODELS -> CONTACT -> INTERFACE -> METHOD -> SOLVE.
+    The originals put MODELS after METHOD/PROBE; at 300 K (= ATLAS default T) this
+    is harmless, at 77 K SOLVE INIT oscillated until MODELS was moved (diag H)."""
+    if s.count("models srh\n") != 1 or s.count("contact name=cgate") != 1:
+        sys.exit("models/contact line not found")
+    s = s.replace("models srh\n", "")
+    return s.replace("contact name=cgate", block + "contact name=cgate")
+
+
+def drain_ramp(s):
+    """Raise VD to 0.1 V in small steps (as in the converged 77 K read decks) instead
+    of one 0.1 V step, which needed 4 bias-step halvings at 77 K (diag H)."""
+    n = s.count("solve vdrain=0.1\n")
+    s = s.replace("solve vdrain=0.1\n", DRAIN_RAMP)
+    s = s.replace("solve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n", DRAIN_RAMP)
+    if n == 0:
+        sys.exit("no drain step found")
+    return s
+
+
 def vt_extract(state, tag, kind):
     """DeckBuild extraction on the current log (same definition as the 77 K read decks)."""
     return (f'extract name="Vt_{state}" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="{tag}_{kind}_Vt.dat"\n'
@@ -69,7 +94,7 @@ def prg_ers(src, T, dev):
     # (1) temperature: the original never applies $temp in this deck (ATLAS default 300 K).
     # (2) 77 K Si statistics (Fermi-Dirac + freeze-out, IONIZ keeps 5e20 S/D ionized).
     # (3) PF.NITRIDE: temperature-dependent trap emission instead of the constant TAU only.
-    s = sub(s, "models srh\n", f"models srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
+    s = models_before_contact(s, f"models srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
     # (4) initial read: fixed range/step + VT extraction
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1\nsolve vdrain=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
@@ -94,6 +119,7 @@ def prg_ers(src, T, dev):
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
     s = sub(s, "solve vcgate=-2 vstep=0.1 name=cgate vfinal=7\n",
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("ERS", tag, KIND))
+    s = drain_ramp(s)
     return prefix_outputs(s, tag, KIND)
 
 
@@ -105,7 +131,7 @@ def retention(src, T, dev):
     s = numerics(s, T)
     # (1)+(2): every MODELS statement carries the temperature (persistence between
     # MODELS statements is not documented) and the 77 K Si statistics.
-    s = sub(s, "models srh\n", f"models srh temperature=@temp\n{SI_MODELS}\n")
+    s = models_before_contact(s, f"models srh temperature=@temp\n{SI_MODELS}\n")
     s = sub(s, "models mos srh pf.nitride temperature=@temp\n",
             f"models mos srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
     s = sub(s, "models srh mos\n", f"models srh mos temperature=@temp\n{SI_MODELS}\n")
@@ -130,6 +156,7 @@ def retention(src, T, dev):
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\n\nsolve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n")
     s = sub(s, "solve vcgate=-1 vstep=0.1 name=cgate vfinal=3\n\nlog off\nquit",
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("RET", tag, KIND) + "\nlog off\nquit")
+    s = drain_ramp(s)
     return prefix_outputs(s, tag, KIND)
 
 

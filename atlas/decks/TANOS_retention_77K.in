@@ -95,6 +95,8 @@ material material=$toxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=
 #bottom oxide
 material material=SiO2 semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 ni.min=1e-60
 material material=nitride semiconductor nc300=1e19 nv300=1e19 mun=1.0e-1 mup=1.0e-2 mc=1.0 mv=1.0 taun0=1.0 taup0=1.0 ni.min=1e-60
+models srh temperature=@temp
+models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
 contact name=cgate workf=$cwf				
 
 nitridecharge nt.p=0.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit sigmat.n=${xs} sigman.p=0.0 sigmap.n=0.0
@@ -104,8 +106,6 @@ method carriers=2
 probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg+$Ttox y.max=-0.1+$Tpg+$Ttox+$Tnit
 
 ######################## init_ structure######################
-models srh temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
 solve init
 output qfn qfp con.band val.band Band.param t.quantum
 save outf=T77K_RET_TANOS_initial.str
@@ -113,7 +113,10 @@ save outf=T77K_RET_TANOS_initial.str
 
 solve prev
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
-solve vdrain=0.1
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
 
 log outf=T77K_RET_TANOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
 solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
@@ -135,7 +138,10 @@ output qfn qfp con.band val.band Band.param t.quantum
 save outf=T77K_RET_TANOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
 
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
-solve vdrain=0.1
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
 
 log outf=T77K_RET_TANOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
 solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
@@ -178,7 +184,10 @@ solve prev
 
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 
-solve vdrain=0 vstep=0.01 name=drain vfinal=0.1
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
 
 log outf=T77K_RET_TANOS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
 solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi

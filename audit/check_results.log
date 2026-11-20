@@ -1,0 +1,2 @@
+PASS: 3 devices x 5 modes, charges, 77 K, geometry, 1 s retention, pulse endpoints, same programmed state, matching ATLAS input and output declarations.
+Simulation engine tested: Python/SciPy. Native ATLAS runs require DeckBuild.

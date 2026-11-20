@@ -1,0 +1,285 @@
+# TANOS_77K_fresh. Reference geometry, uncalibrated parameters.
+go atlas
+title TANOS_77K_fresh
+mesh width=1
+x.mesh loc=0 spac=0.15
+x.mesh loc=0.995 spac=0.005
+x.mesh loc=1 spac=0.005
+x.mesh loc=1.5 spac=0.05
+x.mesh loc=2 spac=0.005
+x.mesh loc=2.005 spac=0.005
+x.mesh loc=3 spac=0.15
+y.mesh loc=-0.098000 spac=0.02
+y.mesh loc=-0.018000 spac=0.0005
+y.mesh loc=-0.010000 spac=0.0004
+y.mesh loc=-0.003000 spac=0.0002
+y.mesh loc=0.000000 spac=0.00015
+y.mesh loc=0.010000 spac=0.002
+y.mesh loc=0.030000 spac=0.004
+y.mesh loc=0.100000 spac=0.012
+y.mesh loc=0.400000 spac=0.05
+region num=1 material=air
+region num=2 material=conductor x.min=1 x.max=2 y.min=-0.098000 y.max=-0.018000
+region num=3 material=Al2O3 x.min=1 x.max=2 y.min=-0.018000 y.max=-0.010000
+region num=4 material=nitride x.min=1 x.max=2 y.min=-0.010000 y.max=-0.003000
+region num=5 material=oxide x.min=1 x.max=2 y.min=-0.003 y.max=0
+region num=6 material=silicon y.min=0
+electrode name=cgate x.min=1 x.max=2 y.min=-0.098000 y.max=-0.018000
+electrode name=source x.min=0 x.max=0.666667 y.min=0 y.max=0
+electrode name=drain x.min=2.333333 x.max=3 y.min=0 y.max=0
+electrode name=substrate bottom
+doping uniform p.type conc=1e17 reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=0.995
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=2.005
+material material=nitride permittivity=7.5 eg300=5.1 affinity=2.05 egalpha=0
+material material=oxide permittivity=3.9 eg300=9.0 affinity=0.95 egalpha=0
+material material=Al2O3 permittivity=9.3 eg300=8.0 affinity=1.50 egalpha=0
+interface qf=-0 x.min=1 x.max=2 y.min=-0.00001 y.max=0.00001
+contact name=cgate workf=4.60
+models srh temp=77 print
+models region=6 fermidirac incomplete ioniz analytic bbt.kl print
+method newton carriers=2
+probe name=bbt_drain r.bbt x=2.005 y=0.001
+output con.band val.band qfn qfp band.param e.field u.bbt
+solve init
+save outf=TANOS_77K_fresh_zero.str
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+solve name=cgate vstep=-0.05 vfinal=-2
+log outf=TANOS_77K_fresh_read.log
+solve vcgate=-2
+solve name=cgate vstep=0.01 vfinal=8
+log off
+extract init infile="TANOS_77K_fresh_read.log"
+extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANOS_77K_fresh_Vt.dat"
+
+# TANOS_77K_programmed. Reference geometry, uncalibrated parameters.
+go atlas
+title TANOS_77K_programmed
+mesh width=1
+x.mesh loc=0 spac=0.15
+x.mesh loc=0.995 spac=0.005
+x.mesh loc=1 spac=0.005
+x.mesh loc=1.5 spac=0.05
+x.mesh loc=2 spac=0.005
+x.mesh loc=2.005 spac=0.005
+x.mesh loc=3 spac=0.15
+y.mesh loc=-0.098000 spac=0.02
+y.mesh loc=-0.018000 spac=0.0005
+y.mesh loc=-0.010000 spac=0.0004
+y.mesh loc=-0.003000 spac=0.0002
+y.mesh loc=0.000000 spac=0.00015
+y.mesh loc=0.010000 spac=0.002
+y.mesh loc=0.030000 spac=0.004
+y.mesh loc=0.100000 spac=0.012
+y.mesh loc=0.400000 spac=0.05
+region num=1 material=air
+region num=2 material=conductor x.min=1 x.max=2 y.min=-0.098000 y.max=-0.018000
+region num=3 material=Al2O3 x.min=1 x.max=2 y.min=-0.018000 y.max=-0.010000
+region num=4 material=nitride x.min=1 x.max=2 y.min=-0.010000 y.max=-0.003000
+region num=5 material=oxide x.min=1 x.max=2 y.min=-0.003 y.max=0
+region num=6 material=silicon y.min=0
+electrode name=cgate x.min=1 x.max=2 y.min=-0.098000 y.max=-0.018000
+electrode name=source x.min=0 x.max=0.666667 y.min=0 y.max=0
+electrode name=drain x.min=2.333333 x.max=3 y.min=0 y.max=0
+electrode name=substrate bottom
+doping uniform p.type conc=1e17 reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=0.995
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=2.005
+material material=nitride permittivity=7.5 eg300=5.1 affinity=2.05 egalpha=0
+material material=oxide permittivity=3.9 eg300=9.0 affinity=0.95 egalpha=0
+material material=Al2O3 permittivity=9.3 eg300=8.0 affinity=1.50 egalpha=0
+interface qf=1.29893051463036e-80 x.min=1 x.max=2 y.min=-0.00001 y.max=0.00001
+contact name=cgate workf=4.60
+models srh temp=77 print
+models region=6 fermidirac incomplete ioniz analytic bbt.kl print
+method newton carriers=2
+probe name=bbt_drain r.bbt x=2.005 y=0.001
+output con.band val.band qfn qfp band.param e.field u.bbt
+solve init
+save outf=TANOS_77K_programmed_zero.str
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+solve name=cgate vstep=-0.05 vfinal=-2
+log outf=TANOS_77K_programmed_read.log
+solve vcgate=-2
+solve name=cgate vstep=0.01 vfinal=8
+log off
+extract init infile="TANOS_77K_programmed_read.log"
+extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANOS_77K_programmed_Vt.dat"
+
+# TANOS_77K_erased. Reference geometry, uncalibrated parameters.
+go atlas
+title TANOS_77K_erased
+mesh width=1
+x.mesh loc=0 spac=0.15
+x.mesh loc=0.995 spac=0.005
+x.mesh loc=1 spac=0.005
+x.mesh loc=1.5 spac=0.05
+x.mesh loc=2 spac=0.005
+x.mesh loc=2.005 spac=0.005
+x.mesh loc=3 spac=0.15
+y.mesh loc=-0.098000 spac=0.02
+y.mesh loc=-0.018000 spac=0.0005
+y.mesh loc=-0.010000 spac=0.0004
+y.mesh loc=-0.003000 spac=0.0002
+y.mesh loc=0.000000 spac=0.00015
+y.mesh loc=0.010000 spac=0.002
+y.mesh loc=0.030000 spac=0.004
+y.mesh loc=0.100000 spac=0.012
+y.mesh loc=0.400000 spac=0.05
+region num=1 material=air
+region num=2 material=conductor x.min=1 x.max=2 y.min=-0.098000 y.max=-0.018000
+region num=3 material=Al2O3 x.min=1 x.max=2 y.min=-0.018000 y.max=-0.010000
+region num=4 material=nitride x.min=1 x.max=2 y.min=-0.010000 y.max=-0.003000
+region num=5 material=oxide x.min=1 x.max=2 y.min=-0.003 y.max=0
+region num=6 material=silicon y.min=0
+electrode name=cgate x.min=1 x.max=2 y.min=-0.098000 y.max=-0.018000
+electrode name=source x.min=0 x.max=0.666667 y.min=0 y.max=0
+electrode name=drain x.min=2.333333 x.max=3 y.min=0 y.max=0
+electrode name=substrate bottom
+doping uniform p.type conc=1e17 reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=0.995
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=2.005
+material material=nitride permittivity=7.5 eg300=5.1 affinity=2.05 egalpha=0
+material material=oxide permittivity=3.9 eg300=9.0 affinity=0.95 egalpha=0
+material material=Al2O3 permittivity=9.3 eg300=8.0 affinity=1.50 egalpha=0
+interface qf=-1.16000525735284e-25 x.min=1 x.max=2 y.min=-0.00001 y.max=0.00001
+contact name=cgate workf=4.60
+models srh temp=77 print
+models region=6 fermidirac incomplete ioniz analytic bbt.kl print
+method newton carriers=2
+probe name=bbt_drain r.bbt x=2.005 y=0.001
+output con.band val.band qfn qfp band.param e.field u.bbt
+solve init
+save outf=TANOS_77K_erased_zero.str
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+solve name=cgate vstep=-0.05 vfinal=-2
+log outf=TANOS_77K_erased_read.log
+solve vcgate=-2
+solve name=cgate vstep=0.01 vfinal=8
+log off
+extract init infile="TANOS_77K_erased_read.log"
+extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANOS_77K_erased_Vt.dat"
+
+# TANOS_77K_program_retained. Reference geometry, uncalibrated parameters.
+go atlas
+title TANOS_77K_program_retained
+mesh width=1
+x.mesh loc=0 spac=0.15
+x.mesh loc=0.995 spac=0.005
+x.mesh loc=1 spac=0.005
+x.mesh loc=1.5 spac=0.05
+x.mesh loc=2 spac=0.005
+x.mesh loc=2.005 spac=0.005
+x.mesh loc=3 spac=0.15
+y.mesh loc=-0.098000 spac=0.02
+y.mesh loc=-0.018000 spac=0.0005
+y.mesh loc=-0.010000 spac=0.0004
+y.mesh loc=-0.003000 spac=0.0002
+y.mesh loc=0.000000 spac=0.00015
+y.mesh loc=0.010000 spac=0.002
+y.mesh loc=0.030000 spac=0.004
+y.mesh loc=0.100000 spac=0.012
+y.mesh loc=0.400000 spac=0.05
+region num=1 material=air
+region num=2 material=conductor x.min=1 x.max=2 y.min=-0.098000 y.max=-0.018000
+region num=3 material=Al2O3 x.min=1 x.max=2 y.min=-0.018000 y.max=-0.010000
+region num=4 material=nitride x.min=1 x.max=2 y.min=-0.010000 y.max=-0.003000
+region num=5 material=oxide x.min=1 x.max=2 y.min=-0.003 y.max=0
+region num=6 material=silicon y.min=0
+electrode name=cgate x.min=1 x.max=2 y.min=-0.098000 y.max=-0.018000
+electrode name=source x.min=0 x.max=0.666667 y.min=0 y.max=0
+electrode name=drain x.min=2.333333 x.max=3 y.min=0 y.max=0
+electrode name=substrate bottom
+doping uniform p.type conc=1e17 reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=0.995
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=2.005
+material material=nitride permittivity=7.5 eg300=5.1 affinity=2.05 egalpha=0
+material material=oxide permittivity=3.9 eg300=9.0 affinity=0.95 egalpha=0
+material material=Al2O3 permittivity=9.3 eg300=8.0 affinity=1.50 egalpha=0
+interface qf=1.71792848426488e-80 x.min=1 x.max=2 y.min=-0.00001 y.max=0.00001
+contact name=cgate workf=4.60
+models srh temp=77 print
+models region=6 fermidirac incomplete ioniz analytic bbt.kl print
+method newton carriers=2
+probe name=bbt_drain r.bbt x=2.005 y=0.001
+output con.band val.band qfn qfp band.param e.field u.bbt
+solve init
+save outf=TANOS_77K_program_retained_zero.str
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+solve name=cgate vstep=-0.05 vfinal=-2
+log outf=TANOS_77K_program_retained_read.log
+solve vcgate=-2
+solve name=cgate vstep=0.01 vfinal=8
+log off
+extract init infile="TANOS_77K_program_retained_read.log"
+extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANOS_77K_program_retained_Vt.dat"
+
+# TANOS_77K_erase_retained. Reference geometry, uncalibrated parameters.
+go atlas
+title TANOS_77K_erase_retained
+mesh width=1
+x.mesh loc=0 spac=0.15
+x.mesh loc=0.995 spac=0.005
+x.mesh loc=1 spac=0.005
+x.mesh loc=1.5 spac=0.05
+x.mesh loc=2 spac=0.005
+x.mesh loc=2.005 spac=0.005
+x.mesh loc=3 spac=0.15
+y.mesh loc=-0.098000 spac=0.02
+y.mesh loc=-0.018000 spac=0.0005
+y.mesh loc=-0.010000 spac=0.0004
+y.mesh loc=-0.003000 spac=0.0002
+y.mesh loc=0.000000 spac=0.00015
+y.mesh loc=0.010000 spac=0.002
+y.mesh loc=0.030000 spac=0.004
+y.mesh loc=0.100000 spac=0.012
+y.mesh loc=0.400000 spac=0.05
+region num=1 material=air
+region num=2 material=conductor x.min=1 x.max=2 y.min=-0.098000 y.max=-0.018000
+region num=3 material=Al2O3 x.min=1 x.max=2 y.min=-0.018000 y.max=-0.010000
+region num=4 material=nitride x.min=1 x.max=2 y.min=-0.010000 y.max=-0.003000
+region num=5 material=oxide x.min=1 x.max=2 y.min=-0.003 y.max=0
+region num=6 material=silicon y.min=0
+electrode name=cgate x.min=1 x.max=2 y.min=-0.098000 y.max=-0.018000
+electrode name=source x.min=0 x.max=0.666667 y.min=0 y.max=0
+electrode name=drain x.min=2.333333 x.max=3 y.min=0 y.max=0
+electrode name=substrate bottom
+doping uniform p.type conc=1e17 reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=0.995
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=2.005
+material material=nitride permittivity=7.5 eg300=5.1 affinity=2.05 egalpha=0
+material material=oxide permittivity=3.9 eg300=9.0 affinity=0.95 egalpha=0
+material material=Al2O3 permittivity=9.3 eg300=8.0 affinity=1.50 egalpha=0
+interface qf=-8.632516627475e-26 x.min=1 x.max=2 y.min=-0.00001 y.max=0.00001
+contact name=cgate workf=4.60
+models srh temp=77 print
+models region=6 fermidirac incomplete ioniz analytic bbt.kl print
+method newton carriers=2
+probe name=bbt_drain r.bbt x=2.005 y=0.001
+output con.band val.band qfn qfp band.param e.field u.bbt
+solve init
+save outf=TANOS_77K_erase_retained_zero.str
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+solve name=cgate vstep=-0.05 vfinal=-2
+log outf=TANOS_77K_erase_retained_read.log
+solve vcgate=-2
+solve name=cgate vstep=0.01 vfinal=8
+log off
+extract init infile="TANOS_77K_erase_retained_read.log"
+extract name="Vt_gm" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="TANOS_77K_erase_retained_Vt.dat"
+quit

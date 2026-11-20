@@ -7,7 +7,7 @@ same derived deck is written for every temperature: <name>_300K.in and
 is listed below with its reason; the script stops if an expected line is missing,
 so nothing changes silently.
 
-Usage:  python cryo_native/make_cryo_decks.py            (SONOS, 300 K and 77 K)
+Usage:  python atlas/make_cryo_decks.py     (SONOS, TANOS, TANS at 300 K and 77 K -> atlas/decks/)
 """
 import re
 import sys
@@ -15,6 +15,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 SRC = HERE / "original_300K"
+OUT = HERE / "decks"
 
 # Read-sweep settings shared by every Id-Vg read (VD = 0.1 V).
 READ_HEADER = ("set Vrd_lo=-2\nset Vrd_hi=12\nset Vrd_step=0.02\n"
@@ -28,11 +29,11 @@ READ_HEADER = ("set Vrd_lo=-2\nset Vrd_hi=12\nset Vrd_step=0.02\n"
 SI_MODELS = "models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel"
 
 
-def vt_extract(state, tag):
+def vt_extract(state, tag, kind):
     """DeckBuild extraction on the current log (same definition as the 77 K read decks)."""
-    return (f'extract name="Vt_{state}" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="{tag}_Vt.dat"\n'
-            f'extract name="Vt_{state}_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="{tag}_Vt.dat"\n'
-            f'extract name="IdVg_{state}" curve(v."cgate",i."drain") outfile="{tag}_{state}_IdVg.dat"\n')
+    return (f'extract name="Vt_{state}" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="{tag}_{kind}_Vt.dat"\n'
+            f'extract name="Vt_{state}_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="{tag}_{kind}_Vt.dat"\n'
+            f'extract name="IdVg_{state}" curve(v."cgate",i."drain") outfile="{tag}_{kind}_{state}_IdVg.dat"\n')
 
 
 def sub(text, old, new, count=1):
@@ -44,6 +45,7 @@ def sub(text, old, new, count=1):
 
 def prg_ers(src, T, dev):
     tag = f"T{T}K_{dev}"
+    KIND = "PE"
     s = src
     s = sub(s, "set temp=300", f"set temp={T}\n" + READ_HEADER)
     # (1) temperature: the original never applies $temp in this deck (ATLAS default 300 K).
@@ -54,7 +56,7 @@ def prg_ers(src, T, dev):
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1\nsolve vdrain=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
     s = sub(s, "solve vcgate=-1 vstep=0.1 name=cgate vfinal=6\nlog off\n",
-            "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("init", tag) + "log off\n")
+            "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("init", tag, KIND) + "log off\n")
     # (5) PGM read: charged nitride -> solve init sonos; same range; solve init moved after log off
     s = re.sub(r"(save outf=\S*PGM\S*\n\n)solve init\n", r"\1solve init sonos\n", s, count=1)
     pg = re.search(r"solve vcgate=0 vstep=0\.1 name=cgate vfinal=1\nsolve vdrain=0\.1\n\n(log outf=\S*PGM\S* master)\n"
@@ -64,7 +66,7 @@ def prg_ers(src, T, dev):
     s = s.replace(pg.group(0),
                   "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n\n"
                   f"{pg.group(1)}\nsolve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n"
-                  + vt_extract("PGM", tag) + "log off\nsolve init sonos\n")
+                  + vt_extract("PGM", tag, KIND) + "log off\nsolve init sonos\n")
     # (6) erase starts from the charged nitride -> solve init sonos
     s = sub(s, "#################### Erase #########################\nsolve init\n",
             "#################### Erase #########################\nsolve init sonos\n")
@@ -73,12 +75,13 @@ def prg_ers(src, T, dev):
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-2\nsolve vdrain=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
     s = sub(s, "solve vcgate=-2 vstep=0.1 name=cgate vfinal=7\n",
-            "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("ERS", tag))
-    return prefix_outputs(s, tag)
+            "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("ERS", tag, KIND))
+    return prefix_outputs(s, tag, KIND)
 
 
 def retention(src, T, dev):
     tag = f"T{T}K_{dev}"
+    KIND = "RET"
     s = src
     s = sub(s, "set temp=300", f"set temp={T}\n" + READ_HEADER)
     # (1)+(2): every MODELS statement carries the temperature (persistence between
@@ -91,12 +94,12 @@ def retention(src, T, dev):
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1\nsolve vdrain=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
     s = sub(s, "solve vcgate=-1 vstep=0.1 name=cgate vfinal=3\nlog off\n\n\n####",
-            "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("init", tag) + "log off\n\n\n####")
+            "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("init", tag, KIND) + "log off\n\n\n####")
     # (5) PGM read after nit.n: same range; solve init moved after log off
     s = sub(s, "solve vcgate=0 vstep=0.1 name=cgate vfinal=2\nsolve vdrain=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
     s = sub(s, "solve vcgate=2 vstep=0.1 name=cgate vfinal=6\n\nsolve init\nlog off\n",
-            "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("PGM", tag)
+            "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("PGM", tag, KIND)
             + "log off\nsolve init sonos\n")
     # (5b) trapped charge vs time during retention, for the Python coupling (python_cryo/)
     s = sub(s, "solve tstep=1e-6 tfinal=@Retime proj\n",
@@ -107,21 +110,28 @@ def retention(src, T, dev):
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1\n\nsolve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\n\nsolve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n")
     s = sub(s, "solve vcgate=-1 vstep=0.1 name=cgate vfinal=3\n\nlog off\nquit",
-            "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("RET", tag) + "\nlog off\nquit")
-    return prefix_outputs(s, tag)
+            "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("RET", tag, KIND) + "\nlog off\nquit")
+    return prefix_outputs(s, tag, KIND)
 
 
-def prefix_outputs(s, tag):
-    """Prefix every .str/.log name with T<T>K_ so 77 K and 300 K runs never overwrite each other."""
-    s = re.sub(r"(save outf=|log outf=|log outfile=)", lambda m: m.group(1) + tag.split("_")[0] + "_", s)
+def prefix_outputs(s, tag, kind):
+    """Prefix every .str/.log name with T<T>K_<PE|RET>_ so temperatures and the two
+    decks (P/E and retention, which reuse names in the originals) never overwrite."""
+    s = re.sub(r"(save outf=|log outf=|log outfile=)", lambda m: m.group(1) + tag.split("_")[0] + f"_{kind}_", s)
     return s
 
 
-def main(devices=(("SONOS", "SONOS_PRG_ERS.in", "SONOS_retention.in"),), temps=(300, 77)):
+DEVICES = (("SONOS", "SONOS_PRG_ERS.in", "SONOS_retention.in"),
+           ("TANOS", "TANOS.in", "TANOS_Retention.in"),
+           ("TANS", "TANS.in", "TANS_Retention.in"))
+
+
+def main(devices=DEVICES, temps=(300, 77)):
+    OUT.mkdir(exist_ok=True)
     for dev, pe, ret in devices:
         for T in temps:
-            (HERE / f"{dev}_PRG_ERS_{T}K.in").write_text(prg_ers((SRC / pe).read_text(), T, dev))
-            (HERE / f"{dev}_retention_{T}K.in").write_text(retention((SRC / ret).read_text(), T, dev))
+            (OUT / f"{dev}_PRG_ERS_{T}K.in").write_text(prg_ers((SRC / pe).read_text(), T, dev))
+            (OUT / f"{dev}_retention_{T}K.in").write_text(retention((SRC / ret).read_text(), T, dev))
             print("wrote", f"{dev}_PRG_ERS_{T}K.in", f"{dev}_retention_{T}K.in")
 
 

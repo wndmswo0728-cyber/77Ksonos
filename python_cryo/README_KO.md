@@ -1,0 +1,51 @@
+# Python 극저온 보정 모델과 ATLAS 연결
+
+ATLAS DYNASONOS에 없는 **온도 의존 손실 메커니즘**을 Python으로 계산한다. 그 결과를 ATLAS 보존 결과에 연결한다.
+
+## 파일
+| 파일 | 역할 |
+|---|---|
+| `cryo_model.py` | 1D 질화막 트랩 모델(v3). `archive/python_qf_path/flash_transport_v2.py`를 복제해 기능을 추가했다. |
+| `couple_atlas.py` | Python 보정 비율 F(t)를 계산하고 ATLAS 결과에 연결한다. 메모리 창, 창이 닫히는 시간, 논문식 로그 피팅을 낸다. |
+| `results/summary.csv` | 구조·온도별 요약 |
+| `results/T<T>K_<DEV>_coupled.csv` | 시간에 따른 F, ΔVT (ATLAS 결과가 있으면 보정된 VT) |
+| `results/sensitivity/sensitivity.csv` | 보정되지 않은 매개변수의 민감도 |
+
+## ATLAS에는 없고 Python에서 추가한 메커니즘 (두 온도 공통)
+| 메커니즘 | 식 / 근거 | 온도 의존 |
+|---|---|---|
+| 열활성 hopping | D = a²ν·exp(−Ea/kT), v = 2aν·exp(−Ea/kT)·sinh(qEa/2kT), Scharfetter–Gummel 이산화. Chiu 2014 식 (12) 계열 | exp(−Ea/kT) |
+| 다중포논 트랩 이온화 | Makram-Ebeid & Lannoo (PRB 25, 6406, 1982). PF를 넘는 부분만 더해 중복을 막는다: max(P_MPA − e_PF, 0) | 포논 점유 coth(ħω/2kT) |
+| Franck–Condon 트랩↔전극 터널링 | 같은 다중포논 선모양 w_p로 가중. p개 포논을 방출하면 에너지 E − pħω에서 터널링한다. 포획은 상세 균형으로 계산 | w_p(T) |
+
+공통 매개변수(보정 전, 문헌 범위): Enit = W_T = 1.2 eV(팀 고정값), W_opt = 2·W_T, ħω = 64 meV, m* = 0.5 m₀, hop 거리 a = 1.5 nm, Ea = 1.2 eV, 이온화 전자 탈출 비율 = 1(보수적).
+
+ATLAS 덱 값과 일치시킨 항목: Nnit = 5e19, 하부 SiO₂ 3 nm(TANS 1 nm), 게이트 일함수 4.05 / 4.5 eV, 초기 전하 = 보존 덱의 `nit.n` 1.1e19(점유율 0.22), 보존 3×10⁸ s, 질화막 16칸.
+
+## 연결 방법
+1. Python **base**: ATLAS에도 있는 경로만 계산한다. 탄성 트랩↔전극 터널링을 쓰고, PF는 ATLAS가 담당하므로 끈다.
+2. Python **full**: 위 표의 세 메커니즘을 추가한다. Franck–Condon 터널링이 탄성 터널링을 대체한다.
+3. F(t) = Q_full(t) / Q_base(t)를 구한다. ATLAS 전하 Q_ATLAS(t)에 곱한다. VT(t) = VT_init + (VT_PGM − VT_init)·Q(t)/Q(0)으로 바꾸고, 메모리 창 MW(t) = VT(t) − VT_ERS를 구한다.
+4. 가정: 1차 곱셈 결합이고, 전하 중심이 움직이지 않는다(VT가 Q에 선형). F > 1은 ATLAS가 탄성 터널링으로 과대평가한 손실을 Franck–Condon 인자가 줄인다는 뜻이다.
+
+## Python 결과 (ATLAS 연결 전, 10년 = 3×10⁸ s, Program ΔVT)
+| 구조 | 온도 | 시작 | base (ATLAS와 같은 경로) | full (온도 메커니즘 추가) | F(10년) |
+|---|---|---:|---:|---:|---:|
+| SONOS | 300 K | 3.51 V | 2.28 V | **1.49 V** | 0.69 |
+| SONOS | 77 K | 3.51 V | 2.28 V | **2.75 V** | 1.18 |
+| TANOS | 300 K | 1.85 V | 1.15 V | **0.81 V** | 0.81 |
+| TANOS | 77 K | 1.85 V | 1.16 V | **1.40 V** | 1.16 |
+| TANS | 300 K | 1.85 V | 0.55 V | **0.55 V** | 1.04 |
+| TANS | 77 K | 1.85 V | 0.55 V | **0.65 V** | 1.15 |
+
+### 해석
+- **SONOS·TANOS**: 추가한 메커니즘이 300 K에서는 손실을 키우고, 77 K에서는 얼어붙는다. 77 K에서는 Franck–Condon 인자가 탄성 터널링 손실까지 줄인다. 그래서 10년 후 ΔVT가 77 K에서 약 1.7–1.8배 크다.
+- **TANS(1 nm 산화막)**: 두 온도 모두 **1초 안에** 1.85 V에서 약 0.75–0.8 V로 떨어진 뒤, 트랩과 Si가 평형을 이루는 수준(약 0.55–0.65 V)에 머문다. 원인은 계면 근처 트랩의 Si 직접 터널링이다. Franck–Condon 인자가 77 K에서 속도를 약 15배 줄이지만, 1 nm 산화막을 통한 속도가 워낙 빨라 1초 안에 일어난다. 이 평형값은 Erase 상태도 결국 도달하는 값이라 메모리 창으로 보면 닫힌 것과 같다.
+- 따라서 이 매개변수에서는 "77 K가 300 K보다 낫다"는 경향은 세 구조 모두에서 나온다. 하지만 **TANS가 77 K에서 10년 창을 유지한다는 결론은 아직 나오지 않는다.** 논문은 측정을 약 1초 이후부터 했으므로 1초 이내의 빠른 손실은 측정 창에 들어 있지 않다. 비교도 1초 이후 구간으로 해야 공정하다. 결론은 ATLAS 결과(PF 포함)와 민감도 결과를 함께 보고 판단한다.
+
+## 실행
+```
+python python_cryo/couple_atlas.py                 # Python 계수 (+ results/atlas/에 ATLAS 결과가 있으면 연결)
+python python_cryo/couple_atlas.py --sensitivity   # 민감도
+```
+연결 경로는 형식만 맞춘 시험용 가짜 ATLAS 파일로 끝까지 실행해 확인했다(VT 보정, 메모리 창, 창이 닫히는 시간, 로그 피팅). 실제 ATLAS 결과로는 아직 실행하지 않았다.

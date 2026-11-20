@@ -57,10 +57,24 @@ class Options:
     pat_escape: float = 1.0     # fraction of ionized carriers lost (1 = all, conservative)
     pf_k: float = 7.5           # permittivity used in the PF rate that PAT is compared with (ATLAS: nitride)
     pf_b_hz: float = 1e13       # ATLAS PF.B
+    fc_tunnel: bool = False     # Franck-Condon (phonon-assisted) trap<->electrode tunneling
+    ode_method: str = "BDF"
+    ode_rtol: float = 1e-5
+    ode_atol: float = 1e-9
 
 
 PATHS = ("Si_band_e","Si_band_h","gate_band_e","gate_band_h",
          "Si_trap_e","Si_trap_h","gate_trap_e","gate_trap_h","PF_thermal")
+
+def log_iv(order, z):
+    """log I_order(z) for integer order, stable when I underflows (large order, small z)."""
+    from scipy.special import ive, gammaln
+    order = np.abs(np.asarray(order, float))
+    with np.errstate(divide="ignore"):
+        direct = np.log(ive(order, z)) + z
+    series = order*np.log(z/2) - gammaln(order+1) + np.log1p(z*z/(4*(order+1)))
+    return np.where(np.isfinite(direct) & (direct > -600), direct, series)
+
 
 def mpa_rate(field, temperature, depth_ev, opt, nmax=400):
     """Makram-Ebeid & Lannoo multiphonon trap ionization rate (1/s) at |field| (V/m)."""
@@ -77,13 +91,26 @@ def mpa_rate(field, temperature, depth_ev, opt, nmax=400):
     ok = field > 1e3
     if ok.any():
         f = field[ok][:, None]
-        log_occ = n*x - s_hr/np.tanh(x) + np.log(np.maximum(ive(n, z), 1e-300)) + z
+        log_occ = n*x - s_hr/np.tanh(x) + log_iv(n, z)
         log_pt = (np.log(e*f/(2*np.sqrt(2*mass*energy)))
                   - 4*np.sqrt(2*mass)*energy**1.5/(3*hbar*e*f))
         terms = log_occ + log_pt
         top = terms.max(axis=1, keepdims=True)
         out[ok] = np.exp(top[:, 0])*np.exp(terms-top).sum(axis=1)
     return out
+
+
+def fc_weights(temperature, depth_ev, opt, cut=30.0):
+    """Multiphonon lineshape w_p (sum = 1), p = net phonons emitted (Huang-Rhys S)."""
+    from scipy.special import ive
+    w = opt.pat_phonon_ev
+    s_hr = (opt.pat_wopt_ratio-1.0)*depth_ev/w
+    x = w/(2*Boltzmann*temperature/e)
+    z = s_hr/np.sinh(x)
+    p = np.arange(-150, 301)
+    logw = p*x - s_hr/np.tanh(x) + log_iv(p, z)
+    keep = logw > logw.max()-cut
+    wts = np.exp(logw[keep]-logw.max()); return p[keep].astype(float), wts/wts.sum()
 
 
 def sonos(options=Options()):
@@ -106,6 +133,11 @@ def simulate(device, opt, retention_from=None):
     dx = 7e-9 / n
     x = (np.arange(n) + 0.5) * dx
     cap = opt.density * dx
+    if opt.fc_tunnel:
+        fc_n, fc_w = fc_weights(opt.temperature, opt.depth_e, opt)
+        seg_j = np.arange(n+1)[None, :]; pl_i = np.arange(n)[:, None]
+        fc_mask_gate = (seg_j >= pl_i+1).astype(float)
+        fc_mask_si = (seg_j <= pl_i).astype(float)
     hop_a = opt.hop_distance_nm*1e-9 if opt.hop_distance_nm > 0 else opt.density**(-1/3)
     hop_ea = (np.full((2,1), opt.hop_ea) if opt.hop_ea > 0
               else np.array([opt.depth_e, opt.depth_h])[:, None])
@@ -230,6 +262,29 @@ def simulate(device, opt, retention_from=None):
         phi_nodes = np.r_[phi_left_n,phi,phi_right_n]
         widths = np.diff(np.r_[0,x,7e-9])
         coef = 2*np.sqrt(2*electron_mass*e)/hbar
+
+        def fc_exchange(gate_side, masses, width, end_v, offset, inner_v, mu):
+            """Trap<->electrode tunneling with Franck-Condon (multiphonon) weights.
+            A trapped carrier that emits p phonons (p>0) or absorbs |p| (p<0) tunnels at
+            carrier energy E_p = E_trap - p*W with weight w_p (same lineshape as mpa_rate).
+            Capture uses detailed balance, so equilibrium occupancy is unchanged."""
+            E = trap_energy[:, :, None] - fc_n[None, None, :]*opt.pat_phonon_ev      # (2,n,K)
+            m_ = np.sqrt(np.array(masses))[:, None, None]
+            a0 = width*m_*mean_sqrt_barrier(offset[:, :, None]+signs[:, :, None]*end_v-E,
+                                            offset[:, :, None]+signs[:, :, None]*inner_v-E)
+            ns4, sg4 = ns_offset[:, :, None, None], signs[:, :, None, None]
+            lo = ns4+sg4*phi_nodes[:-1][None, None, None, :]-E[..., None]
+            hi = ns4+sg4*phi_nodes[1:][None, None, None, :]-E[..., None]
+            mask = fc_mask_gate if gate_side else fc_mask_si
+            seg = (mean_sqrt_barrier(lo, hi)*widths[None, None, None, :]*mask[None, :, None, :]).sum(-1)
+            k = opt.elastic_hz*np.exp(-coef*(a0+seg))
+            acc = 1.0 if gate_side else expit((E-signs[:, :, None]*surface)/kt)
+            f_p = expit((mu[:, :, None]-E)/kt)
+            emit = y[:, :, None]*(1-f_p)
+            capt = (1-y)[:, :, None]*np.exp(-np.logaddexp(((trap_energy-mu)/kt)[:, :, None],
+                                                         (fc_n*opt.pat_phonon_ev/kt)[None, None, :]))
+            return (fc_w[None, None, :]*k*acc*(capt-emit)).sum(-1)
+
         for gate_side in (False,True):
             masses = (0.3,1.) if gate_side and device!="SONOS" else (opt.sio2_me,opt.sio2_mh)
             width = 8e-9 if gate_side else tunnel
@@ -245,10 +300,13 @@ def simulate(device, opt, retention_from=None):
             # Occupied and empty reservoir states share the same WKB coupling.
             # Electron/hole energies are referenced to bulk Si CB/VB respectively.
             mu = np.array([ef0-eg,-ef0])[:,None] + (signs*vg if gate_side else 0.)
-            filled = expit((mu-trap_energy)/kt)
-            accessible = np.ones_like(filled) if gate_side else expit((trap_energy-signs*surface)/kt)
-            coupling = opt.elastic_hz*accessible*np.exp(-coef*action_length)
-            exchange = coupling*(filled-y)
+            if opt.fc_tunnel:
+                exchange = fc_exchange(gate_side, masses, width, end_v, offset, inner_v, mu)
+            else:
+                filled = expit((mu-trap_energy)/kt)
+                accessible = np.ones_like(filled) if gate_side else expit((trap_energy-signs*surface)/kt)
+                coupling = opt.elastic_hz*accessible*np.exp(-coef*action_length)
+                exchange = coupling*(filled-y)
             change += exchange
             side = "gate" if gate_side else "Si"
             for j,carrier in enumerate(("e","h")):
@@ -313,7 +371,7 @@ def simulate(device, opt, retention_from=None):
             return v0+(v1-v0)*(t/duration)
         t = np.r_[0,np.geomspace(max(duration*1e-12,1e-20) if duration < 1 else 1e-6,duration,61)]
         sol = solve_ivp(lambda t,s:rates(s.reshape(2,n),bias(t)).ravel(),
-                        (0,duration),start,method="BDF",atol=1e-11,rtol=2e-6,t_eval=t)
+                        (0,duration),start,method=opt.ode_method,atol=opt.ode_atol,rtol=opt.ode_rtol,t_eval=t)
         if not sol.success or not np.isfinite(sol.y).all() or sol.y.min() < -1e-6 or sol.y.max()>1+1e-6:
             raise RuntimeError(f"{label}: solver or occupancy failure: {sol.message}")
         for time, state in zip(sol.t,sol.y.T):

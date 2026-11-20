@@ -3,7 +3,7 @@
 **목표**: 300 K에서 retention이 약한 TANS가 77 K에서는 약점을 보완해 10년 보존이 가능함을 보인다. 온도와 관련된 모델·메커니즘을 최대한 넣고, 같은 덱을 두 온도에서 돌려 비교한다.
 
 - **기준**: 팀의 원본 300 K SONOS 덱(`original_300K/`)이다. 원본 파일은 수정하지 않고 "원본 모델" 참고 결과로 보관한다.
-- **방식**: `make_cryo_decks.py`가 원본에 온도 관련 모델을 **추가**해 `<구조>_PRG_ERS_<T>K.in`, `<구조>_retention_<T>K.in`을 만든다. **300 K 판과 77 K 판은 `set temp=`와 출력 접두어(`T300K_`/`T77K_`)만 다르다.**
+- **방식**: `make_cryo_decks.py`가 원본에 온도 관련 모델을 **추가**해 `decks/<구조>_PRG_ERS_<T>K.in`, `decks/<구조>_retention_<T>K.in`을 만든다(SONOS·TANOS·TANS). **300 K 판과 77 K 판은 `set temp=`와 출력 접두어(`T300K_`/`T77K_`)만 다르다.**
 - SONOS를 먼저 확정한 뒤, 같은 스크립트로 TANOS·TANS를 만든다.
 - 고정 매개변수(세 구조 공통): Nsub = 1e17, Nnit = 5e19, Enit = 1.2 eV, Tbox = 3 nm(TANS는 1 nm).
 
@@ -39,7 +39,7 @@ DYNASONOS가 원래 계산하는 메커니즘(밴드↔트랩 직접 터널링, 
 1. `SONOS_PRG_ERS_300K.in`, `SONOS_PRG_ERS_77K.in`: 초기 → Program(+16 V, 100 µs) → Erase(−12 V, 500 µs), 각 단계 뒤 읽기
 2. `SONOS_retention_300K.in`, `SONOS_retention_77K.in`: `nit.n`으로 전하 주입 → 0 V로 3×10⁸ s(약 10년) 보존 → 읽기
 
-출력: `T<T>K_SONOS_Vt.dat`(상태별 VT와 VD/2 보정값), `T<T>K_SONOS_<init|PGM|ERS|RET>_IdVg.dat`, 보존 과도 로그(질화막 순전하 `netcharge` 포함)
+출력: `T<T>K_<DEV>_PE_Vt.dat`, `T<T>K_<DEV>_RET_Vt.dat`(상태별 VT와 VD/2 보정값), `T<T>K_<DEV>_<PE|RET>_<상태>_IdVg.dat`, `T<T>K_<DEV>_netcharge_vs_time.dat`(보존 중 질화막 전하, Python 연결용). `.str`/`.log`는 `T<T>K_<PE|RET>_` 접두어. 받은 결과는 `results/atlas/`에 넣는다.
 
 ## 확인이 필요한 점 (바꾸지 않음)
 - retention 덱의 `nit.n=1e18` 다음 `nit.n=1e19`는 설명서상 **누적**되어 1.1×10¹⁹이 들어간다. 원본과 같게 두었다.

@@ -24,7 +24,7 @@ set Tpg=0.08
 set TPGM=1.0e-4
 set TERS=5.0e-4
 set Retime=3e8
-set temp=77
+set temp=300
 set Vrd_lo=-2
 set Vrd_hi=12
 set Vrd_step=0.02
@@ -110,18 +110,18 @@ models srh temperature=@temp
 models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
 solve init
 output qfn qfp con.band val.band Band.param t.quantum
-save outf=T77K_SONOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
+save outf=T300K_RET_SONOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
 
 
 solve prev
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.1
 
-log outf=T77K_SONOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
+log outf=T300K_RET_SONOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
 solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
-extract name="Vt_init" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_SONOS_Vt.dat"
-extract name="Vt_init_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_SONOS_Vt.dat"
-extract name="IdVg_init" curve(v."cgate",i."drain") outfile="T77K_SONOS_init_IdVg.dat"
+extract name="Vt_init" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T300K_SONOS_RET_Vt.dat"
+extract name="Vt_init_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_SONOS_RET_Vt.dat"
+extract name="IdVg_init" curve(v."cgate",i."drain") outfile="T300K_SONOS_RET_init_IdVg.dat"
 log off
 
 
@@ -134,16 +134,16 @@ solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ym
 
 
 output qfn qfp con.band val.band Band.param t.quantum
-save outf=T77K_SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
+save outf=T300K_RET_SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
 
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.1
 
-log outf=T77K_SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
+log outf=T300K_RET_SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
 solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
-extract name="Vt_PGM" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_SONOS_Vt.dat"
-extract name="Vt_PGM_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_SONOS_Vt.dat"
-extract name="IdVg_PGM" curve(v."cgate",i."drain") outfile="T77K_SONOS_PGM_IdVg.dat"
+extract name="Vt_PGM" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T300K_SONOS_RET_Vt.dat"
+extract name="Vt_PGM_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_SONOS_RET_Vt.dat"
+extract name="IdVg_PGM" curve(v."cgate",i."drain") outfile="T300K_SONOS_RET_PGM_IdVg.dat"
 log off
 solve init sonos
 
@@ -159,13 +159,13 @@ solve init sonos
 
 method lte2step tol.time=1.0e-4 tstep.incr=1.2 dt.max=1.0e7
 
-log outfile=T77K_TRNS_Retention_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log sonos.curr j.tun
+log outfile=T300K_RET_TRNS_Retention_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log sonos.curr j.tun
 
 solve tstep=1e-6 tfinal=@Retime proj
-extract name="Qnit_vs_t" curve(time, probe."netcharge") outfile="T77K_SONOS_netcharge_vs_time.dat"
+extract name="Qnit_vs_t" curve(time, probe."netcharge") outfile="T300K_SONOS_netcharge_vs_time.dat"
 
 output qfn qfp con.band val.band Band.param t.quantum
-save outf=T77K_SONOS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
+save outf=T300K_RET_SONOS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
 
 
 log off
@@ -182,11 +182,11 @@ solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 
 solve vdrain=0 vstep=0.01 name=drain vfinal=0.1
 
-log outf=T77K_SONOS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
+log outf=T300K_RET_SONOS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
 solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
-extract name="Vt_RET" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_SONOS_Vt.dat"
-extract name="Vt_RET_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_SONOS_Vt.dat"
-extract name="IdVg_RET" curve(v."cgate",i."drain") outfile="T77K_SONOS_RET_IdVg.dat"
+extract name="Vt_RET" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T300K_SONOS_RET_Vt.dat"
+extract name="Vt_RET_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_SONOS_RET_Vt.dat"
+extract name="IdVg_RET" curve(v."cgate",i."drain") outfile="T300K_SONOS_RET_RET_IdVg.dat"
 
 log off
 quit	

@@ -7,12 +7,12 @@ go atlas
 TITLE planar device simulation
 #
 set Nsub=1e17
-set Tbox=0.003
+set Tbox=0.001
 set Nnit=5e19
 set Enit=1.2
-set toxide=sio2  
+#set toxide=sio2  
 #sio2,al2o3, hfo2
-set cwf=4.05
+set cwf=4.5
 
 set Ttox=0.008	
 set Tnit=0.007
@@ -63,16 +63,16 @@ y.mesh loc=0.1    spac=0.1
 y.mesh loc=0.4    spac=0.5
 
 region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
-region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=conductor
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
 
 #Oxide on the nitride
-region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=$toxide
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
 
 #nitride
 region number=4  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tnit-$Tbox y.max=-$Tbox material=nitride
 
 #Oxide under the nitride
-region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=oxide
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
 
 #Substrate
 region number=6  y.min=0   material=silicon
@@ -84,16 +84,16 @@ electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
 electrode name=substrate bottom
 
 doping uniform conc=@Nsub p.type reg=6
-doping uniform conc=1e21 n.type reg=2
+#doping uniform conc=1e21 n.type reg=2
 doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
 doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
 
 interface n.i dynasonos
 
 #top oxide
-material material=$toxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 
+material material=Al2O3 semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 
 #bottom oxide
-material material=oxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 
+material material=SiO2 semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 
 
 material material=nitride semiconductor nc300=1e19 nv300=1e19 mun=1.0e-1 mup=1.0e-2 mc=1.0 mv=1.0 taun0=1.0 taup0=1.0
 
@@ -110,17 +110,17 @@ models srh pf.nitride temperature=@temp
 models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
 solve init
 output qfn qfp con.band val.band Band.param t.quantum
-save outf=T300K_SONOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
+save outf=T300K_PE_TANS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.str
 
 solve prev
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.1
 
-log outf=T300K_SONOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
+log outf=T300K_PE_TANS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.log
 solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
-extract name="Vt_init" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T300K_SONOS_Vt.dat"
-extract name="Vt_init_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_SONOS_Vt.dat"
-extract name="IdVg_init" curve(v."cgate",i."drain") outfile="T300K_SONOS_init_IdVg.dat"
+extract name="Vt_init" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T300K_TANS_PE_Vt.dat"
+extract name="Vt_init_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_TANS_PE_Vt.dat"
+extract name="IdVg_init" curve(v."cgate",i."drain") outfile="T300K_TANS_PE_init_IdVg.dat"
 log off
 
 #################### PROGRAM #######################
@@ -128,7 +128,7 @@ log off
 solve init
 
 # Charge up the Nitride region
-log outf=T300K_TRNS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
+log outf=T300K_PE_TRNS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.log
 solve vcgate=$vcgate ramptime=1e-9 tstep=1e-12 tfinal=1e-9 proj
 method dt.min=1.0e-9
 solve tstop=1.0e-8 proj
@@ -143,26 +143,29 @@ log off
 #################### Vt after PGM ################## 
 
 output qfn qfp con.band val.band Band.param t.quantum
-save outf=T300K_SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
+save outf=T300K_PE_TANS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.str
 
 solve init sonos
 
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.1
 
-log outf=T300K_SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
+log outf=T300K_PE_TANS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.log master
 solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
-extract name="Vt_PGM" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T300K_SONOS_Vt.dat"
-extract name="Vt_PGM_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_SONOS_Vt.dat"
-extract name="IdVg_PGM" curve(v."cgate",i."drain") outfile="T300K_SONOS_PGM_IdVg.dat"
+extract name="Vt_PGM" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T300K_TANS_PE_Vt.dat"
+extract name="Vt_PGM_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_TANS_PE_Vt.dat"
+extract name="IdVg_PGM" curve(v."cgate",i."drain") outfile="T300K_TANS_PE_PGM_IdVg.dat"
 log off
 solve init sonos
 
 #################### Erase #########################
 solve init sonos
 
+# Reset transient controls BEFORE starting erase
+method dt.min=1.0e-15 itlimit=50
+
 #Charge out the Nitride region
-log outf=T300K_TRNS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
+log outf=T300K_PE_TRNS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.log
 solve vcgate=$ecgate ramptime=1e-9 tstep=1e-12 tfinal=1e-9
 method dt.min=1.0e-9
 solve tstop=1.0e-8 proj
@@ -177,18 +180,18 @@ log off
 
 #################### Vt after ERS #################
 output qfn qfp con.band val.band Band.param t.quantum
-save outf=T300K_SONOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
+save outf=T300K_PE_TANS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.str
 
 solve init sonos
 
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.1
 
-log outf=T300K_SONOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
+log outf=T300K_PE_TANS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.log master
 solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
-extract name="Vt_ERS" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T300K_SONOS_Vt.dat"
-extract name="Vt_ERS_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_SONOS_Vt.dat"
-extract name="IdVg_ERS" curve(v."cgate",i."drain") outfile="T300K_SONOS_ERS_IdVg.dat"
+extract name="Vt_ERS" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T300K_TANS_PE_Vt.dat"
+extract name="Vt_ERS_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_TANS_PE_Vt.dat"
+extract name="IdVg_ERS" curve(v."cgate",i."drain") outfile="T300K_TANS_PE_ERS_IdVg.dat"
 
 
 log off

@@ -3,7 +3,7 @@
 assign name=xs n.value=1.0e-14 ratio=0.1
 
 
-go atlas 
+go atlas simflags="-160"
 TITLE planar device simulation
 #
 set Nsub=1e17
@@ -91,12 +91,10 @@ doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
 interface n.i dynasonos
 
 #top oxide
-material material=Al2O3 semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 
+material material=Al2O3 semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 ni.min=1e-60
 #bottom oxide
-material material=SiO2 semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 
-
-material material=nitride semiconductor nc300=1e19 nv300=1e19 mun=1.0e-1 mup=1.0e-2 mc=1.0 mv=1.0 taun0=1.0 taup0=1.0
-
+material material=SiO2 semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 ni.min=1e-60
+material material=nitride semiconductor nc300=1e19 nv300=1e19 mun=1.0e-1 mup=1.0e-2 mc=1.0 mv=1.0 taun0=1.0 taup0=1.0 ni.min=1e-60
 contact name=cgate workf=$cwf		
 
 nitridecharge nt.p=1.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit sigmat.n=$xs sigman.p=0.0 sigmap.n=0.0

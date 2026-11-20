@@ -29,6 +29,23 @@ READ_HEADER = ("set Vrd_lo=-2\nset Vrd_hi=12\nset Vrd_step=0.02\n"
 SI_MODELS = "models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel"
 
 
+NI_MIN = "1e-60"   # cm^-3; below the 300 K n_i of SiO2 (~1e-57), so 300 K is unchanged
+
+
+def numerics(s, T):
+    """77 K convergence aids (no change in the physical models).
+    - SOLVE INIT failed at 77 K (Gummel oscillation): the insulators that DYNASONOS treats
+      as wide-gap semiconductors (Eg 9 eV) have n_i ~ 1e-276 cm^-3 at 77 K, which underflows
+      in 64-bit arithmetic. Manual 21.11 / 3.3.3: extended precision (-160) for low T.
+    - NI.MIN (MATERIAL) floors n_i of those insulators. Added at both temperatures."""
+    s = re.sub(r"^(material material=\S+ semiconductor.*?)\s*$", rf"\1 ni.min={NI_MIN}", s, flags=re.M)
+    if T < 200:
+        s, k = re.subn(r"^go atlas\s*$", 'go atlas simflags="-160"', s, flags=re.M)
+        if k != 1:
+            sys.exit("go atlas line not found")
+    return s
+
+
 def vt_extract(state, tag, kind):
     """DeckBuild extraction on the current log (same definition as the 77 K read decks)."""
     return (f'extract name="Vt_{state}" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="{tag}_{kind}_Vt.dat"\n'
@@ -48,6 +65,7 @@ def prg_ers(src, T, dev):
     KIND = "PE"
     s = src
     s = sub(s, "set temp=300", f"set temp={T}\n" + READ_HEADER)
+    s = numerics(s, T)
     # (1) temperature: the original never applies $temp in this deck (ATLAS default 300 K).
     # (2) 77 K Si statistics (Fermi-Dirac + freeze-out, IONIZ keeps 5e20 S/D ionized).
     # (3) PF.NITRIDE: temperature-dependent trap emission instead of the constant TAU only.
@@ -84,6 +102,7 @@ def retention(src, T, dev):
     KIND = "RET"
     s = src
     s = sub(s, "set temp=300", f"set temp={T}\n" + READ_HEADER)
+    s = numerics(s, T)
     # (1)+(2): every MODELS statement carries the temperature (persistence between
     # MODELS statements is not documented) and the 77 K Si statistics.
     s = sub(s, "models srh\n", f"models srh temperature=@temp\n{SI_MODELS}\n")

@@ -3,7 +3,7 @@
 **목표**: 300 K에서 retention이 약한 TANS가 77 K에서는 약점을 보완해 10년 보존이 가능함을 보인다. 온도와 관련된 모델·메커니즘을 최대한 넣고, 같은 덱을 두 온도에서 돌려 비교한다.
 
 - **기준**: 팀의 원본 300 K SONOS 덱(`original_300K/`)이다. 원본 파일은 수정하지 않고 "원본 모델" 참고 결과로 보관한다.
-- **방식**: `make_cryo_decks.py`가 원본에 온도 관련 모델을 **추가**해 `decks/<구조>_PRG_ERS_<T>K.in`, `decks/<구조>_retention_<T>K.in`을 만든다(SONOS·TANOS·TANS). **300 K 판과 77 K 판은 `set temp=`와 출력 접두어(`T300K_`/`T77K_`)만 다르다.**
+- **방식**: `make_cryo_decks.py`가 원본에 온도 관련 모델을 **추가**해 `decks/<구조>_PRG_ERS_<T>K.in`, `decks/<구조>_retention_<T>K.in`을 만든다(SONOS·TANOS·TANS). **300 K 판과 77 K 판은 `set temp=`, 출력 접두어(`T300K_`/`T77K_`), 77 K의 `simflags="-160"`(수치 정밀도)만 다르다.**
 - SONOS를 먼저 확정한 뒤, 같은 스크립트로 TANOS·TANS를 만든다.
 - 고정 매개변수(세 구조 공통): Nsub = 1e17, Nnit = 5e19, Enit = 1.2 eV, Tbox = 3 nm(TANS는 1 nm).
 
@@ -20,6 +20,14 @@
 | 전체 | `temperature=@temp` (모든 MODELS 문) | 원본 P/E 덱은 `$temp`를 쓰지 않아 늘 300 K였다. MODELS 문 사이에 온도가 유지되는지는 설명서에 나와 있지 않다. |
 
 DYNASONOS가 원래 계산하는 메커니즘(밴드↔트랩 직접 터널링, 포획·방출, 질화막 계면 열전자 방출, Si 밴드갭·열속도의 온도 의존)은 그대로 유지한다.
+
+## 77 K 수렴 대책 (2026-11-20, 첫 실행에서 `solve init` 실패 후 추가)
+- 증상: `SONOS_PRG_ERS_77K.in`의 첫 `solve init`에서 Gummel 반복이 진동하다(0.588 ↔ −0.098) "Cannot trap. Cannot reduce bias step"으로 중단됐다.
+- 원인: DYNASONOS는 산화막(Eg 9 eV)·Al₂O₃·질화막을 넓은 밴드갭 반도체로 계산한다. 77 K에서 산화막 n_i는 약 10⁻²⁷⁶ cm⁻³이라 64 bit 연산에서 언더플로한다(설명서 §21.11).
+- 대책:
+  1. **77 K 덱만** `go atlas simflags="-160"`. 수치 정밀도만 올리며 물리 모델은 같다(설명서 §3.3.3, §21.11).
+  2. **두 온도 모두** 반도체로 바꾼 절연막에 `ni.min=1e-60`. 300 K에서 진성 농도(SiO₂ ~10⁻⁵⁷, Al₂O₃ ~10⁻⁴⁸, 질화막 ~10⁻²⁴ cm⁻³)가 이 값보다 커서 300 K 결과는 바뀌지 않는다.
+- 그래도 실패하면 `"-256"`으로 올린다. 다음 단계로 `bbt.kl trap.tunnel`을 두 온도에서 함께 뺀다.
 
 ## 추가가 아닌 변경 (최소한으로, 물리 변화 없음)
 | # | 내용 | 이유 |

@@ -162,6 +162,7 @@ method lte2step tol.time=1.0e-4 tstep.incr=1.2 dt.max=1.0e7
 log outfile=T300K_TRNS_Retention_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log sonos.curr j.tun
 
 solve tstep=1e-6 tfinal=@Retime proj
+extract name="Qnit_vs_t" curve(time, probe."netcharge") outfile="T300K_SONOS_netcharge_vs_time.dat"
 
 output qfn qfp con.band val.band Band.param t.quantum
 save outf=T300K_SONOS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str

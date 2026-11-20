@@ -98,6 +98,10 @@ def retention(src, T, dev):
     s = sub(s, "solve vcgate=2 vstep=0.1 name=cgate vfinal=6\n\nsolve init\nlog off\n",
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("PGM", tag)
             + "log off\nsolve init sonos\n")
+    # (5b) trapped charge vs time during retention, for the Python coupling (python_cryo/)
+    s = sub(s, "solve tstep=1e-6 tfinal=@Retime proj\n",
+            "solve tstep=1e-6 tfinal=@Retime proj\n"
+            f'extract name="Qnit_vs_t" curve(time, probe."netcharge") outfile="{tag}_netcharge_vs_time.dat"\n')
     # (6) read after retention: charged nitride
     s = sub(s, f"{SI_MODELS}\nsolve init\nsolve prev\n", f"{SI_MODELS}\nsolve init sonos\nsolve prev\n")
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1\n\nsolve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n",

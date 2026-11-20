@@ -1,0 +1,6 @@
+device,variant,state,source,VT_V,VT_minus_VD2_V,Vg_gmmax_V,gm_max_S,deckbuild_VT_V,python_dVT_V,status
+SONOS,BTBT,fresh,,,,,,,0.0,미실행(파일 없음)
+SONOS,BTBT,programmed,SONOS_77K_programmed_IdVg.dat,1.219862361370982,1.169862361370982,1.4449999999999998,5.906771999999995e-06,1.21986237,0.465639000538403,추출됨
+SONOS,BTBT,erased,,,,,,,0.5151256890460094,미실행(파일 없음)
+SONOS,BTBT,program_retained,,,,,,,0.42295260573490917,미실행(파일 없음)
+SONOS,BTBT,erase_retained,,,,,,,0.39082501530997193,미실행(파일 없음)

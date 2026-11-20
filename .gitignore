@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+atlas_results/**/*.log
+atlas_results/**/*.str

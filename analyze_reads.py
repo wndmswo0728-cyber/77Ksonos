@@ -47,8 +47,13 @@ def numeric_rows(path):
             rows.append([float(t) for t in toks if t])
         except ValueError:
             continue
-    width = max((len(r) for r in rows), default=0)
-    return np.array([r for r in rows if len(r) == width]) if width >= 2 else np.empty((0, 2))
+    # Use the most common row width: DeckBuild curve files start with a
+    # "<npoints> <ncols> <nsets>" header line that must not be taken as data.
+    widths = [len(r) for r in rows if len(r) >= 2]
+    if not widths:
+        return np.empty((0, 2))
+    width = max(set(widths), key=widths.count)
+    return np.array([r for r in rows if len(r) == width])
 
 
 def vt_maxgm(vg, idd):

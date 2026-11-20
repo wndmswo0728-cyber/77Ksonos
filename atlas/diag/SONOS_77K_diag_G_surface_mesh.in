@@ -56,7 +56,8 @@ y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
 y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
 y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
 y.mesh loc=-$Tbox                         spac=$Tbox/10
-y.mesh loc=0                              spac=0.00015   # (diag G) was $Tbox/100 = 0.03 nm
+# (diag G) next line: Si-surface spacing 0.15 nm (was $Tbox/100 = 0.03 nm)
+y.mesh loc=0                              spac=0.00015
 y.mesh loc=0.01   spac=0.003
 y.mesh loc=0.02   spac=0.005
 y.mesh loc=0.05   spac=0.01

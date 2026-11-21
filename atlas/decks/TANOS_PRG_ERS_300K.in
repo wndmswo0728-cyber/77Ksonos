@@ -26,7 +26,7 @@ set TERS=5.0e-4
 set Retime=3e8
 set temp=300
 set Vrd_lo=-2
-set Vrd_hi=12
+set Vrd_hi=8
 set Vrd_step=0.1
 # read sweep: Vg from Vrd_lo to Vrd_hi in Vrd_step (V), VD=0.1 V, same for every state
 
@@ -207,7 +207,30 @@ solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
 extract name="Vt_ERS" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T300K_TANOS_PE_Vt.dat"
 extract name="Vt_ERS_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_TANOS_PE_Vt.dat"
 extract name="IdVg_ERS" curve(v."cgate",i."drain") outfile="T300K_TANOS_PE_ERS_IdVg.dat"
+log off
 
+################ ERS retention (added) ################
+solve init sonos
+method lte2step tol.time=1.0e-4 tstep.incr=1.2 dt.max=1.0e7
+log outfile=T300K_PE_TRNS_ERS_Retention.log sonos.curr j.tun
+solve tstep=1e-6 tfinal=@Retime proj
+extract name="Qnit_ERS_vs_t" curve(time, probe."netcharge") outfile="T300K_TANOS_ERS_netcharge_vs_time.dat"
+save outf=T300K_PE_TANOS_ERS_RETEN.str
+log off
 
+################ Vt after ERS retention ################
+solve init sonos
+solve prev
+solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+
+log outf=T300K_PE_TANOS_ERS_RETEN.log master
+solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+extract name="Vt_ERSRET" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T300K_TANOS_PE_Vt.dat"
+extract name="Vt_ERSRET_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_TANOS_PE_Vt.dat"
+extract name="IdVg_ERSRET" curve(v."cgate",i."drain") outfile="T300K_TANOS_PE_ERSRET_IdVg.dat"
 log off
 quit

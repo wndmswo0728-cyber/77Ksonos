@@ -24,7 +24,7 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   The 300 K and 77 K decks differ only in `set temp=` and output prefixes. Temperature
   models are ADDED to the originals (pf.nitride, fermidirac, incomplete ioniz, cvt,
   bbt.kl, trap.tunnel, temperature= on every MODELS). Other changes: solve init sonos,
-  common read sweep -2..12 V / 0.1 V (speed), extract lines, output names T<T>K_<PE|RET>_...
+  common read sweep -2..8 V / 0.1 V (speed; gm rises again above ~6 V), extract lines, output names T<T>K_<PE|RET>_...
 - `python_cryo/cryo_model.py` 1-D trap model (v3): activated hopping, multiphonon
   (Makram-Ebeid & Lannoo) trap ionization above PF, Franck-Condon trap<->electrode
   tunneling (fc_tunnel), retention-only mode, ATLAS device values.
@@ -62,8 +62,20 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   this ramp form (300 K too); PROJ kept for constant-bias holds.
 
 - Retention decks: the original nit.n=1e18 + 1e19 in two SOLVE steps did not converge at
-  77 K (Newton 25 iterations). Now 10 x 1e17 + 40 x 2.5e17 (same 1.1e19 total, NIT.N is
-  cumulative), both temperatures.
+  77 K (Newton 25 iterations).
+- SOLVE NIT.N OVERWRITES (measured, despite the manual's "cumulative"): 10 x 1e17 + 40 x
+  2.5e17 left exactly 2.5e17 in the PGM .str (probe 2.2e17); the team original ends at 1e19
+  (teammate probe 9.0e18). Decks now step 1e17, 2.5e17, 5e17 ... 1e19 (41 solves).
+
+- First 77 K SONOS retention run (2.2e17 only, not for the 10-year verdict): charge continuous
+  through every step (SOLVE INIT SONOS keeps the trapped charge); SS 22-23 mV/dec (mesh OK);
+  -18 % in 10 y via tunnel-oxide electron current; post-retention read diverged at Vg -1.09 V
+  (mid-deck MODELS after METHOD) -> retention decks now use ONE model set at the top (same as
+  P/E: srh pf.nitride + Si models); trapped electrons moved to the blocking-oxide side
+  (2e18 in one row), unexplained by 77 K PF -> retention split at 1 s / 1e4 s with .str saves.
+- Deck VT extract picks the global max gm (end of sweep); couple_atlas.py re-extracts VT at the
+  first gm peak from the Id-Vg files. Python initial occupancy = ATLAS probe Q(0).
+- P/E decks end with an ERS-state retention (team review item 4): MW = VT_PGM(t) - VT_ERS(t).
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

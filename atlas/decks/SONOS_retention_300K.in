@@ -26,7 +26,7 @@ set TERS=5.0e-4
 set Retime=3e8
 set temp=300
 set Vrd_lo=-2
-set Vrd_hi=12
+set Vrd_hi=8
 set Vrd_step=0.1
 # read sweep: Vg from Vrd_lo to Vrd_hi in Vrd_step (V), VD=0.1 V, same for every state
 
@@ -99,7 +99,7 @@ contact name=cgate workf=$cwf
 
 nitridecharge nt.p=0.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit hole.depth=@Enit sigmat.n=${xs} sigman.p=0.0 sigmap.n=0.0
 
-models srh temperature=@temp
+models srh pf.nitride temperature=@temp
 models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
 method carriers=2
 
@@ -130,58 +130,48 @@ log off
 solve init 
 solve prev
 
-# trapped charge added in small cumulative steps: 10 x 1e17 = 1e18 (original first line)
+# NIT.N overwrites (not cumulative): raise the value step by step to the original final 1e19
 solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e17
-# 40 x 2.5e17 = 1e19 (original second line); total 1.1e19 as in the original
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
-solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e17
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=2.5e17
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=5e17
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=7.5e17
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=1.25e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=1.5e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=1.75e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.25e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.5e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=2.75e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=3e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=3.25e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=3.5e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=3.75e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=4e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=4.25e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=4.5e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=4.75e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=5e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=5.25e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=5.5e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=5.75e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=6e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=6.25e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=6.5e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=6.75e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=7e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=7.25e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=7.5e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=7.75e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=8e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=8.25e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=8.5e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=8.75e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=9e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=9.25e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=9.5e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=9.75e18
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=1e19
 
 
 output qfn qfp con.band val.band Band.param t.quantum
@@ -204,8 +194,7 @@ solve init sonos
 
 ################## Retention ######################
 
-models mos srh pf.nitride temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+# (original MODELS mos srh pf.nitride removed: one model set at the top)
 
 solve init sonos
 
@@ -215,7 +204,11 @@ method lte2step tol.time=1.0e-4 tstep.incr=1.2 dt.max=1.0e7
 
 log outfile=T300K_RET_TRNS_Retention_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log sonos.curr j.tun
 
-solve tstep=1e-6 tfinal=@Retime proj
+solve tstep=1e-6 tfinal=1 proj
+save outf=T300K_RET_SONOS_RETEN_t1s.str
+solve tstop=1e4 proj
+save outf=T300K_RET_SONOS_RETEN_t1e4s.str
+solve tstop=@Retime proj
 extract name="Qnit_vs_t" curve(time, probe."netcharge") outfile="T300K_SONOS_netcharge_vs_time.dat"
 
 output qfn qfp con.band val.band Band.param t.quantum
@@ -226,8 +219,7 @@ log off
 
 ################ Tranfer curve after Retention ############
 
-models srh mos temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+# (original MODELS srh mos removed: one model set at the top)
 solve init sonos
 solve prev
 

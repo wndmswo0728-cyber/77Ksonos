@@ -6,7 +6,9 @@ and no Franck-Condon (phonon-assisted) weighting of trap<->electrode tunneling.
 For each device and temperature this script
 
  1. runs the Python model (cryo_model.py) twice from the same initial charge as the
-    ATLAS retention deck (nit.n = 1.1e19 cm^-3, uniform; Nnit = 5e19):
+    ATLAS run: the trapped density is taken from the ATLAS probe Q(0) of that run
+    (|Q|/q over the 1 um x 7 nm x 1 um nitride); without ATLAS data, the nominal
+    nit.n = 1e19 cm^-3 (NIT.N overwrites, so the deck ends at 1e19; Nnit = 5e19):
         base : channels ATLAS also has (elastic WKB exchange), Python PF/thermal OFF
         full : activated hopping + phonon-assisted ionization (above PF)
                + Franck-Condon weighted trap<->electrode tunneling (replaces elastic)
@@ -14,8 +16,14 @@ For each device and temperature this script
  3. if the ATLAS outputs exist, multiplies the ATLAS trapped charge Q_ATLAS(t)
     (T<T>K_<DEV>_netcharge_vs_time.dat) by F(t) and converts it to VT(t) with
         VT(t) = VT_init + (VT_PGM - VT_init) * Q(t) / Q(0)
-    (VT_init, VT_PGM, VT_RET from T<T>K_<DEV>_RET_Vt.dat), and the memory window
-        MW(t) = VT(t) - VT_ERS   (VT_ERS from the P/E deck, T<T>K_<DEV>_PE_Vt.dat)
+    (VT_init, VT_PGM, VT_RET re-extracted from the Id-Vg files: max-gm tangent at the
+    first gm peak, because above ~6 V gm rises again and the deck's own extraction
+    then picks the end of the sweep), and the memory window
+        MW(t) = VT_PGM(t) - VT_ERS(t)
+    with VT_ERS(t) from the ERS-state retention appended to the P/E deck
+    (T<T>K_<DEV>_ERS_netcharge_vs_time.dat, coupled the same way). If that file is
+    missing, VT_ERS is the constant post-erase value (marked "const" in the output;
+    this overstates the window where the erased state drifts, e.g. at 300 K).
     as in Hur et al., Adv. Electron. Mater. 2023, 9, 2201299 (window open at 10 years).
     F(t) can exceed 1 for TANS: the elastic loss that ATLAS computes is reduced by the
     Franck-Condon factor, so the coupling also removes part of the ATLAS loss.
@@ -42,15 +50,24 @@ sys.path.insert(0, str(HERE))
 import cryo_model as cm  # noqa: E402
 
 RETENTION_S = 3e8                 # ATLAS Retime
-OCC0 = (1.1e19 / 5e19, 0.0)       # nit.n 1e18 + 1e19 (cumulative) over Nnit 5e19
+NNIT = 5e19                       # cm^-3, team value
+NIT_VOL_CM3 = 1e-4 * 7e-7 * 1e-4  # nitride under the gate per um width: Lg 1 um x 7 nm x 1 um
+Q_E = 1.602176634e-19
+OCC0 = (1e19 / NNIT, 0.0)         # nominal: NIT.N overwrites, the deck ends at 1e19
+
+
+def occ_from_q(q0):
+    """(electron, hole) trap occupancy from the ATLAS probe net charge (C/um)."""
+    frac = min(abs(q0) / Q_E / NIT_VOL_CM3 / NNIT, 1.0)
+    return (frac, 0.0) if q0 < 0 else (0.0, frac)
 BASE = dict(thermal_emission=False, hopping=False, pat=False)
 FULL = dict(thermal_emission=False, hopping=True, pat=True, fc_tunnel=True,
             hop_distance_nm=1.5, hop_ea=1.2)
 
 
-def python_run(device, T, extra):
+def python_run(device, T, extra, occ0=OCC0):
     hist, snap = cm.simulate(device, cm.Options(temperature=T, retention_s=RETENTION_S, **extra),
-                             retention_from=OCC0)
+                             retention_from=occ0)
     rows = [r for r in hist if r[0] == "retention"]
     t = np.array([r[1] for r in rows])
     q = np.array([r[3] for r in rows])        # net sheet charge, C/m^2
@@ -58,9 +75,9 @@ def python_run(device, T, extra):
     return t, q, dvt
 
 
-def survival_factor(device, T, full=FULL):
-    t, qb, dvb = python_run(device, T, BASE)
-    t2, qf, dvf = python_run(device, T, full)
+def survival_factor(device, T, full=FULL, occ0=OCC0):
+    t, qb, dvb = python_run(device, T, BASE, occ0)
+    t2, qf, dvf = python_run(device, T, full, occ0)
     assert np.allclose(t, t2)
     with np.errstate(divide="ignore", invalid="ignore"):
         f = np.where(np.abs(qb) > 1e-12 * np.abs(qb[0]), qf / qb, 0.0)
@@ -84,6 +101,34 @@ def read_vt(path):
     for m in re.finditer(r"(Vt_\w+?)=\s*([-+0-9.eE]+)", Path(path).read_text(errors="replace")):
         vals[m.group(1)] = float(m.group(2))
     return vals
+
+
+def vt_from_idvg(path):
+    """Max-gm tangent VT at the FIRST gm peak (>= 30 % of the largest gm). The deck's
+    extract takes the global gm maximum, which sat at the end of the sweep in the first
+    77 K run (gm rises again above ~6 V)."""
+    d = read_two_columns(path)
+    if len(d) < 5:
+        return None
+    d = d[np.argsort(d[:, 0])]
+    v, i = d[:, 0], d[:, 1]
+    g = np.gradient(i, v)
+    thr = 0.3 * g.max()
+    for k in range(1, len(v) - 1):
+        if g[k] >= thr and g[k] >= g[k-1] and g[k] >= g[k+1]:
+            return float(v[k] - i[k] / g[k])
+    return None
+
+
+def read_states(atlas_dir, T, device, kind, states):
+    """VT per state from the Id-Vg files; falls back to the deck's Vt.dat value."""
+    deck = read_vt(atlas_dir / f"T{T}K_{device}_{kind}_Vt.dat") if (atlas_dir / f"T{T}K_{device}_{kind}_Vt.dat").exists() else {}
+    out = {}
+    for st in states:
+        f = atlas_dir / f"T{T}K_{device}_{kind}_{st}_IdVg.dat"
+        # Id-Vg present but no gm peak (e.g. the read stopped early): no VT, not the deck value
+        out[st] = vt_from_idvg(f) if f.exists() else deck.get(f"Vt_{st}")
+    return out
 
 
 def close_time(t, mw):
@@ -116,35 +161,60 @@ def log_interp(x, xp, fp):
 
 
 def couple(device, T, atlas_dir, out_dir):
-    t, f, dvb, dvf = survival_factor(device, T)
-    res = dict(device=device, T_K=T, F_10y=f[-1],
+    qfile = atlas_dir / f"T{T}K_{device}_netcharge_vs_time.dat" if atlas_dir else None
+    efile = atlas_dir / f"T{T}K_{device}_ERS_netcharge_vs_time.dat" if atlas_dir else None
+    have_q = bool(qfile and qfile.exists())
+    q = read_two_columns(qfile) if have_q else None
+    occ0 = occ_from_q(q[0, 1]) if have_q else OCC0
+    t, f, dvb, dvf = survival_factor(device, T, occ0=occ0)
+    res = dict(device=device, T_K=T, occ0_e=occ0[0], occ0_h=occ0[1], F_10y=f[-1],
                py_dVt_start_V=dvb[0], py_base_dVt_10y_V=dvb[-1], py_full_dVt_10y_V=dvf[-1])
     rows = [dict(time_s=a, F=b, py_base_dVt_V=c, py_full_dVt_V=d) for a, b, c, d in zip(t, f, dvb, dvf)]
-    qfile = atlas_dir / f"T{T}K_{device}_netcharge_vs_time.dat" if atlas_dir else None
-    vfile = atlas_dir / f"T{T}K_{device}_RET_Vt.dat" if atlas_dir else None
-    pfile = atlas_dir / f"T{T}K_{device}_PE_Vt.dat" if atlas_dir else None
-    if qfile and qfile.exists() and vfile.exists():
-        q = read_two_columns(qfile)
-        vt = read_vt(vfile)
+    ret = read_states(atlas_dir, T, device, "RET", ("init", "PGM", "RET")) if atlas_dir else {}
+    pe = read_states(atlas_dir, T, device, "PE", ("init", "PGM", "ERS", "ERSRET")) if atlas_dir else {}
+    if have_q and ret.get("init") is not None and ret.get("PGM") is not None:
         ta, qa = q[:, 0], q[:, 1]
         fa = log_interp(ta, t[1:], f[1:])
         qc = qa * fa
-        v0, vp = vt["Vt_init"], vt["Vt_PGM"]
+        v0, vp = ret["init"], ret["PGM"]
         vt_atlas = v0 + (vp - v0) * qa / qa[0]
         vt_corr = v0 + (vp - v0) * qc / qa[0]
-        v_ers = read_vt(pfile).get("Vt_ERS") if pfile.exists() else None
-        res.update(VT_init_V=v0, VT_PGM_V=vp, VT_RET_atlas_read_V=vt.get("Vt_RET"), VT_ERS_V=v_ers,
-                   VT_10y_atlas_V=vt_atlas[-1], VT_10y_coupled_V=vt_corr[-1],
+        res.update(N_trap0_cm3=abs(qa[0]) / Q_E / NIT_VOL_CM3, VT_init_V=v0, VT_PGM_V=vp,
+                   VT_RET_atlas_read_V=ret.get("RET"), VT_10y_atlas_V=vt_atlas[-1], VT_10y_coupled_V=vt_corr[-1],
+                   VT_init_PE_V=pe.get("init"), VT_PGM_PE_V=pe.get("PGM"), VT_ERS_V=pe.get("ERS"),
+                   VT_ERSRET_atlas_read_V=pe.get("ERSRET"),
                    retained_fraction_atlas=qa[-1] / qa[0], retained_fraction_coupled=qc[-1] / qa[0],
                    atlas_status="coupled")
+        rows = [dict(time_s=a, Q_atlas=b, F=c, Q_coupled=d, VT_atlas_V=e, VT_coupled_V=g)
+                for a, b, c, d, e, g in zip(ta, qa, fa, qc, vt_atlas, vt_corr)]
+        v_ers = pe.get("ERS")
         if v_ers is not None:
+            if efile and efile.exists():
+                qe = read_two_columns(efile)
+                te, qe_a = qe[:, 0], qe[:, 1]
+                occ_e = occ_from_q(qe_a[0])
+                tp, fe, _, _ = survival_factor(device, T, occ0=occ_e)
+                qe_c = qe_a * log_interp(te, tp[1:], fe[1:])
+                if abs(qe_a[0]) > 1e-3 * abs(qa[0]):       # own scaling: VT_init at Q = 0
+                    ve_atlas = v0 + (v_ers - v0) * qe_a / qe_a[0]
+                    ve_corr = v0 + (v_ers - v0) * qe_c / qe_a[0]
+                else:                                       # nearly neutral: PGM slope dVT/dQ
+                    sl = (vp - v0) / qa[0]
+                    ve_atlas = v_ers + sl * (qe_a - qe_a[0])
+                    ve_corr = v_ers + sl * (qe_c - qe_a[0])
+                ers = {"atlas": log_interp(ta, te, ve_atlas), "coupled": log_interp(ta, te, ve_corr)}
+                res.update(ERS_mode="VT_ERS(t)", occ0_ers_e=occ_e[0], occ0_ers_h=occ_e[1],
+                           VT_ERS_10y_atlas_V=ers["atlas"][-1], VT_ERS_10y_coupled_V=ers["coupled"][-1])
+                for r, a_, c_ in zip(rows, ers["atlas"], ers["coupled"]):
+                    r.update(VT_ERS_atlas_V=a_, VT_ERS_coupled_V=c_)
+            else:
+                ers = {"atlas": np.full_like(ta, v_ers), "coupled": np.full_like(ta, v_ers)}
+                res["ERS_mode"] = "const (ERS retention not run)"
             for name, curve in (("atlas", vt_atlas), ("coupled", vt_corr)):
-                mw = curve - v_ers
+                mw = curve - ers[name]
                 res[f"MW_10y_{name}_V"] = mw[-1]
                 res[f"MW_close_time_{name}_s"] = close_time(ta, mw)
                 res[f"logfit_{name}"] = log_fit(ta, curve)
-        rows = [dict(time_s=a, Q_atlas=b, F=c, Q_coupled=d, VT_atlas_V=e, VT_coupled_V=g)
-                for a, b, c, d, e, g in zip(ta, qa, fa, qc, vt_atlas, vt_corr)]
     else:
         res["atlas_status"] = "ATLAS 결과 없음 (Python 계수만)"
     out_dir.mkdir(parents=True, exist_ok=True)

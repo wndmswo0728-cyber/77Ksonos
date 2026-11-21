@@ -18,7 +18,10 @@ SRC = HERE / "original_300K"
 OUT = HERE / "decks"
 
 # Read-sweep settings shared by every Id-Vg read (VD = 0.1 V).
-READ_HEADER = ("set Vrd_lo=-2\nset Vrd_hi=12\nset Vrd_step=0.1\n"
+# Upper end 8 V (was 12 V): above ~6 V gm rises again (high-field current), which moved
+# the max-gm VT to 12 V in the first 77 K run; the peak near VT (<= 5 V even for a
+# 1e19 cm^-3 programmed state) is inside -2..8 V. Fewer points = shorter 77 K reads.
+READ_HEADER = ("set Vrd_lo=-2\nset Vrd_hi=8\nset Vrd_step=0.1\n"
                "# read sweep: Vg from Vrd_lo to Vrd_hi in Vrd_step (V), VD=0.1 V, same for every state\n")
 # Temperature-dependent Si models added to the team's 300 K SONOS deck, used
 # identically at every temperature:
@@ -105,18 +108,22 @@ def models_before_contact(s, block):
 
 
 def charge_ramp(s):
-    """Insert the trapped charge in small cumulative steps (NIT.N is cumulative, manual
-    DYNASONOS section). The original 1e18 + 1e19 cm^-3 in two steps did not converge at
-    77 K (Newton, 25 iterations, no bias step to cut). Same total 1.1e19 and same box:
-    10 x 1e17, then 40 x 2.5e17."""
+    """Insert the trapped charge in small steps. SOLVE NIT.N OVERWRITES the trapped
+    density in the box (measured: after 10 x 1e17 + 40 x 2.5e17 the PGM .str held exactly
+    2.5e17 cm^-3 everywhere, probe 2.2e17), although the manual calls it cumulative. The
+    team's original (1e18 then 1e19) therefore ends at 1e19 (teammate probe: 9.0e18).
+    One 1e18 step did not converge at 77 K, so the value is raised in 2.5e17 steps
+    (the size that converged) up to the original final value 1e19."""
     lines = s.split("\n")
     idx = [k for k, l in enumerate(lines) if l.startswith("solve nit.xmin=")]
     if len(idx) != 2 or not lines[idx[0]].endswith("nit.n=1e18") or not lines[idx[1]].endswith("nit.n=1e19"):
         sys.exit("nit.n lines not as in the original")
     first = lines[idx[0]][:-len("nit.n=1e18")]
     second = lines[idx[1]][:-len("nit.n=1e19")]
-    new1 = ["# trapped charge added in small cumulative steps: 10 x 1e17 = 1e18 (original first line)"] + [first + "nit.n=1e17"] * 10
-    new2 = ["# 40 x 2.5e17 = 1e19 (original second line); total 1.1e19 as in the original"] + [second + "nit.n=2.5e17"] * 40
+    vals = [1e17] + [2.5e17 * k for k in range(1, 41)]          # 1e17, 2.5e17 ... 1e19
+    new1 = ["# NIT.N overwrites (not cumulative): raise the value step by step to the original final 1e19"] \
+        + [first + f"nit.n={v:.4g}".replace("e+", "e") for v in vals if v <= 1e18]
+    new2 = [second + f"nit.n={v:.4g}".replace("e+", "e") for v in vals if v > 1e18]
     lines = lines[:idx[0]] + new1 + lines[idx[0]+1:idx[1]] + new2 + lines[idx[1]+1:]
     return "\n".join(lines)
 
@@ -189,6 +196,29 @@ def prg_ers(src, T, dev):
             "#################### PROGRAM #######################\n\nsolve init\nsolve prev\n")
     s = sub(s, "#################### Erase #########################\nsolve init sonos\n",
             "#################### Erase #########################\nsolve init sonos\nsolve prev\n")
+    # (8) ERS-state retention (team review item 4): the memory window is
+    # VT_PGM(t) - VT_ERS(t), so the erased state is also held at 0 V for @Retime with the
+    # same transient settings as the retention deck, starting from the real erased state
+    # (SOLVE INIT SONOS keeps the trapped charge: checked in the first 77 K retention run).
+    m = re.search(rf'(outfile="{tag}_{KIND}_ERS_IdVg.dat"\n)\s*log off\nquit\s*$', s)
+    if not m:
+        sys.exit("end of ERS read not found")
+    s = s[:m.start()] + m.group(1) + (
+        "log off\n\n"
+        "################ ERS retention (added) ################\n"
+        "solve init sonos\n"
+        "method lte2step tol.time=1.0e-4 tstep.incr=1.2 dt.max=1.0e7\n"
+        "log outfile=TRNS_ERS_Retention.log sonos.curr j.tun\n"
+        "solve tstep=1e-6 tfinal=@Retime proj\n"
+        f'extract name="Qnit_ERS_vs_t" curve(time, probe."netcharge") outfile="{tag}_ERS_netcharge_vs_time.dat"\n'
+        f"save outf={dev}_ERS_RETEN.str\n"
+        "log off\n\n"
+        "################ Vt after ERS retention ################\n"
+        "solve init sonos\nsolve prev\n"
+        "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n\n"
+        f"log outf={dev}_ERS_RETEN.log master\n"
+        "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n"
+        + vt_extract("ERSRET", tag, KIND) + "log off\nquit\n")
     s = drain_ramp(s)
     return prefix_outputs(s, tag, KIND)
 
@@ -201,11 +231,15 @@ def retention(src, T, dev):
     s = numerics(s, T)
     # (1)+(2): every MODELS statement carries the temperature (persistence between
     # MODELS statements is not documented) and the 77 K Si statistics.
-    s = models_before_method(s, f"models srh temperature=@temp\n{SI_MODELS}\n")
+    # (3) ONE model set for every step, identical to the P/E deck (pf.nitride included
+    # from the start). The original re-specified MODELS mid-deck (mos srh pf.nitride for
+    # the retention, srh mos for the last read): the last read then used other models
+    # than the first two (VT difference mixed with a model difference), and at 77 K that
+    # read diverged at Vg = -1.1 V (MODELS after METHOD, same failure as diag H).
+    s = models_before_method(s, f"models srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
     s, _ = transient_fixes(s)
     s = sub(s, "models mos srh pf.nitride temperature=@temp\n",
-            f"models mos srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
-    s = sub(s, "models srh mos\n", f"models srh mos temperature=@temp\n{SI_MODELS}\n")
+            "# (original MODELS mos srh pf.nitride removed: one model set at the top)\n")
     # (4) initial read
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1\nsolve vdrain=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
@@ -218,11 +252,19 @@ def retention(src, T, dev):
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("PGM", tag, KIND)
             + "log off\nsolve init sonos\n")
     # (5b) trapped charge vs time during retention, for the Python coupling (python_cryo/)
+    # (5c) the retention transient is split at 1 s and 1e4 s with a .str saved at each,
+    # to see when the trapped charge redistributes inside the nitride (first 77 K run:
+    # it moved to the blocking-oxide side). Same time-step control, the solve continues.
     s = sub(s, "solve tstep=1e-6 tfinal=@Retime proj\n",
-            "solve tstep=1e-6 tfinal=@Retime proj\n"
+            "solve tstep=1e-6 tfinal=1 proj\n"
+            f"save outf={dev}_RETEN_t1s.str\n"
+            "solve tstop=1e4 proj\n"
+            f"save outf={dev}_RETEN_t1e4s.str\n"
+            "solve tstop=@Retime proj\n"
             f'extract name="Qnit_vs_t" curve(time, probe."netcharge") outfile="{tag}_netcharge_vs_time.dat"\n')
     # (6) read after retention: charged nitride
-    s = sub(s, f"{SI_MODELS}\nsolve init\nsolve prev\n", f"{SI_MODELS}\nsolve init sonos\nsolve prev\n")
+    s = sub(s, "models srh mos\nsolve init\nsolve prev\n",
+            "# (original MODELS srh mos removed: one model set at the top)\nsolve init sonos\nsolve prev\n")
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1\n\nsolve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\n\nsolve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n")
     s = sub(s, "solve vcgate=-1 vstep=0.1 name=cgate vfinal=3\n\nlog off\nquit",

@@ -214,14 +214,13 @@ extract name="Vt_PGM" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile=
 extract name="Vt_PGM_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_SONOS_RET_Vt.dat"
 extract name="IdVg_PGM" curve(v."cgate",i."drain") outfile="T77K_SONOS_RET_PGM_IdVg.dat"
 log off
-solve init sonos
+solve name=drain vstep=-0.02 vfinal=0
+solve name=cgate vstep=-0.2 vfinal=0
 
 
 ################## Retention ######################
 
 # (original MODELS mos srh pf.nitride removed: one model set at the top)
-
-solve init sonos
 
 #solve prev
 

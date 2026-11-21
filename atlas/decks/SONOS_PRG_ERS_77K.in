@@ -150,7 +150,7 @@ log off
 output qfn qfp con.band val.band Band.param t.quantum
 save outf=T77K_PE_SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
 
-solve init sonos
+solve name=cgate vstep=-0.5 vfinal=0
 
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.0001
@@ -190,7 +190,7 @@ log off
 output qfn qfp con.band val.band Band.param t.quantum
 save outf=T77K_PE_SONOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
 
-solve init sonos
+solve name=cgate vstep=0.5 vfinal=0
 
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.0001

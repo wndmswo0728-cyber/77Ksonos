@@ -137,3 +137,13 @@ P14는 램프에서 `proj` 제거와 시간 간격 상한 5 ps를 동시에 바�
 2. **`SONOS_PRG_ERS_300K.in`이 Erase 램프 첫 구간에서 실패.** 콘솔을 보면 Erase 앞의 `solve init sonos` + `solve prev`가 직전 읽기의 바이어스(Vg = 8 V, VD = 0.1 V)를 다시 걸었다. 그 상태에서 Vg가 0.1 ns 만에 8 V에서 −1.2 V로 바뀌었다. Program도 같은 방식이어서 초기 읽기의 Vg에서 출발했다(이 경우는 수렴했다). → **Program, Erase, ERS 보존 앞에서 드레인 0.1 → 0 V(0.02 V 간격), 게이트 → 0 V(0.2 V 간격)로 DC로 내린 뒤 시작**한다. `solve init`/`solve prev`는 이 자리에서 뺐다. 원본 의도(PGM +16 V, ERS −12 V, 나머지 전극 접지)와 같다.
 - 지금 돌고 있는 77 K P/E(이전 덱, 읽기 상한 12 V)도 Erase에서 같은 문제가 생길 수 있다. Program과 PGM 읽기 결과는 쓸 수 있다.
 - retention 덱의 보존 과도해석은 바이어스 0 V에서 시작했다(1차 77 K TRNS 로그 확인). 그래서 retention 덱의 구조는 바꾸지 않았다.
+
+## 2차 실행의 두 오류 (2026-11-21 저녁)
+1. **77 K 보존 (66단계 덱):** 1e19 주입과 PGM 읽기(−2→8 V)까지는 됐다. 그다음 `solve init sonos`가 **읽기 바이어스(Vg = 8 V, VD = 0.1 V)에서** 초기해를 다시 구하다 실패했다("bias step cut back more than 4 times"). 이어진 보존 과도해석은 그 망가진 해에서 시작해 첫 단계에서 "NaN or Inf in SONOS tunnel current"로 멈췄다. → `SOLVE INIT SONOS`는 트랩 전하뿐 아니라 **전극 바이어스도 유지**한다(`SOLVE INIT`은 0 V로 되돌린다: 300 K 콘솔의 `nit.n` 단계가 모두 0 V). 수정:
+   - retention 덱: PGM 읽기 뒤 `RAMP_DOWN`(드레인 → 0, 게이트 → 0, DC)으로 0 V를 만들고 보존을 시작. 두 번의 `solve init sonos`는 뺐다.
+   - P/E 덱: Program(+16 V) 뒤와 Erase(−12 V) 뒤 읽기 앞의 `solve init sonos`를 게이트 DC 단계(0.5 V)로 0 V까지 내리는 것으로 바꿨다. 0 V에서 쓰는 `solve init sonos`(보존 뒤 읽기 앞)는 그대로 둔다.
+2. **300 K 보존 (`-160`):** `nit.n=5e17`에서 Newton 25회 실패(64 bit일 때는 5.875e18까지 갔다). 갱신량이 1e-1~1e-3에서 줄지 않았다. 원인 후보를 짧은 진단으로 가린다(읽기 없이 전하 주입만, 300 K):
+   - `diag/SONOS_300K_diag_R3b_nimin1e-40.in`: `ni.min` 1e-40. 300 K 산화막 n_i(~1e-57)는 1e-60으로는 바닥이 걸리지 않아, 이 아주 작은 농도의 갱신이 잡음일 수 있다. 1e-40 cm⁻³은 물리적으로 0과 같다.
+   - `R3c_no_pf`: 주입 단계에서 `pf.nitride` 없음(팀 원본도 주입 때는 없었다).
+   - `R3d_no_bbt_tat`: `bbt.kl`, `trap.tunnel` 없음.
+   - `R3e_64bit_nimin1e-40`: 64 bit + `ni.min` 1e-40.

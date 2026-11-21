@@ -186,7 +186,8 @@ def prg_ers(src, T, dev):
     s = sub(s, "solve vcgate=-1 vstep=0.1 name=cgate vfinal=6\nlog off\n",
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("init", tag, KIND) + "log off\n")
     # (5) PGM read: charged nitride -> solve init sonos; same range; solve init moved after log off
-    s = re.sub(r"(save outf=\S*PGM\S*\n\n)solve init\n", r"\1solve init sonos\n", s, count=1)
+    # SOLVE INIT SONOS keeps the bias (here Vg = 16 V); go to 0 V by DC steps instead.
+    s = re.sub(r"(save outf=\S*PGM\S*\n\n)solve init\n", r"\1solve name=cgate vstep=-0.5 vfinal=0\n", s, count=1)
     pg = re.search(r"solve vcgate=0 vstep=0\.1 name=cgate vfinal=1\nsolve vdrain=0\.1\n\n(log outf=\S*PGM\S* master)\n"
                    r"solve vcgate=\d+ vstep=0\.1 name=cgate vfinal=\d+\n\nsolve init\nlog off\n", s)
     if not pg:
@@ -199,7 +200,7 @@ def prg_ers(src, T, dev):
     s = sub(s, "#################### Erase #########################\nsolve init\n",
             "#################### Erase #########################\nsolve init sonos\n")
     # (7) ERS read
-    s = re.sub(r"(save outf=\S*ERS\S*\n\n)solve init\n", r"\1solve init sonos\n", s, count=1)
+    s = re.sub(r"(save outf=\S*ERS\S*\n\n)solve init\n", r"\1solve name=cgate vstep=0.5 vfinal=0\n", s, count=1)
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-2\nsolve vdrain=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
     s = sub(s, "solve vcgate=-2 vstep=0.1 name=cgate vfinal=7\n",
@@ -274,7 +275,12 @@ def retention(src, T, dev):
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
     s = sub(s, "solve vcgate=2 vstep=0.1 name=cgate vfinal=6\n\nsolve init\nlog off\n",
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("PGM", tag, KIND)
-            + "log off\nsolve init sonos\n")
+            + "log off\n" + RAMP_DOWN)
+    # (5a) SOLVE INIT SONOS keeps the electrode biases: after the PGM read it re-solved at
+    # Vg = 8 V, VD = 0.1 V with 1e19 trapped and failed (77 K, "bias step cut back"), and
+    # the retention transient then started from that broken solution (NaN in the SONOS
+    # tunnel current). The retention starts from 0 V reached by RAMP_DOWN instead.
+    s = sub(s, "solve init sonos\n\n#solve prev\n", "#solve prev\n")
     # (5b) trapped charge vs time during retention, for the Python coupling (python_cryo/)
     # (5c) the retention transient is split at 1 s and 1e4 s with a .str saved at each,
     # to see when the trapped charge redistributes inside the nitride (first 77 K run:

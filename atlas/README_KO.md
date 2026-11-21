@@ -268,3 +268,9 @@ R3c의 1e19, 0 V에서도 source→substrate 전류가 2.8e-11 A/µm다(77 K R1�
 → 생성 스크립트의 Si 모델에 `bbt.hurkx`를 추가했다(모든 덱, 두 온도). 지금 돌고 있는 SONOS 실행(`bbt.hurkx` 없음)은 전하·VT가 같으므로 계속 쓴다. Id-Vg 그림(누설 쪽)은 저장된 `.str`을 `bbt.hurkx`로 다시 읽어 만든다(R7a 방식).
 
 **R7a 결과 (300 K, 세 읽기를 `bbt.kl bbt.hurkx`로, ATLAS 단독):** VT 0.5336 / 3.4795 / 2.2416 V(변화 없음). Vg = −2 V 전류는 세 상태 모두 1.6e-16 A(수치 바닥), PGM 2~3 V의 드레인→기판 전류 없음(2.8 V 드레인 전류 3.9e-14 A는 모두 소스로 가는 채널 전류), 기판 전류는 최대 4e-16 A. → **문제 1(왼쪽 상승)과 문제 2(PGM 꺾임)는 `bbt.hurkx`로 해결.** 그림용 Id-Vg는 `results/atlas/T300K_SONOS_RET_{init,PGM,RET}_IdVg_hurkx.dat`. R8(생성 위치)은 원인이 확인돼 필요 없다.
+
+## 재실행 결정과 B 진단 (2026-11-22)
+- 돌고 있던 SONOS 77 K 보존, 300 K P/E, 77 K P/E는 `bbt.hurkx`가 없는 덱이었다. 300 K 보존에서는 영향이 없었지만(R7b) **77 K(PF 방출이 꺼져 작은 가짜 과정이 상대적으로 커질 수 있음)와 Program/Erase 고전계(16 V, −12 V)에서는 확인되지 않았다.** 나중에 다시 돌리지 않도록 지금 멈추고 `bbt.hurkx`가 들어간 현재 덱으로 다시 시작한다.
+- B 진단(우회한 문제의 원인 확인, 결과와 관계없이 덱은 바꾸지 않는다: 정적 계산에는 시간이 없어 PF 방출을 넣을 이유가 없고, `load`는 R5a로 정확함이 확인됨):
+  - `diag/SONOS_{77,300}K_diag_B1_pf_in_static.in`: R4가 저장한 1e19 상태에서 `pf.nitride` 없음/있음으로 정적 해를 구해 비교하고, `pf.nitride`를 켠 채 PGM 읽기(무효였던 2차 77 K 실행의 재현). R4 폴더에서 실행.
+  - `diag/SONOS_300K_diag_B2_initsonos_after_retention.in`: 10 y 상태를 load → `solve init sonos` → `solve prev` → 게이트 단계의 실패 경로를 단계마다 저장. 300 K 보존 폴더에서 실행.

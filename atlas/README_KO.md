@@ -274,3 +274,6 @@ R3c의 1e19, 0 V에서도 source→substrate 전류가 2.8e-11 A/µm다(77 K R1�
 - B 진단(우회한 문제의 원인 확인, 결과와 관계없이 덱은 바꾸지 않는다: 정적 계산에는 시간이 없어 PF 방출을 넣을 이유가 없고, `load`는 R5a로 정확함이 확인됨):
   - `diag/SONOS_{77,300}K_diag_B1_pf_in_static.in`: R4가 저장한 1e19 상태에서 `pf.nitride` 없음/있음으로 정적 해를 구해 비교하고, `pf.nitride`를 켠 채 PGM 읽기(무효였던 2차 77 K 실행의 재현). R4 폴더에서 실행.
   - `diag/SONOS_300K_diag_B2_initsonos_after_retention.in`: 10 y 상태를 load → `solve init sonos` → `solve prev` → 게이트 단계의 실패 경로를 단계마다 저장. 300 K 보존 폴더에서 실행.
+
+**B1 300 K:** 1e19 상태(R4)를 `pf.nitride` 없이 정적으로 풀면 바로 수렴하고, 같은 상태에서 `pf.nitride`만 켜면 6회째에 발산해 NaN. → 정적 해에서는 트랩 점유가 고정되는데 PF 방출 항(e_n·n_t)은 질화막 전도대에 자유 전자를 계속 공급하는 원천으로 남는다(트랩 쪽 손실 없음) → 정상 상태가 없다. 300 K에서는 발산(R3의 주입 정체와 같은 원인), 77 K에서는 방출이 작아 수렴하지만 고전계 읽기에서 자유 전자가 쌓여 VT를 올린 것으로 해석된다(2차 77 K 실행: 채널 8 V까지 꺼짐, 보존 시작 시 +28 %). 77 K B1의 자유 전자 밀도로 확정한다. 정적 계산에서 `pf.nitride`를 빼는 것은 올바른 처리다.
+**B2 300 K:** 10 y 상태를 load → `solve init sonos` → `solve prev` → 게이트 0 → −0.5 V가 **모두 수렴**했다. `solve init sonos` 자체는 원인이 아니다. 실행 안에서 실패한 것은 바로 앞의 과도해석과 관련된다 → B3a(실행 순서 그대로 재현: 짧은 보존 → 모델 전환 → init sonos → prev → 게이트), B3b(B3a + 읽기 전 `method carriers=2`: 보존용 METHOD가 정적 계산에 남는지).

@@ -120,6 +120,11 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   transient (B2) it works; METHOD reset does not help (B3b). save -> LOAD restarts from the saved
   solution, so reads after transients use LOAD.
 
+- Diag B5/B6 (77 K): the injected states with/without PF.NITRIDE are identical, and so are the
+  read states at Vg 0-4 V (B6). The failed reads (channel off to 8 V / stop at 4.6 V) only occur
+  with PF.NITRIDE active in static solves AND a read path through -2 V: a path-dependent Newton
+  problem, not physics. Keep PF.NITRIDE out of static solves. Diag B7 checks the final read path.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

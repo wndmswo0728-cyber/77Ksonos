@@ -1,0 +1,123 @@
+			
+# (c) Silvaco Inc., 2015
+assign name=xs n.value=1.0e-14 ratio=0.1
+
+
+# DIAG R7b (300 K): does the spurious BTBT generation change the retention? The saved PGM
+# state is loaded and held at 0 V to 1e4 s exactly as in the retention deck, but with
+# bbt.kl + BBT.HURKX. Compare Q(1e4 s)/Q0 with the run with bbt.kl alone (0.7526).
+# Run in the folder with the 300 K retention .str files.
+go atlas simflags="-160"
+TITLE planar device simulation
+#
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set toxide=sio2  
+#sio2,al2o3, hfo2
+set cwf=4.05
+
+set Ttox=0.008	
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set temp=300
+set Vrd_lo=-2
+set Vrd_hi=8
+set Vrd_step=0.1
+# read sweep: Vg from Vrd_lo to Vrd_hi in Vrd_step (V), VD=0.1 V, same for every state
+
+
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+
+set Lsc = $Lgate_left*2/3		
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+
+mesh   width = 1	
+
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Lgate_left   spac=$Lgate*0.05
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=$Lgate*0.05
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+
+
+y.mesh loc=-0.1                         spac=0.1
+y.mesh loc=-0.1+$Tpg                    spac=0.01
+y.mesh loc=-0.1+$Tpg+$Ttox              spac=$Ttox/6
+y.mesh loc=-0.1+$Tpg+$Ttox+$Tnit        spac=$Tnit*0.15
+y.mesh loc=-0.1+$Tpg+$Ttox+$Tnit+$Tbox  spac=$Tbox/6
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+
+region number=1  y.min=-0.1   material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1 y.max=-0.1+$Tpg material=conductor
+
+#Oxide on the nitride
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg y.max=-0.1+$Tpg+$Ttox material=$toxide
+
+#hafnium
+region number=4  x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg+$Ttox y.max=-0.1+$Tpg+$Ttox+$Tnit material=nitride
+
+#Oxide under the nitride
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg+$Ttox+$Tnit y.max=-0.1+$Tpg+$Ttox+$Tnit+$Tbox  material=oxide
+
+#Substrate
+region number=6  y.min=-0.1+$Tpg+$Ttox+$Tnit+$Tbox   material=silicon
+
+
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1 y.max=-0.1+$Tpg
+electrode name=source x.min=0.0 x.max=@Lsc y.min=-0.1+$Tpg+$Ttox+$Tnit+$Tbox  y.max=-0.1+$Tpg+$Ttox+$Tnit+$Tbox 
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=-0.1+$Tpg+$Ttox+$Tnit+$Tbox  y.max=-0.1+$Tpg+$Ttox+$Tnit+$Tbox 
+electrode name=substrate bottom
+
+doping uniform conc=@Nsub p.type reg=6
+doping uniform conc=1e21 n.type reg=2
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+interface n.i dynasonos
+
+
+#top oxide
+material material=$toxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 ni.min=1e-60
+#bottom oxide
+material material=oxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 ni.min=1e-60
+material material=nitride semiconductor nc300=1e19 nv300=1e19 mun=1.0e-1 mup=1.0e-2 mc=1.0 mv=1.0 taun0=1.0 taup0=1.0 ni.min=1e-60
+contact name=cgate workf=$cwf				
+
+nitridecharge nt.p=0.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit hole.depth=@Enit sigmat.n=${xs} sigman.p=0.0 sigmap.n=0.0
+
+models srh temperature=@temp
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
+method carriers=2
+
+probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg+$Ttox y.max=-0.1+$Tpg+$Ttox+$Tnit
+
+load infile=T300K_RET_SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master
+solve prev
+models srh pf.nitride temperature=@temp
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
+method lte2step tol.time=1.0e-4 tstep.incr=1.2 dt.max=1.0e7
+log outfile=DIAG_R7b_300K_retention.log sonos.curr j.tun
+solve tstep=1e-6 tfinal=1 proj
+solve tstop=1e4 proj
+extract name="Q" curve(time, probe."netcharge") outfile="DIAG_R7b_300K_netcharge_vs_time.dat"
+save outf=DIAG_R7b_300K_t1e4s.str
+log off
+quit

@@ -78,14 +78,16 @@ def transient_fixes(s):
     # rate: at 77 K the gate passes VT (~0.8 V) where the channel charge changes by
     # ~16 decades per 0.32 V (SS ~20 mV/dec) and Newton diverged at t = 51 ps with
     # DT.MAX 2e-11 (diag P11d). First segment DT.MAX 2e-12 (0.032 V per step).
+    # (d) Final ramp form = diag P14, the first 77 K Program run that reached 16 V / 10 ns:
+    # DT.MAX 5e-12 over the whole 1 ns ramp and NO PROJ on the ramp solves. With PROJ the
+    # extrapolated guess made the tunnel current NaN near Vg 2.1-2.4 V at 77 K for every
+    # time step tried (P12, P13, P13b, P15b); PROJ is kept for the constant-bias hold.
     def split(m):
         v = m.group(1)                       # vcgate or ecgate
-        proj = m.group(2) or ""
         return (f"set {v}_split=${v}/10\n"
-                f"method dt.max=2e-12\n"
-                f"solve vcgate=${v}_split ramptime=1e-10 tstep=1e-12 tfinal=1e-10{proj}\n"
-                f"method dt.max=2e-11\n"
-                f"solve vcgate=${v} ramptime=9e-10 tstep=2e-12 tfinal=1e-9{proj}\n"
+                f"method dt.max=5e-12\n"
+                f"solve vcgate=${v}_split ramptime=1e-10 tstep=1e-12 tfinal=1e-10\n"
+                f"solve vcgate=${v} ramptime=9e-10 tstep=2e-12 tfinal=1e-9\n"
                 f"method dt.max=1e-3 dt.min=1.0e-9\n")
     s, k = re.subn(r"solve vcgate=\$([ve]cgate) ramptime=1e-9 tstep=1e-12 tfinal=1e-9( proj)?\nmethod dt\.min=1\.0e-9\n",
                    split, s)

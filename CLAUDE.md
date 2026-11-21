@@ -55,9 +55,11 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   0.6 ns near 13 V). With both (diag P11a/P11c) the 300 K SONOS Program reaches 16 V / 10 ns
   with all added models. MODELS now sits after NITRIDECHARGE and before METHOD.
 
-- 77 K P11d diverged at t = 51 ps (Vg ~0.8 V ~ VT; SS ~20 mV/dec). All decks now split the
-  1 ns gate ramp at Vg/10 (first 0.1 ns with DT.MAX 2e-12, same ramp rate). Diag P12 at
-  300 K reproduces P11c exactly (16 V / 10 ns). 77 K P12 pending.
+- 77 K Program ramp: with PROJ on the ramp solves the tunnel current became NaN near Vg
+  2.1-2.4 V for every time step tried (P12, P13 down to 0.25 ps, P13b, P15b without
+  PF.NITRIDE). Diag P14 (DT.MAX 5e-12 over the whole 1 ns ramp, ramp split at Vg/10, NO
+  PROJ on the ramp) reached 16 V / 10 ns at 77 K in 2.8 h with all models. All decks use
+  this ramp form (300 K too); PROJ kept for constant-bias holds.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

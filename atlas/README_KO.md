@@ -219,3 +219,6 @@ R3c의 1e19, 0 V에서도 source→substrate 전류가 2.8e-11 A/µm다(77 K R1�
 | netcharge(t) | 단조 감소, 매끈함 | 191점, 증가 구간 없음, 점 사이 최대 0.9 % | 맞음 |
 | 손실 시점 | 1 s까지 터널링, 그 뒤 PF (0.8 MV/cm에서 장벽 약 0.25 eV 낮아져 시간 상수 1e2~1e4 s) | 1e2~1e4 s에서 15 % (가장 큼), 1e4 s 뒤 느려짐 | 맞음 |
 | **주의: PGM 곡선의 누설 바닥** | 초기 수준(VT−1 V에서 ~2e-16 A) | PGM: VT−1 V에서 1.9e-12, Vg = −2 V에서 2.4e-8 A/µm | `bbt.kl`(국소 BTBT)이 강하게 충전된 질화막 아래 S/D 가장자리에서 만드는 GIDL 전류. 최대 gm VT에는 영향 없음. 정전류 VT나 off 전류를 말할 때는 주의 |
+
+### 진단 R6 (300 K): `bbt.kl` 없이 세 읽기 반복
+300 K Id-Vg의 왼쪽(음의 Vg) 전류 상승과 0 V에서 흐르는 전류는 국소 BTBT 모델 `bbt.kl`에서 나온다. `diag/SONOS_300K_diag_R6_reads_no_bbtkl.in`은 Si MODELS에서 `bbt.kl`만 빼고 초기(새로 풀기), PGM(`.str` load), 10 y(`.str` load)를 같은 방법으로 읽는다. VT가 같으면 `bbt.kl`은 누설 쪽에만 영향을 준다.

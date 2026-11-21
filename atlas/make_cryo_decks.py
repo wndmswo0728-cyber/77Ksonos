@@ -256,15 +256,17 @@ def retention(src, T, dev):
     s = numerics(s, T)
     # (1)+(2): every MODELS statement carries the temperature (persistence between
     # MODELS statements is not documented) and the 77 K Si statistics.
-    # (3) ONE model set for every step, identical to the P/E deck (pf.nitride included
-    # from the start). The original re-specified MODELS mid-deck (mos srh pf.nitride for
-    # the retention, srh mos for the last read): the last read then used other models
-    # than the first two (VT difference mixed with a model difference), and at 77 K that
-    # read diverged at Vg = -1.1 V (MODELS after METHOD, same failure as diag H).
-    s = models_before_method(s, f"models srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
+    # (3) Model sets, following the team original's order but without `mos`:
+    #   injection + initial/PGM/RET reads : srh + Si models (no pf.nitride)
+    #   retention transient               : srh pf.nitride + Si models
+    # With pf.nitride during the static NIT.N injection, 300 K stalled at 5e17 (diag R3;
+    # without it 1e19 in 3 Newton iterations per step, R3c). Re-specifying MODELS before the
+    # retention works at 77 K and 300 K (diag R4). The three reads use the same models
+    # (team review item 2: the original read after retention used `srh mos`).
+    s = models_before_method(s, f"models srh temperature=@temp\n{SI_MODELS}\n")
     s, _ = transient_fixes(s)
     s = sub(s, "models mos srh pf.nitride temperature=@temp\n",
-            "# (original MODELS mos srh pf.nitride removed: one model set at the top)\n")
+            f"# pf.nitride for the retention transient only (diag R3/R4)\nmodels srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
     # (4) initial read
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1\nsolve vdrain=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
@@ -294,7 +296,7 @@ def retention(src, T, dev):
             f'extract name="Qnit_vs_t" curve(time, probe."netcharge") outfile="{tag}_netcharge_vs_time.dat"\n')
     # (6) read after retention: charged nitride
     s = sub(s, "models srh mos\nsolve init\nsolve prev\n",
-            "# (original MODELS srh mos removed: one model set at the top)\nsolve init sonos\nsolve prev\n")
+            f"# same models as the initial and PGM reads (original: srh mos)\nmodels srh temperature=@temp\n{SI_MODELS}\nsolve init sonos\nsolve prev\n")
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1\n\nsolve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\n\nsolve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n")
     s = sub(s, "solve vcgate=-1 vstep=0.1 name=cgate vfinal=3\n\nlog off\nquit",

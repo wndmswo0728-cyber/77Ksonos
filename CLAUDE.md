@@ -71,8 +71,7 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
 - First 77 K SONOS retention run (2.2e17 only, not for the 10-year verdict): charge continuous
   through every step (SOLVE INIT SONOS keeps the trapped charge); SS 22-23 mV/dec (mesh OK);
   -18 % in 10 y via tunnel-oxide electron current; post-retention read diverged at Vg -1.09 V
-  (mid-deck MODELS after METHOD) -> retention decks now use ONE model set at the top (same as
-  P/E: srh pf.nitride + Si models); trapped electrons moved to the blocking-oxide side
+  (cause unclear; see model order below); trapped electrons moved to the blocking-oxide side
   (2e18 in one row), unexplained by 77 K PF -> retention split at 1 s / 1e4 s with .str saves.
 - TAU.N/TAU.P are unused when PF.NITRIDE is on: diag R2a (tau 1e-4 s, team) and R2b (tau
   removed) gave byte-identical 77 K results to 1 s. First-second loss (~8 %) = the nitride row
@@ -92,7 +91,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   after every read or pulse that precedes a transient or a read; SOLVE INIT SONOS only at 0 V.
 - 300 K NIT.N stall is caused by PF.NITRIDE during the static injection (diag R3c without it:
   1e19 in 3 Newton iterations per step; R3b ni.min 1e-40 failed; R3d without bbt.kl/trap.tunnel
-  barely passed). Diag R4: inject without PF.NITRIDE, re-specify MODELS with it before retention.
+  barely passed). Diag R4 (77 K and 300 K OK): retention decks now inject and read with
+  "srh + Si models" and re-specify "srh pf.nitride + Si models" only for the retention
+  transient (team original order, without mos); all three reads use the same models.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

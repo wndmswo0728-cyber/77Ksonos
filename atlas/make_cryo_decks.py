@@ -113,14 +113,18 @@ def charge_ramp(s):
     2.5e17 cm^-3 everywhere, probe 2.2e17), although the manual calls it cumulative. The
     team's original (1e18 then 1e19) therefore ends at 1e19 (teammate probe: 9.0e18).
     One 1e18 step did not converge at 77 K, so the value is raised in 2.5e17 steps
-    (the size that converged) up to the original final value 1e19."""
+    (the size that converged) up to 3.75e18, then 1.25e17 steps (diag R1) to the
+    original final value 1e19."""
     lines = s.split("\n")
     idx = [k for k, l in enumerate(lines) if l.startswith("solve nit.xmin=")]
     if len(idx) != 2 or not lines[idx[0]].endswith("nit.n=1e18") or not lines[idx[1]].endswith("nit.n=1e19"):
         sys.exit("nit.n lines not as in the original")
     first = lines[idx[0]][:-len("nit.n=1e18")]
     second = lines[idx[1]][:-len("nit.n=1e19")]
-    vals = [1e17] + [2.5e17 * k for k in range(1, 41)]          # 1e17, 2.5e17 ... 1e19
+    # 2.5e17 steps up to 3.75e18, then 1.25e17 steps to 1e19: at 77 K the 2.5e17 step from
+    # 3.75e18 to 4e18 stopped ("Internal error in linear solver"); with half steps above
+    # 3.75e18 diag R1 reached 1e19 (77 K, 9.4 min without reads).
+    vals = [1e17] + [2.5e17 * k for k in range(1, 16)] + [3.75e18 + 1.25e17 * k for k in range(1, 51)]
     new1 = ["# NIT.N overwrites (not cumulative): raise the value step by step to the original final 1e19"] \
         + [first + f"nit.n={v:.4g}".replace("e+", "e") for v in vals if v <= 1e18]
     new2 = [second + f"nit.n={v:.4g}".replace("e+", "e") for v in vals if v > 1e18]

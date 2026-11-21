@@ -65,7 +65,8 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   77 K (Newton 25 iterations).
 - SOLVE NIT.N OVERWRITES (measured, despite the manual's "cumulative"): 10 x 1e17 + 40 x
   2.5e17 left exactly 2.5e17 in the PGM .str (probe 2.2e17); the team original ends at 1e19
-  (teammate probe 9.0e18). Decks now step 1e17, 2.5e17, 5e17 ... 1e19 (41 solves).
+  (teammate probe 9.0e18). Decks step 1e17, 2.5e17 ... 3.75e18, then 1.25e17 steps to 1e19
+  (66 solves): 2.5e17 steps stopped at 4e18 at 77 K, half steps reached 1e19 (diag R1).
 
 - First 77 K SONOS retention run (2.2e17 only, not for the 10-year verdict): charge continuous
   through every step (SOLVE INIT SONOS keeps the trapped charge); SS 22-23 mV/dec (mesh OK);

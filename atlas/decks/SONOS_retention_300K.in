@@ -100,7 +100,7 @@ contact name=cgate workf=$cwf
 nitridecharge nt.p=0.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit hole.depth=@Enit sigmat.n=${xs} sigman.p=0.0 sigmap.n=0.0
 
 models srh temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 method carriers=2
 
 probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg+$Ttox y.max=-0.1+$Tpg+$Ttox+$Tnit
@@ -222,7 +222,7 @@ solve name=cgate vstep=-0.2 vfinal=0
 
 # pf.nitride for the retention transient only (diag R3/R4)
 models srh pf.nitride temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 
 #solve prev
 
@@ -247,7 +247,7 @@ log off
 
 # same models as the initial and PGM reads (original: srh mos)
 models srh temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 load infile=T300K_RET_SONOS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master
 solve prev
 

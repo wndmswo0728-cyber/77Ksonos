@@ -101,7 +101,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
 - LOAD INFILE=<.str> MASTER restores the trapped nitride charge exactly (diag R5a: same netcharge
   and VT as the in-run PGM read). Reads after a retention transient now LOAD the .str just saved
   (in-run SOLVE INIT SONOS + SOLVE PREV failed at 300 K; R5b load read worked).
-- bbt.kl only adds leakage (left branch, PGM hump = drain->substrate, high-Vg Isub); VT identical
+- bbt.kl with default D = 1 generates in equilibrium (0 V current, left Id-Vg branch, PGM hump =
+  drain->substrate); VT identical without it (R6); retention Q(1e4 s) identical with bbt.hurkx (R7b,
+  0.7527 vs 0.7526). Decks now use bbt.kl bbt.hurkx. Old notes:
   without it (diag R6, 300 K). Kept in the decks; do not report off-current or high-Vg Id.
 - 300 K SONOS retention (ATLAS-only, 8.84e18 probe): VT_init 0.534, VT_PGM 3.480, VT 10 y 2.242 V;
   Q/Q0 10 y 0.635; electrons pile up at the blocking-oxide side (1.24e19 in the top row), so VT

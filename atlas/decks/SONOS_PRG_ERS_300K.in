@@ -100,7 +100,7 @@ contact name=cgate workf=$cwf
 nitridecharge nt.p=1.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit hole.depth=@Enit sigmat.n=$xs sigman.p=0.0 sigmap.n=0.0
 
 models srh temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 method carriers=2
 
 probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tnit-$Tbox y.max=-$Tbox
@@ -129,7 +129,7 @@ log off
 solve name=drain vstep=-0.02 vfinal=0
 solve name=cgate vstep=-0.2 vfinal=0
 models srh pf.nitride temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 
 # Charge up the Nitride region
 log outf=T300K_PE_TRNS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
@@ -153,7 +153,7 @@ output qfn qfp con.band val.band Band.param t.quantum
 save outf=T300K_PE_SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
 
 models srh temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 load infile=T300K_PE_SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master
 solve name=cgate vstep=-0.5 vfinal=0
 
@@ -174,7 +174,7 @@ log off
 solve name=drain vstep=-0.02 vfinal=0
 solve name=cgate vstep=-0.2 vfinal=0
 models srh pf.nitride temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 
 #Charge out the Nitride region
 log outf=T300K_PE_TRNS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
@@ -198,7 +198,7 @@ output qfn qfp con.band val.band Band.param t.quantum
 save outf=T300K_PE_SONOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
 
 models srh temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 load infile=T300K_PE_SONOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master
 solve name=cgate vstep=0.5 vfinal=0
 
@@ -219,7 +219,7 @@ log off
 solve name=drain vstep=-0.02 vfinal=0
 solve name=cgate vstep=-0.2 vfinal=0
 models srh pf.nitride temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 method lte2step tol.time=1.0e-4 tstep.incr=1.2 dt.max=1.0e7
 log outfile=T300K_PE_TRNS_ERS_Retention.log sonos.curr j.tun
 solve tstep=1e-6 tfinal=@Retime proj
@@ -229,7 +229,7 @@ log off
 
 ################ Vt after ERS retention ################
 models srh temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 load infile=T300K_PE_SONOS_ERS_RETEN.str master
 solve prev
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo

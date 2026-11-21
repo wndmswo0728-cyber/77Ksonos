@@ -28,8 +28,12 @@ READ_HEADER = ("set Vrd_lo=-2\nset Vrd_hi=8\nset Vrd_step=0.1\n"
 #   fermidirac, incomplete+ioniz : carrier statistics and dopant freeze-out
 #   cvt                          : temperature-dependent inversion-layer mobility
 #   bbt.kl                       : band-to-band tunneling (via Eg(T))
+#   bbt.hurkx                    : statistical factor D = (nie^2-np)/((n+nie)(p+nie)) for bbt.kl,
+#                                  zero in equilibrium. With the default D = 1 bbt.kl generated at
+#                                  0 V (diag R6/R7: left Id-Vg branch, PGM hump); retention charge
+#                                  to 1e4 s identical with and without it (diag R7b).
 #   trap.tunnel                  : trap-assisted (phonon-assisted) tunneling in Si
-SI_MODELS = "models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel"
+SI_MODELS = "models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel"
 
 
 NI_MIN = "1e-60"   # cm^-3; below the 300 K n_i of SiO2 (~1e-57), so 300 K is unchanged

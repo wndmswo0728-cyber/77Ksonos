@@ -41,13 +41,40 @@
   - retention: PGM 읽기 시점의 netcharge = 보존 과도 계산 첫 점의 netcharge = 보존 끝 값 → 보존 뒤 읽기의 netcharge
   - P/E: Program 과도 계산 끝 = PGM 읽기, Erase 과도 계산 첫 점 = 프로그램 직후 값
 
-## 4. 300 K 평형 점유 → ERS 상태도 보존 중에 움직일 수 있음
-- 팀원 Python에서는 300 K, 0 V에서 빈 트랩이 Si 쪽에서 전자를 받아 평형 점유로 갔다(SONOS에서 약 1 V). 내 `python_cryo`도 TANS에서 트랩–Si 평형(0.55~0.65 V)을 이미 확인했다.
-- `couple_atlas.py`는 MW(t) = VT(t) − VT_ERS를 계산한다. 여기서 **VT_ERS는 상수**(P/E 덱의 소거 직후 값)다.
-- 300 K에서 ERS 상태도 보존 중에 평형 쪽으로 올라간다면, 상수 VT_ERS로 계산한 MW(t)는 300 K 창을 **실제보다 크게** 볼 수 있다. 77 K에서는 이 효과가 거의 없다(팀원 결과에서 77 K 빈 트랩 보존은 거의 0).
-- 제안 (둘 중 하나):
-  - (a) ERS 상태에서 시작하는 보존도 같은 방식으로 계산해 VT_ERS(t)를 쓴다.
-  - (b) 최소한 빈 트랩 상태로 0 V에서 보존하는 기준선을 계산해서, 300 K에서 평형 쪽으로 얼마나 차는지 확인한다.
+## 4. [적용 권장] ERS 상태 보존도 계산해서 VT_ERS(t)로 메모리 창 구하기
+**현재 방식**
+- `couple_atlas.py`는 MW(t) = VT_PGM(t) − VT_ERS를 계산한다.
+- 여기서 **VT_ERS는 상수**(P/E 덱에서 소거 직후의 값)다. 보존은 PGM 상태(`nit.n` 주입)에서만 계산한다.
+
+**바꿔야 하는 이유**
+- 메모리 창은 두 상태로 정해진다. PGM 상태는 전자를 잃어 VT가 내려가고, ERS 상태는 정공을 잃거나 전자를 받아 VT가 올라간다. 실제 소자 측정에서도 두 상태를 각각 보존해서, 두 곡선이 만나는 시점을 "창이 닫히는 시간"으로 본다.
+- 팀원 결과(v1 계열 Python, TANS 300 K, 호핑 ON)를 보면 PGM 보존과 ERS 보존이 1초 근처에서 **같은 값(−8.23e-16 C)으로 모인다.** 창이 1초 안에 닫힌다는 뜻이다. PGM 곡선만 봤다면 "전하가 남는다"로 잘못 읽었을 것이다.
+  - SONOS 300 K도 PGM 보존과 ERS 보존이 10년 뒤 같은 값(ΔVt 약 1 V)으로 모였다.
+- 내 `python_cryo`도 TANS에서 트랩–Si 평형(0.55~0.65 V)을 이미 확인했고, README에 "Erase 상태도 결국 도달하는 값이라 창이 닫힌 것과 같다"고 써 두었다. 그런데 정작 MW 계산에는 이 내용이 반영되지 않았다.
+- 상수 VT_ERS를 쓰면 **300 K 창이 실제보다 크게** 나온다. 반대로 77 K는 ERS 상태가 거의 변하지 않아 영향이 작다(팀원 결과 77 K ERS 보존: 10년 동안 2.02e-15 → 2.00e-15 C). 그 결과 **77 K와 300 K의 차이가 실제보다 작게** 보일 수 있다. 이 연구의 핵심 결론에 직접 영향을 주는 부분이다.
+
+**적용 방법**
+1. **ATLAS:** `atlas/decks/<구조>_PRG_ERS_<T>K.in`의 ERS 읽기 다음에 보존 블록을 추가한다. retention 덱과 같은 설정을 쓴다.
+   ```
+   (ERS 읽기 끝, log off)
+   solve init sonos            # 또는 save/load로 소거 직후 0 V 상태로 복귀
+   models mos srh pf.nitride temperature=@temp
+   models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+   method lte2step tol.time=1.0e-4 tstep.incr=1.2 dt.max=1.0e7
+   log outfile=T<T>K_PE_<DEV>_ERS_Retention.log sonos.curr j.tun
+   solve tstep=1e-6 tfinal=@Retime proj
+   extract name="Qnit_ERS_vs_t" curve(time, probe."netcharge") outfile="T<T>K_<DEV>_ERS_netcharge_vs_time.dat"
+   log off
+   (보존 뒤 ERS 읽기: 기존 읽기 블록과 같은 MODELS, 같은 범위)
+   ```
+   P/E 덱 끝에 붙이면 retention 덱을 새로 만들 필요가 없다. 소거 직후 상태에서 그대로 시작할 수 있다.
+2. **Python (`python_cryo`):** 소거 상태에서 시작하는 base/full 보존도 계산해서 F_ERS(t)를 구한다.
+3. **`couple_atlas.py`:** MW(t) = VT_PGM(t) − VT_ERS(t)로 바꾸고, 창이 닫히는 시간을 두 곡선의 교점으로 정의한다.
+4. **기준선(선택):** 빈 트랩 상태에서 0 V로 보존하는 계산을 하나 추가하면, 300 K에서 평형 쪽으로 얼마나 차는지 바로 보인다.
+
+**비용과 우선순위**
+- 보존 과도 계산이 구조 3개 × 온도 2개 = 6개 늘어난다.
+- 시간이 부족하면 **300 K를 먼저** 한다. 77 K는 ERS 변화가 작으니, 77 K 한 구조로 "ERS가 거의 안 변한다"만 확인해 두면 된다.
 
 ## 5. ATLAS 실제 전하와 Python 초기 점유율
 - `python_cryo`의 초기 점유율은 공칭 1.1e19(0.22)이다. 팀원 결과를 보면 probe로 측정한 실제 전하는 공칭의 약 82%(평균 9.0e18)였다. 질화막 경계 노드 처리 때문으로 보인다.

@@ -8,7 +8,7 @@
 |---|---|---|
 | `inputs/01_SEED_first_run/` | `SONOS_.in`(첫 SEED 덱), 77 K 초기·PGM 읽기 `.log`, `.str` | `feedback/01_...`에 반영 |
 | `inputs/02_N5_decks/` | `SONOS_{77K,300K}_{SEED,PE}_N5.in` (DYNASONOS, 팀 원본 300 K 덱 + `temp`) | `feedback/01_SONOS_N5_decks_KO.md` |
-| `inputs/03_ChargeTrap_package/` | `ChargeTrap_77K_Ready_To_Run.zip` (Python 수송 결과 → ATLAS `ox.charge` 읽기, 3구조 × 2온도 × PF/호핑 4조합) | `feedback/02_ChargeTrap_package_KO.md` |
+| `inputs/03_ChargeTrap_package/` | `ChargeTrap_77K_Ready_To_Run.zip` (Python 수송 결과 → ATLAS `ox.charge` 읽기, 3구조 × 2온도 × PF/호핑 4조합) | `feedback/02_ChargeTrap_package_KO.md`, `feedback/03_TANS_300K_PF_hopping_KO.md` |
 
 ## 내 작업 (저장소 나머지)
 | 경로 | 내용 |

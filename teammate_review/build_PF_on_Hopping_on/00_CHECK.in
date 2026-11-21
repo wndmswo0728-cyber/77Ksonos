@@ -1,0 +1,92 @@
+# Part 1. Check the selected ATLAS executable with a 300 K Si resistor.
+go atlas simflags="-V 5.36.0.R"
+mesh
+x.mesh loc=0 spac=0.1
+x.mesh loc=1 spac=0.1
+y.mesh loc=0 spac=0.05
+y.mesh loc=0.2 spac=0.05
+region num=1 material=silicon
+electrode name=source left
+electrode name=drain right
+doping uniform n.type conc=1e16
+models srh temperature=300 print
+solve init
+log outf=engine_only.log master
+solve vdrain=0.001
+log off
+
+# Part 2. Exercise fixed dielectric volume charge and the actual read models at 300 K.
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.001
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.006250000 spac=0.00035
+y.mesh loc=-0.004500000 spac=0.00035
+y.mesh loc=-0.002750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.002750000 y.max=-0.001000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004500000 y.max=-0.002750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006250000 y.max=-0.004500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008000000 y.max=-0.006250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-1e17
+contact name=cgate workf=4.5
+models srh fermidirac incomplete analytic bbt.kl temperature=300 print
+method newton carriers=2
+output ox.charge e.field
+solve init
+log outf=version_check.log master
+solve previous
+solve vdrain=0.001
+log off
+save outf=version_check.str
+quit

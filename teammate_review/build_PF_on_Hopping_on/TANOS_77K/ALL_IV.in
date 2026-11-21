@@ -1,0 +1,3077 @@
+# TANOS 77K PF_on_Hopping_on ALL_IV.in (build copy)
+# Source: ChargeTrap_77K_Ready_To_Run.zip. Procedure-only changes, see README_KO.md:
+#  (1) models moved before contact, (2) drain stepped 1e-4 -> 1e-3 -> 0.01 -> 0.1 V,
+#  (3) Vt extract added after each read. ox.charge, models, mesh unchanged.
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=300 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+solve init
+save outf=INITIAL_equilibrium_300K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=250 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=INITIAL_equilibrium_300K.str master
+solve previous vcgate=0 vdrain=0
+save outf=INITIAL_equilibrium_250K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=200 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=INITIAL_equilibrium_250K.str master
+solve previous vcgate=0 vdrain=0
+save outf=INITIAL_equilibrium_200K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=150 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=INITIAL_equilibrium_200K.str master
+solve previous vcgate=0 vdrain=0
+save outf=INITIAL_equilibrium_150K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=120 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=INITIAL_equilibrium_150K.str master
+solve previous vcgate=0 vdrain=0
+save outf=INITIAL_equilibrium_120K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=100 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=INITIAL_equilibrium_120K.str master
+solve previous vcgate=0 vdrain=0
+save outf=INITIAL_equilibrium_100K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=85 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=INITIAL_equilibrium_100K.str master
+solve previous vcgate=0 vdrain=0
+save outf=INITIAL_equilibrium_85K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=77 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=INITIAL_equilibrium_85K.str master
+solve previous vcgate=0 vdrain=0
+save outf=INITIAL.str
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+solve vcgate=0 vstep=-0.05 name=cgate vfinal=-2
+log outf=INITIAL_IV.log master
+solve previous
+solve name=cgate vstep=0.05 vfinal=11
+log off
+extract init infile="INITIAL_IV.log"
+extract name="Vt_gm_INITIAL" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="Vt_summary.dat"
+extract name="Vt_cc_INITIAL" x.val from curve(v."cgate",i."drain") where y.val=1e-7 datafile="Vt_summary.dat"
+extract name="IdVg_INITIAL" curve(v."cgate",i."drain") outfile="INITIAL_IdVg.dat"
+
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.069321916918e+18
+doping uniform region=7 ox.charge conc=-2.747417135616e+18
+doping uniform region=8 ox.charge conc=-1.109611968653e+18
+doping uniform region=9 ox.charge conc=-6.382683729082e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=300 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+solve init
+save outf=PGM_equilibrium_300K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.069321916918e+18
+doping uniform region=7 ox.charge conc=-2.747417135616e+18
+doping uniform region=8 ox.charge conc=-1.109611968653e+18
+doping uniform region=9 ox.charge conc=-6.382683729082e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=250 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=PGM_equilibrium_300K.str master
+solve previous vcgate=0 vdrain=0
+save outf=PGM_equilibrium_250K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.069321916918e+18
+doping uniform region=7 ox.charge conc=-2.747417135616e+18
+doping uniform region=8 ox.charge conc=-1.109611968653e+18
+doping uniform region=9 ox.charge conc=-6.382683729082e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=200 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=PGM_equilibrium_250K.str master
+solve previous vcgate=0 vdrain=0
+save outf=PGM_equilibrium_200K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.069321916918e+18
+doping uniform region=7 ox.charge conc=-2.747417135616e+18
+doping uniform region=8 ox.charge conc=-1.109611968653e+18
+doping uniform region=9 ox.charge conc=-6.382683729082e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=150 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=PGM_equilibrium_200K.str master
+solve previous vcgate=0 vdrain=0
+save outf=PGM_equilibrium_150K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.069321916918e+18
+doping uniform region=7 ox.charge conc=-2.747417135616e+18
+doping uniform region=8 ox.charge conc=-1.109611968653e+18
+doping uniform region=9 ox.charge conc=-6.382683729082e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=120 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=PGM_equilibrium_150K.str master
+solve previous vcgate=0 vdrain=0
+save outf=PGM_equilibrium_120K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.069321916918e+18
+doping uniform region=7 ox.charge conc=-2.747417135616e+18
+doping uniform region=8 ox.charge conc=-1.109611968653e+18
+doping uniform region=9 ox.charge conc=-6.382683729082e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=100 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=PGM_equilibrium_120K.str master
+solve previous vcgate=0 vdrain=0
+save outf=PGM_equilibrium_100K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.069321916918e+18
+doping uniform region=7 ox.charge conc=-2.747417135616e+18
+doping uniform region=8 ox.charge conc=-1.109611968653e+18
+doping uniform region=9 ox.charge conc=-6.382683729082e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=85 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=PGM_equilibrium_100K.str master
+solve previous vcgate=0 vdrain=0
+save outf=PGM_equilibrium_85K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.069321916918e+18
+doping uniform region=7 ox.charge conc=-2.747417135616e+18
+doping uniform region=8 ox.charge conc=-1.109611968653e+18
+doping uniform region=9 ox.charge conc=-6.382683729082e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=77 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=PGM_equilibrium_85K.str master
+solve previous vcgate=0 vdrain=0
+save outf=PGM.str
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+solve vcgate=0 vstep=-0.05 name=cgate vfinal=-2
+log outf=PGM_IV.log master
+solve previous
+solve name=cgate vstep=0.05 vfinal=11
+log off
+extract init infile="PGM_IV.log"
+extract name="Vt_gm_PGM" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="Vt_summary.dat"
+extract name="Vt_cc_PGM" x.val from curve(v."cgate",i."drain") where y.val=1e-7 datafile="Vt_summary.dat"
+extract name="IdVg_PGM" curve(v."cgate",i."drain") outfile="PGM_IdVg.dat"
+
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-5.668489543328e+12
+doping uniform region=7 ox.charge conc=-3.759530972460e+15
+doping uniform region=8 ox.charge conc=-4.535047526111e+07
+doping uniform region=9 ox.charge conc=-4.072650487815e+06
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=300 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+solve init
+save outf=ERS_equilibrium_300K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-5.668489543328e+12
+doping uniform region=7 ox.charge conc=-3.759530972460e+15
+doping uniform region=8 ox.charge conc=-4.535047526111e+07
+doping uniform region=9 ox.charge conc=-4.072650487815e+06
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=250 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_equilibrium_300K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_equilibrium_250K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-5.668489543328e+12
+doping uniform region=7 ox.charge conc=-3.759530972460e+15
+doping uniform region=8 ox.charge conc=-4.535047526111e+07
+doping uniform region=9 ox.charge conc=-4.072650487815e+06
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=200 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_equilibrium_250K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_equilibrium_200K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-5.668489543328e+12
+doping uniform region=7 ox.charge conc=-3.759530972460e+15
+doping uniform region=8 ox.charge conc=-4.535047526111e+07
+doping uniform region=9 ox.charge conc=-4.072650487815e+06
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=150 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_equilibrium_200K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_equilibrium_150K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-5.668489543328e+12
+doping uniform region=7 ox.charge conc=-3.759530972460e+15
+doping uniform region=8 ox.charge conc=-4.535047526111e+07
+doping uniform region=9 ox.charge conc=-4.072650487815e+06
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=120 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_equilibrium_150K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_equilibrium_120K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-5.668489543328e+12
+doping uniform region=7 ox.charge conc=-3.759530972460e+15
+doping uniform region=8 ox.charge conc=-4.535047526111e+07
+doping uniform region=9 ox.charge conc=-4.072650487815e+06
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=100 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_equilibrium_120K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_equilibrium_100K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-5.668489543328e+12
+doping uniform region=7 ox.charge conc=-3.759530972460e+15
+doping uniform region=8 ox.charge conc=-4.535047526111e+07
+doping uniform region=9 ox.charge conc=-4.072650487815e+06
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=85 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_equilibrium_100K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_equilibrium_85K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-5.668489543328e+12
+doping uniform region=7 ox.charge conc=-3.759530972460e+15
+doping uniform region=8 ox.charge conc=-4.535047526111e+07
+doping uniform region=9 ox.charge conc=-4.072650487815e+06
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=77 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_equilibrium_85K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS.str
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+solve vcgate=0 vstep=-0.05 name=cgate vfinal=-2
+log outf=ERS_IV.log master
+solve previous
+solve name=cgate vstep=0.05 vfinal=11
+log off
+extract init infile="ERS_IV.log"
+extract name="Vt_gm_ERS" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="Vt_summary.dat"
+extract name="Vt_cc_ERS" x.val from curve(v."cgate",i."drain") where y.val=1e-7 datafile="Vt_summary.dat"
+extract name="IdVg_ERS" curve(v."cgate",i."drain") outfile="ERS_IdVg.dat"
+
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-1.465063823319e+13
+doping uniform region=7 ox.charge conc=-7.789998347843e+14
+doping uniform region=8 ox.charge conc=-4.142337401178e+16
+doping uniform region=9 ox.charge conc=-2.208416152028e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=300 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+solve init
+save outf=RET_equilibrium_300K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-1.465063823319e+13
+doping uniform region=7 ox.charge conc=-7.789998347843e+14
+doping uniform region=8 ox.charge conc=-4.142337401178e+16
+doping uniform region=9 ox.charge conc=-2.208416152028e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=250 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=RET_equilibrium_300K.str master
+solve previous vcgate=0 vdrain=0
+save outf=RET_equilibrium_250K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-1.465063823319e+13
+doping uniform region=7 ox.charge conc=-7.789998347843e+14
+doping uniform region=8 ox.charge conc=-4.142337401178e+16
+doping uniform region=9 ox.charge conc=-2.208416152028e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=200 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=RET_equilibrium_250K.str master
+solve previous vcgate=0 vdrain=0
+save outf=RET_equilibrium_200K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-1.465063823319e+13
+doping uniform region=7 ox.charge conc=-7.789998347843e+14
+doping uniform region=8 ox.charge conc=-4.142337401178e+16
+doping uniform region=9 ox.charge conc=-2.208416152028e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=150 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=RET_equilibrium_200K.str master
+solve previous vcgate=0 vdrain=0
+save outf=RET_equilibrium_150K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-1.465063823319e+13
+doping uniform region=7 ox.charge conc=-7.789998347843e+14
+doping uniform region=8 ox.charge conc=-4.142337401178e+16
+doping uniform region=9 ox.charge conc=-2.208416152028e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=120 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=RET_equilibrium_150K.str master
+solve previous vcgate=0 vdrain=0
+save outf=RET_equilibrium_120K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-1.465063823319e+13
+doping uniform region=7 ox.charge conc=-7.789998347843e+14
+doping uniform region=8 ox.charge conc=-4.142337401178e+16
+doping uniform region=9 ox.charge conc=-2.208416152028e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=100 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=RET_equilibrium_120K.str master
+solve previous vcgate=0 vdrain=0
+save outf=RET_equilibrium_100K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-1.465063823319e+13
+doping uniform region=7 ox.charge conc=-7.789998347843e+14
+doping uniform region=8 ox.charge conc=-4.142337401178e+16
+doping uniform region=9 ox.charge conc=-2.208416152028e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=85 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=RET_equilibrium_100K.str master
+solve previous vcgate=0 vdrain=0
+save outf=RET_equilibrium_85K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-1.465063823319e+13
+doping uniform region=7 ox.charge conc=-7.789998347843e+14
+doping uniform region=8 ox.charge conc=-4.142337401178e+16
+doping uniform region=9 ox.charge conc=-2.208416152028e+18
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=77 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=RET_equilibrium_85K.str master
+solve previous vcgate=0 vdrain=0
+save outf=RET.str
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+solve vcgate=0 vstep=-0.05 name=cgate vfinal=-2
+log outf=RET_IV.log master
+solve previous
+solve name=cgate vstep=0.05 vfinal=11
+log off
+extract init infile="RET_IV.log"
+extract name="Vt_gm_RET" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="Vt_summary.dat"
+extract name="Vt_cc_RET" x.val from curve(v."cgate",i."drain") where y.val=1e-7 datafile="Vt_summary.dat"
+extract name="IdVg_RET" curve(v."cgate",i."drain") outfile="RET_IdVg.dat"
+
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.799433640897e+09
+doping uniform region=7 ox.charge conc=-5.615467375184e+11
+doping uniform region=8 ox.charge conc=-4.042966349638e+13
+doping uniform region=9 ox.charge conc=-2.910779251192e+15
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=300 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+solve init
+save outf=ERS_RET_equilibrium_300K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.799433640897e+09
+doping uniform region=7 ox.charge conc=-5.615467375184e+11
+doping uniform region=8 ox.charge conc=-4.042966349638e+13
+doping uniform region=9 ox.charge conc=-2.910779251192e+15
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=250 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_RET_equilibrium_300K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_RET_equilibrium_250K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.799433640897e+09
+doping uniform region=7 ox.charge conc=-5.615467375184e+11
+doping uniform region=8 ox.charge conc=-4.042966349638e+13
+doping uniform region=9 ox.charge conc=-2.910779251192e+15
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=200 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_RET_equilibrium_250K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_RET_equilibrium_200K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.799433640897e+09
+doping uniform region=7 ox.charge conc=-5.615467375184e+11
+doping uniform region=8 ox.charge conc=-4.042966349638e+13
+doping uniform region=9 ox.charge conc=-2.910779251192e+15
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=150 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_RET_equilibrium_200K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_RET_equilibrium_150K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.799433640897e+09
+doping uniform region=7 ox.charge conc=-5.615467375184e+11
+doping uniform region=8 ox.charge conc=-4.042966349638e+13
+doping uniform region=9 ox.charge conc=-2.910779251192e+15
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=120 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_RET_equilibrium_150K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_RET_equilibrium_120K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.799433640897e+09
+doping uniform region=7 ox.charge conc=-5.615467375184e+11
+doping uniform region=8 ox.charge conc=-4.042966349638e+13
+doping uniform region=9 ox.charge conc=-2.910779251192e+15
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=100 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_RET_equilibrium_120K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_RET_equilibrium_100K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.799433640897e+09
+doping uniform region=7 ox.charge conc=-5.615467375184e+11
+doping uniform region=8 ox.charge conc=-4.042966349638e+13
+doping uniform region=9 ox.charge conc=-2.910779251192e+15
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=85 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_RET_equilibrium_100K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_RET_equilibrium_85K.str
+go atlas simflags="-V 5.36.0.R -160"
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set cwf=4.5
+set Ttox=0.008
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+set Lsc = $Lgate_left*2/3
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+mesh   width = 1
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Ls spac=0.005
+x.mesh loc=@Lgate_left   spac=0.005
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=0.005
+x.mesh loc=@Ld spac=0.005
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+y.mesh loc=-$Tpg-$Ttox-$Tnit-$Tbox        spac=0.1
+y.mesh loc=-$Tpg*0.1-$Ttox-$Tnit-$Tbox    spac=$Ttox*2
+y.mesh loc=-$Ttox-$Tnit-$Tbox             spac=$Ttox/10
+y.mesh loc=-$Tnit-$Tbox                   spac=$Ttox/10
+y.mesh loc=-0.008250000 spac=0.00035
+y.mesh loc=-0.006500000 spac=0.00035
+y.mesh loc=-0.004750000 spac=0.00035
+y.mesh loc=-$Tbox                         spac=$Tbox/10
+y.mesh loc=0                              spac=$Tbox/100
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+region number=1  y.min=-$Tpg-$Ttox-$Tnit-$Tbox  material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox material=TaN
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Ttox-$Tnit-$Tbox y.max=-$Tnit-$Tbox material=Al2O3
+region number=4 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.004750000 y.max=-0.003000000
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tbox y.max=0  material=Sio2
+region number=6  y.min=0   material=silicon
+region number=7 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.006500000 y.max=-0.004750000
+region number=8 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.008250000 y.max=-0.006500000
+region number=9 material=nitride x.min=@Lgate_left x.max=@Lgate_right y.min=-0.010000000 y.max=-0.008250000
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tpg-$Ttox-$Tnit-$Tbox y.max=-$Ttox-$Tnit-$Tbox
+electrode name=source x.min=0.0 x.max=@Lsc y.min=0 y.max=0
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=0  y.max=0
+electrode name=substrate bottom
+doping uniform conc=@Nsub p.type reg=6
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+doping uniform region=4 ox.charge conc=-7.799433640897e+09
+doping uniform region=7 ox.charge conc=-5.615467375184e+11
+doping uniform region=8 ox.charge conc=-4.042966349638e+13
+doping uniform region=9 ox.charge conc=-2.910779251192e+15
+material material=nitride permittivity=7.5
+material material=SiO2 permittivity=3.9
+material material=Al2O3 permittivity=9.3
+models srh fermidirac analytic incomplete bbt.kl temperature=77 print
+contact name=cgate workf=$cwf
+method newton carriers=2 itlimit=50
+output con.band val.band qfn qfp e.field ox.charge
+load infile=ERS_RET_equilibrium_85K.str master
+solve previous vcgate=0 vdrain=0
+save outf=ERS_RET.str
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+solve vcgate=0 vstep=-0.05 name=cgate vfinal=-2
+log outf=ERS_RET_IV.log master
+solve previous
+solve name=cgate vstep=0.05 vfinal=11
+log off
+extract init infile="ERS_RET_IV.log"
+extract name="Vt_gm_ERS_RET" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="Vt_summary.dat"
+extract name="Vt_cc_ERS_RET" x.val from curve(v."cgate",i."drain") where y.val=1e-7 datafile="Vt_summary.dat"
+extract name="IdVg_ERS_RET" curve(v."cgate",i."drain") outfile="ERS_RET_IdVg.dat"
+quit

@@ -10,6 +10,7 @@
 | `inputs/02_N5_decks/` | `SONOS_{77K,300K}_{SEED,PE}_N5.in` (DYNASONOS, 팀 원본 300 K 덱 + `temp`) | `feedback/01_SONOS_N5_decks_KO.md` |
 | `inputs/03_ChargeTrap_package/` | `ChargeTrap_77K_Ready_To_Run.zip` (Python 수송 결과 → ATLAS `ox.charge` 읽기, 3구조 × 2온도 × PF/호핑 4조합) | `feedback/02_ChargeTrap_package_KO.md`, `feedback/03_TANS_300K_PF_hopping_KO.md` |
 | `inputs/04_Retention_Crosscheck/` | `Retention_Crosscheck_Results.zip` (ChargeTrap 패키지 retention 교차 검증 보고서·그림·스크립트) | `feedback/04_Retention_Crosscheck_KO.md` |
+| `build_PF_on_Hopping_on/` | 팀 요청 "PF on·Hopping on 빌드"용. ChargeTrap 패키지의 `ALL_IV.in` 6개(3구조 × 77/300 K)를 계산 절차만 고친 사본 | `build_PF_on_Hopping_on/README_KO.md` |
 
 ## 내 작업 (저장소 나머지)
 | 경로 | 내용 |

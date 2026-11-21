@@ -11,7 +11,7 @@ assign name=xs n.value=1.0e-14 ratio=0.1
 # DIAG R6 (77 K): the three reads of the 77 K retention run repeated WITHOUT bbt.kl
 # (only change: bbt.kl removed from the Si MODELS line). Question: does the local BTBT
 # model (left branch of Id-Vg, current at 0 V bias) change VT? Compare with
-# T77K_SONOS_RET_{init,PGM}_IdVg.dat and DIAG_R5_77K_RETload_IdVg.dat.
+# T77K_SONOS_RET_{init,PGM,RET}_IdVg.dat of the same run.
 # Run in the folder with the 77 K retention .str files.
 go atlas simflags="-160"
 TITLE planar device simulation

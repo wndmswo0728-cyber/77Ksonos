@@ -3,7 +3,7 @@
 assign name=xs n.value=1.0e-14 ratio=0.1
 
 
-go atlas 
+go atlas simflags="-160"
 TITLE planar device simulation
 #
 set Nsub=1e17
@@ -126,8 +126,8 @@ log off
 
 #################### PROGRAM #######################
 
-solve init
-solve prev
+solve name=drain vstep=-0.02 vfinal=0
+solve name=cgate vstep=-0.2 vfinal=0
 
 # Charge up the Nitride region
 log outf=T300K_PE_TRNS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.log
@@ -164,11 +164,10 @@ extract name="Vt_PGM" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile=
 extract name="Vt_PGM_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T300K_TANOS_PE_Vt.dat"
 extract name="IdVg_PGM" curve(v."cgate",i."drain") outfile="T300K_TANOS_PE_PGM_IdVg.dat"
 log off
-solve init sonos
 
 #################### Erase #########################
-solve init sonos
-solve prev
+solve name=drain vstep=-0.02 vfinal=0
+solve name=cgate vstep=-0.2 vfinal=0
 
 # Reset transient controls BEFORE starting erase
 method dt.min=1.0e-15 itlimit=50
@@ -210,7 +209,8 @@ extract name="IdVg_ERS" curve(v."cgate",i."drain") outfile="T300K_TANOS_PE_ERS_I
 log off
 
 ################ ERS retention (added) ################
-solve init sonos
+solve name=drain vstep=-0.02 vfinal=0
+solve name=cgate vstep=-0.2 vfinal=0
 method lte2step tol.time=1.0e-4 tstep.incr=1.2 dt.max=1.0e7
 log outfile=T300K_PE_TRNS_ERS_Retention.log sonos.curr j.tun
 solve tstep=1e-6 tfinal=@Retime proj

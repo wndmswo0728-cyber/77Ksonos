@@ -42,7 +42,11 @@ def numerics(s, T):
       in 64-bit arithmetic. Manual 21.11 / 3.3.3: extended precision (-160) for low T.
     - NI.MIN (MATERIAL) floors n_i of those insulators. Added at both temperatures."""
     s = re.sub(r"^(material material=\S+ semiconductor.*?)\s*$", rf"\1 ni.min={NI_MIN}", s, flags=re.M)
-    if T < 200:
+    if True:
+        # 160-bit arithmetic at BOTH temperatures (numerics only; the two decks again differ
+        # only in temperature). 300 K with 64-bit: the NIT.N steps above ~5.7e18 stalled with
+        # potential updates hovering at 1e-5..1e-7 (precision floor) and 6e18 failed after
+        # 25 Newton iterations; at 77 K with -160 the same steps reached 1e19 (diag R1).
         # 160-bit arithmetic at 77 K. With 64-bit the init/read converged but the first
         # Program time step stopped with "NaN or Inf in SONOS tunnel current": exp(E/kT)
         # terms exceed the 64-bit range at kT = 6.6 meV (manual 21.11). -256 if needed.
@@ -51,6 +55,12 @@ def numerics(s, T):
             sys.exit("go atlas line not found")
     return s
 
+
+# Back to 0 V after a read, along converged DC steps, before a transient. "solve init" +
+# "solve prev" re-applied the read bias (Vg = Vrd_hi, VD = 0.1 V): the 300 K Erase then
+# started from Vg = 8 V and jumped to -1.2 V in 0.1 ns, and Newton failed (25 iterations).
+RAMP_DOWN = ("solve name=drain vstep=-0.02 vfinal=0\n"
+             "solve name=cgate vstep=-0.2 vfinal=0\n")
 
 DRAIN_RAMP = ("solve vdrain=0.0001\nsolve vdrain=0.001\n"
               "solve name=drain vstep=0.001 vfinal=0.01\nsolve name=drain vstep=0.005 vfinal=0.1\n")
@@ -223,6 +233,16 @@ def prg_ers(src, T, dev):
         f"log outf={dev}_ERS_RETEN.log master\n"
         "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n"
         + vt_extract("ERSRET", tag, KIND) + "log off\nquit\n")
+    # (9) Program, Erase and the ERS retention start at 0 V on every electrode (as in the
+    # original's intent: PGM +16 V / ERS -12 V with S/D/substrate grounded), reached by
+    # RAMP_DOWN from the preceding read instead of solve init + solve prev.
+    s = sub(s, "#################### PROGRAM #######################\n\nsolve init\nsolve prev\n",
+            "#################### PROGRAM #######################\n\n" + RAMP_DOWN)
+    s = sub(s, "log off\nsolve init sonos\n", "log off\n")             # after the PGM read
+    s = sub(s, "#################### Erase #########################\nsolve init sonos\nsolve prev\n",
+            "#################### Erase #########################\n" + RAMP_DOWN)
+    s = sub(s, "################ ERS retention (added) ################\nsolve init sonos\n",
+            "################ ERS retention (added) ################\n" + RAMP_DOWN)
     s = drain_ramp(s)
     return prefix_outputs(s, tag, KIND)
 

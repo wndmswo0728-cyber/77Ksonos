@@ -3,7 +3,7 @@
 assign name=xs n.value=1.0e-14 ratio=0.1
 
 
-go atlas
+go atlas simflags="-160"
 TITLE planar device simulation
 #
 set Nsub=1e17

@@ -81,6 +81,11 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   first gm peak from the Id-Vg files. Python initial occupancy = ATLAS probe Q(0).
 - P/E decks end with an ERS-state retention (team review item 4): MW = VT_PGM(t) - VT_ERS(t).
 
+- Both temperatures now use simflags -160: 300 K 64-bit stalled at NIT.N 6e18 (precision floor).
+- "solve init"/"solve init sonos" + "solve prev" after a read RE-APPLIED the read bias (Vg 8 V,
+  VD 0.1 V): the 300 K Erase ramp started at 8 V and failed. P/E decks now ramp drain and gate
+  back to 0 V with DC steps before Program, Erase and the ERS retention.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

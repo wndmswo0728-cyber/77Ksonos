@@ -3,13 +3,16 @@
 assign name=xs n.value=1.0e-14 ratio=0.1
 
 
-# DIAG R5a (PGM .str only) (77 K): read a saved state from its .str with LOAD (manual 2.10.5) instead of
-# reading it at the end of the retention run. The 300 K retention reached 3e8 s, but the
-# read after it failed at the first gate step (Vg = 0 -> -0.1 V) after solve init sonos.
-# 1) PGM .str -> read: compare with the in-run PGM read (validates that LOAD restores the
-#    trapped charge; the log's netcharge column must equal the saved value).
-# 2) RETEN .str (after 3e8 s) -> the same read, no solve init.
-# Same MODELS as the in-run reads (srh + Si models). Run in the folder with the .str files.
+			
+# (c) Silvaco Inc., 2015
+assign name=xs n.value=1.0e-14 ratio=0.1
+
+
+# DIAG R6 (77 K): the three reads of the 77 K retention run repeated WITHOUT bbt.kl
+# (only change: bbt.kl removed from the Si MODELS line). Question: does the local BTBT
+# model (left branch of Id-Vg, current at 0 V bias) change VT? Compare with
+# T77K_SONOS_RET_{init,PGM}_IdVg.dat and DIAG_R5_77K_RETload_IdVg.dat.
+# Run in the folder with the 77 K retention .str files.
 go atlas simflags="-160"
 TITLE planar device simulation
 #
@@ -107,12 +110,23 @@ contact name=cgate workf=$cwf
 nitridecharge nt.p=0.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit hole.depth=@Enit sigmat.n=${xs} sigman.p=0.0 sigmap.n=0.0
 
 models srh temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models region=6 fermidirac incomplete ioniz cvt trap.tunnel
 method carriers=2
 
 probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg+$Ttox y.max=-0.1+$Tpg+$Ttox+$Tnit
 
-######################## reads from saved states ######################
+######################## reads without bbt.kl ######################
+solve init
+solve prev
+solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+log outf=DIAG_R6_77K_init.log master
+solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+extract name="IdVg_init" curve(v."cgate",i."drain") outfile="DIAG_R6_77K_init_IdVg.dat"
+log off
 load infile=T77K_RET_SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master
 solve prev
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
@@ -120,8 +134,19 @@ solve vdrain=0.0001
 solve vdrain=0.001
 solve name=drain vstep=0.001 vfinal=0.01
 solve name=drain vstep=0.005 vfinal=0.1
-log outf=DIAG_R5_77K_PGMload.log master
+log outf=DIAG_R6_77K_PGM.log master
 solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
-extract name="IdVg_PGMload" curve(v."cgate",i."drain") outfile="DIAG_R5_77K_PGMload_IdVg.dat"
+extract name="IdVg_PGM" curve(v."cgate",i."drain") outfile="DIAG_R6_77K_PGM_IdVg.dat"
+log off
+load infile=T77K_RET_SONOS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master
+solve prev
+solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+log outf=DIAG_R6_77K_RET.log master
+solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+extract name="IdVg_RET" curve(v."cgate",i."drain") outfile="DIAG_R6_77K_RET_IdVg.dat"
 log off
 quit

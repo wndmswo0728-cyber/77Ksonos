@@ -62,6 +62,9 @@ def numerics(s, T):
 RAMP_DOWN = ("solve name=drain vstep=-0.02 vfinal=0\n"
              "solve name=cgate vstep=-0.2 vfinal=0\n")
 
+NOPF = f"models srh temperature=@temp\n{SI_MODELS}\n"
+PF = f"models srh pf.nitride temperature=@temp\n{SI_MODELS}\n"
+
 DRAIN_RAMP = ("solve vdrain=0.0001\nsolve vdrain=0.001\n"
               "solve name=drain vstep=0.001 vfinal=0.01\nsolve name=drain vstep=0.005 vfinal=0.1\n")
 
@@ -176,7 +179,10 @@ def prg_ers(src, T, dev):
     # (1) temperature: the original never applies $temp in this deck (ATLAS default 300 K).
     # (2) 77 K Si statistics (Fermi-Dirac + freeze-out, IONIZ keeps 5e20 S/D ionized).
     # (3) PF.NITRIDE: temperature-dependent trap emission instead of the constant TAU only.
-    s = models_before_method(s, f"models srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
+    # (3) Static solves (reads) WITHOUT pf.nitride, transients (Program, Erase, ERS
+    # retention) WITH it, as in the retention decks (diag R3/R4; with pf.nitride in the
+    # static solves the 77 K PGM read never turned the channel on up to 8 V).
+    s = models_before_method(s, NOPF)
     s, k = transient_fixes(s)
     if k != 2:
         sys.exit(f"expected 2 gate ramps (PGM, ERS), found {k}")
@@ -244,8 +250,25 @@ def prg_ers(src, T, dev):
             "#################### Erase #########################\n" + RAMP_DOWN)
     s = sub(s, "################ ERS retention (added) ################\nsolve init sonos\n",
             "################ ERS retention (added) ################\n" + RAMP_DOWN)
+    # (10) pf.nitride on for each transient, off for each read; a read after a pulse starts
+    # from the .str saved at the end of the pulse (LOAD restores the trapped charge, R5a).
+    s = sub(s, "#################### PROGRAM #######################\n\n" + RAMP_DOWN,
+            "#################### PROGRAM #######################\n\n" + RAMP_DOWN + PF)
+    s = sub(s, "#################### Erase #########################\n" + RAMP_DOWN,
+            "#################### Erase #########################\n" + RAMP_DOWN + PF)
+    s = sub(s, "################ ERS retention (added) ################\n" + RAMP_DOWN,
+            "################ ERS retention (added) ################\n" + RAMP_DOWN + PF)
     s = drain_ramp(s)
-    return read_from_saved(prefix_outputs(s, tag, KIND), "_ERS_RETEN")
+    s = prefix_outputs(s, tag, KIND)
+    for key, step in (("_PGM_nt_", "-0.5"), ("_ERS_nt_", "0.5")):
+        m = re.findall(rf"save outf=(\S*{key}\S*\.str)\n", s)
+        if len(m) != 1:
+            sys.exit(f"saved {key} .str not found")
+        s = sub(s, f"save outf={m[0]}\n\nsolve name=cgate vstep={step} vfinal=0\n",
+                f"save outf={m[0]}\n\n{NOPF}load infile={m[0]} master\nsolve name=cgate vstep={step} vfinal=0\n")
+    s = sub(s, "################ Vt after ERS retention ################\n",
+            "################ Vt after ERS retention ################\n" + NOPF)
+    return read_from_saved(s, "_ERS_RETEN")
 
 
 def retention(src, T, dev):

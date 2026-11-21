@@ -79,6 +79,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
 - Deck VT extract picks the global max gm (end of sweep); couple_atlas.py re-extracts VT at the
   first gm peak from the Id-Vg files. Python initial occupancy = ATLAS probe Q(0).
 - P/E decks end with an ERS-state retention (team review item 4): MW = VT_PGM(t) - VT_ERS(t).
+- All decks: static solves (injection, reads) without PF.NITRIDE, transients with it. The 2nd 77 K
+  retention run with PF.NITRIDE in static solves was invalid (PGM channel off up to 8 V, +28 %
+  charge at the retention start). Reads after pulses LOAD the .str saved at the end of the pulse.
 
 - Both temperatures now use simflags -160: 300 K 64-bit stalled at NIT.N 6e18 (precision floor).
 - "solve init"/"solve init sonos" + "solve prev" after a read RE-APPLIED the read bias (Vg 8 V,

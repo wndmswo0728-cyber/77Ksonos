@@ -248,7 +248,7 @@ log off
 # same models as the initial and PGM reads (original: srh mos)
 models srh temperature=@temp
 models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
-solve init sonos
+load infile=T300K_RET_SONOS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master
 solve prev
 
 

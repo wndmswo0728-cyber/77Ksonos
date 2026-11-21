@@ -95,6 +95,13 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   "srh + Si models" and re-specify "srh pf.nitride + Si models" only for the retention
   transient (team original order, without mos); all three reads use the same models.
 
+- LOAD INFILE=<.str> MASTER restores the trapped nitride charge exactly (diag R5a: same netcharge
+  and VT as the in-run PGM read). Reads after a retention transient now LOAD the .str just saved
+  (in-run SOLVE INIT SONOS + SOLVE PREV failed at 300 K; R5b load read worked).
+- 300 K SONOS retention (ATLAS-only, 8.84e18 probe): VT_init 0.534, VT_PGM 3.480, VT 10 y 2.242 V;
+  Q/Q0 10 y 0.635; electrons pile up at the blocking-oxide side (1.24e19 in the top row), so VT
+  falls more than Q (58 % vs 63.5 %): use the read VT, not VT linear in Q (0.16 V too high).
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

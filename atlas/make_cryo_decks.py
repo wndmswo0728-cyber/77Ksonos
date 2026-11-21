@@ -245,7 +245,7 @@ def prg_ers(src, T, dev):
     s = sub(s, "################ ERS retention (added) ################\nsolve init sonos\n",
             "################ ERS retention (added) ################\n" + RAMP_DOWN)
     s = drain_ramp(s)
-    return prefix_outputs(s, tag, KIND)
+    return read_from_saved(prefix_outputs(s, tag, KIND), "_ERS_RETEN")
 
 
 def retention(src, T, dev):
@@ -303,7 +303,19 @@ def retention(src, T, dev):
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("RET", tag, KIND) + "\nlog off\nquit")
     s = charge_ramp(s)
     s = drain_ramp(s)
-    return prefix_outputs(s, tag, KIND)
+    return read_from_saved(prefix_outputs(s, tag, KIND), "_RETEN_nt_")
+
+
+def read_from_saved(s, key):
+    """Start the read after a retention transient from the .str just saved, with LOAD (manual
+    2.10.5), instead of SOLVE INIT SONOS + SOLVE PREV. At 300 K the in-run read after 3e8 s
+    failed at the first gate step after SOLVE INIT SONOS; loading the saved .str (diag R5b)
+    read the same state without problems, and diag R5a showed LOAD restores the trapped
+    charge exactly (same netcharge and VT as the in-run PGM read)."""
+    m = re.findall(rf"save outf=(\S*{key}\S*\.str)\n", s)
+    if len(m) != 1:
+        sys.exit(f"saved {key} .str not found")
+    return sub(s, "solve init sonos\nsolve prev\n", f"load infile={m[0]} master\nsolve prev\n")
 
 
 def prefix_outputs(s, tag, kind):

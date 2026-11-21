@@ -219,7 +219,7 @@ save outf=T300K_PE_TANS_ERS_RETEN.str
 log off
 
 ################ Vt after ERS retention ################
-solve init sonos
+load infile=T300K_PE_TANS_ERS_RETEN.str master
 solve prev
 solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.0001

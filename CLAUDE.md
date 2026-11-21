@@ -109,6 +109,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   Q/Q0 10 y 0.635; electrons pile up at the blocking-oxide side (1.24e19 in the top row), so VT
   falls more than Q (58 % vs 63.5 %): use the read VT, not VT linear in Q (0.16 V too high).
 
+- Diag B1 77 K: PF.NITRIDE in a static solve changes nothing (a/b .str identical; PGM read with it
+  normal, VT 4.00 V). So the 2nd 77 K run failure is NOT read-time free electrons; open candidate:
+  injection with PF.NITRIDE on (compare R1 vs R4 77 K .str). Final decks inject without it.
 - Diag B1 (300 K): a static solve with PF.NITRIDE diverges (NaN) from a converged 1e19 state:
   in static solves the trap occupancy is frozen but the PF emission term still feeds free electrons
   into the nitride (no steady state). Keep PF.NITRIDE out of static solves (correct, not a bypass).

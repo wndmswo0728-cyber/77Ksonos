@@ -1,9 +1,13 @@
-# DIAGNOSTIC P14 (77 K, = P13b without PROJ on the ramp solves: previous solution as initial guess). Program first 10 ns.
 			
 # (c) Silvaco Inc., 2015
 assign name=xs n.value=1.0e-14 ratio=0.1
 
 
+# DIAG P16ref (77 K): Program ramp time-step test with the FINAL deck models (static solves
+# without pf.nitride, pf.nitride switched on just before the ramp, bbt.hurkx). Diag P14 used
+# DT.MAX 5e-12 over the whole ramp and no PROJ (2.8 h). NaN was caused by PROJ (P13/P15b),
+# so above VT a larger cap may be enough. Reference: same as the final deck (5 ps on both segments).
+# Compare the run time and the netcharge at 1e-9 s and 1e-8 s with diag P16ref.
 go atlas simflags="-160"
 TITLE planar device simulation
 #
@@ -27,7 +31,7 @@ set TERS=5.0e-4
 set Retime=3e8
 set temp=77
 set Vrd_lo=-2
-set Vrd_hi=12
+set Vrd_hi=8
 set Vrd_step=0.1
 # read sweep: Vg from Vrd_lo to Vrd_hi in Vrd_step (V), VD=0.1 V, same for every state
 
@@ -100,27 +104,25 @@ contact name=cgate workf=$cwf
 
 nitridecharge nt.p=1.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit hole.depth=@Enit sigmat.n=$xs sigman.p=0.0 sigmap.n=0.0
 
-# (diag P8) MODELS after NITRIDECHARGE (trap depth defined) and before METHOD
-models srh pf.nitride temperature=@temp
-models region=6 fermidirac incomplete ioniz cvt bbt.kl trap.tunnel
+models srh temperature=@temp
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 method carriers=2
 
 probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tnit-$Tbox y.max=-$Tbox
 
-######## init_ structure####
+######## P16: Program ramp only (first 10 ns), final model scheme ########
 solve init
 solve prev
-# Charge up the Nitride region (first 10 ns only)
-log outf=DIAG_P16a_77K.log
+models srh pf.nitride temperature=@temp
+models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
+log outf=DIAG_P16ref_77K.log
 set vcgate_split=$vcgate/10
 method dt.max=5e-12
 solve vcgate=$vcgate_split ramptime=1e-10 tstep=1e-12 tfinal=1e-10
-# P16a: second ramp segment (1.6 -> 16 V) with DT.MAX 2e-11 instead of 5e-12, still NO proj.
-# P14 changed two things at once (no proj + 5 ps); NaN was caused by proj (P13/P15b),
-# so the 5 ps cap may be unnecessary above VT. First segment (passes VT) unchanged.
-method dt.max=2e-11
+method dt.max=5e-12
 solve vcgate=$vcgate ramptime=9e-10 tstep=2e-12 tfinal=1e-9
 method dt.max=1e-3 dt.min=1.0e-9
 solve tstop=1.0e-8 proj
+extract name="Q" curve(time, probe."netcharge") outfile="DIAG_P16ref_77K_netcharge.dat"
 log off
 quit

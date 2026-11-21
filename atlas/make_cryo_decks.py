@@ -104,6 +104,23 @@ def models_before_contact(s, block):
     return s.replace("contact name=cgate", block + "contact name=cgate")
 
 
+def charge_ramp(s):
+    """Insert the trapped charge in small cumulative steps (NIT.N is cumulative, manual
+    DYNASONOS section). The original 1e18 + 1e19 cm^-3 in two steps did not converge at
+    77 K (Newton, 25 iterations, no bias step to cut). Same total 1.1e19 and same box:
+    10 x 1e17, then 40 x 2.5e17."""
+    lines = s.split("\n")
+    idx = [k for k, l in enumerate(lines) if l.startswith("solve nit.xmin=")]
+    if len(idx) != 2 or not lines[idx[0]].endswith("nit.n=1e18") or not lines[idx[1]].endswith("nit.n=1e19"):
+        sys.exit("nit.n lines not as in the original")
+    first = lines[idx[0]][:-len("nit.n=1e18")]
+    second = lines[idx[1]][:-len("nit.n=1e19")]
+    new1 = ["# trapped charge added in small cumulative steps: 10 x 1e17 = 1e18 (original first line)"] + [first + "nit.n=1e17"] * 10
+    new2 = ["# 40 x 2.5e17 = 1e19 (original second line); total 1.1e19 as in the original"] + [second + "nit.n=2.5e17"] * 40
+    lines = lines[:idx[0]] + new1 + lines[idx[0]+1:idx[1]] + new2 + lines[idx[1]+1:]
+    return "\n".join(lines)
+
+
 def drain_ramp(s):
     """Raise VD to 0.1 V in small steps (as in the converged 77 K read decks) instead
     of one 0.1 V step, which needed 4 bias-step halvings at 77 K (diag H)."""
@@ -210,6 +227,7 @@ def retention(src, T, dev):
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\n\nsolve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n")
     s = sub(s, "solve vcgate=-1 vstep=0.1 name=cgate vfinal=3\n\nlog off\nquit",
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("RET", tag, KIND) + "\nlog off\nquit")
+    s = charge_ramp(s)
     s = drain_ramp(s)
     return prefix_outputs(s, tag, KIND)
 

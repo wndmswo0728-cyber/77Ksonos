@@ -61,6 +61,10 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   PROJ on the ramp) reached 16 V / 10 ns at 77 K in 2.8 h with all models. All decks use
   this ramp form (300 K too); PROJ kept for constant-bias holds.
 
+- Retention decks: the original nit.n=1e18 + 1e19 in two SOLVE steps did not converge at
+  77 K (Newton 25 iterations). Now 10 x 1e17 + 40 x 2.5e17 (same 1.1e19 total, NIT.N is
+  cumulative), both temperatures.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

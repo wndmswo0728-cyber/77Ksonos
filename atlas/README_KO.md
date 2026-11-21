@@ -120,3 +120,8 @@ DYNASONOS가 원래 계산하는 메커니즘(밴드↔트랩 직접 터널링, 
 P14는 램프에서 `proj` 제거와 시간 간격 상한 5 ps를 동시에 바꿨다. NaN의 원인은 `proj`였으므로(P13/P15b), VT를 지난 두 번째 램프 구간(1.6→16 V)은 상한 20 ps로 충분할 수 있다.
 - `diag/SONOS_77K_diag_P16a_dtmax20ps.in`: 두 번째 구간 `dt.max=2e-11`, `proj` 없음. 성공하면 램프 시간 약 1/4.
 - `diag/SONOS_77K_diag_P16b_dtmax20ps_P4.in`: P16a + `simflags="-160 -P 4"`(설명서 §2.3.4 병렬 실행; CPU 수·스레드 라이선스만큼만 적용).
+
+## 2차 77 K 보존 실행: 전하 주입 4e18에서 중단 (2026-11-21)
+`SONOS_retention_77K.in`(1e17 → 1e19)이 3.75e18까지 수렴하고 `nit.n=4e18`에서 "Internal error in linear solver"로 멈췄다. Newton 잔차는 줄고 있었다. 진단 덱(초기 읽기 없음, 수 분):
+- `diag/SONOS_77K_diag_R1_nit_to_1e19.in`: 3.75e18 이후 1.25e17씩(절반) 올려 1e19까지 가는지 본다. `.str`을 3.75e18, 1e19에서 저장한다.
+- `diag/SONOS_77K_diag_R2a_tau_team.in` / `R2b_tau_off.in`: 팀 덱의 `tau.n=tau.p=1e-4 s`(온도 무관 상수 방출)가 `pf.nitride`와 함께 작동하는지 본다. 1차 77 K 보존에서 전자가 블로킹 쪽으로 옮겨간 것은 77 K PF로는 불가능하므로 상수 방출이 의심된다. 2.5e17, 보존 1 s, `.str`은 0, 1 ms, 1 s. R2b는 tau를 빼서 설명서 기본값(1e300 s)으로 둔 것이다.

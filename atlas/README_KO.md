@@ -266,3 +266,5 @@ R3c의 1e19, 0 V에서도 source→substrate 전류가 2.8e-11 A/µm다(77 K R1�
 
 0 V 보존 중 소스→기판 전류: 원래 4e-12 A → `bbt.hurkx` 1.7e-22 A (평형에서 0). 트랩 전하 변화는 같다 → 가짜 BTBT 생성은 보존 결과에 영향이 없었다. 300 K 보존 결과는 그대로 유효하다.
 → 생성 스크립트의 Si 모델에 `bbt.hurkx`를 추가했다(모든 덱, 두 온도). 지금 돌고 있는 SONOS 실행(`bbt.hurkx` 없음)은 전하·VT가 같으므로 계속 쓴다. Id-Vg 그림(누설 쪽)은 저장된 `.str`을 `bbt.hurkx`로 다시 읽어 만든다(R7a 방식).
+
+**R7a 결과 (300 K, 세 읽기를 `bbt.kl bbt.hurkx`로, ATLAS 단독):** VT 0.5336 / 3.4795 / 2.2416 V(변화 없음). Vg = −2 V 전류는 세 상태 모두 1.6e-16 A(수치 바닥), PGM 2~3 V의 드레인→기판 전류 없음(2.8 V 드레인 전류 3.9e-14 A는 모두 소스로 가는 채널 전류), 기판 전류는 최대 4e-16 A. → **문제 1(왼쪽 상승)과 문제 2(PGM 꺾임)는 `bbt.hurkx`로 해결.** 그림용 Id-Vg는 `results/atlas/T300K_SONOS_RET_{init,PGM,RET}_IdVg_hurkx.dat`. R8(생성 위치)은 원인이 확인돼 필요 없다.

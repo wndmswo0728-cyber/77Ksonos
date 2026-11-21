@@ -1,0 +1,181 @@
+# Source SONOS_retention(1).in. Deck equivalence check and run order in README_KO.md.
+			
+# (c) Silvaco Inc., 2015
+assign name=xs n.value=1.0e-14 ratio=0.1
+
+
+go atlas
+TITLE planar device simulation
+#
+set Nsub=1e17
+set Tbox=0.003
+set Nnit=5e19
+set Enit=1.2
+set toxide=sio2  
+#sio2,al2o3, hfo2
+set cwf=4.05
+
+set Ttox=0.008	
+set Tnit=0.007
+set Lgate=1
+set vcgate=16
+set ecgate=-12
+set Tpg=0.08
+
+set TPGM=1.0e-4
+set TERS=5.0e-4
+set Retime=3e8
+set temp=300
+
+set Ltotal=$Lgate*3
+set Lgate_mid=$Ltotal/2
+set Lgate_left=$Lgate_mid - $Lgate/2
+set Lgate_right=$Lgate_mid + $Lgate/2
+
+set Lsc = $Lgate_left*2/3		
+set Ldc = $Ltotal - $Lsc
+set Ls  = $Lgate_left - 0.005
+set Ld  = $Lgate_right + 0.005
+
+mesh   width = 1	
+
+x.mesh loc=0.0   spac=$Lgate*0.25
+x.mesh loc=@Lgate_left   spac=$Lgate*0.05
+x.mesh loc=@Lgate_mid    spac=$Lgate*0.05
+x.mesh loc=@Lgate_right  spac=$Lgate*0.05
+x.mesh loc=@Ltotal   spac=$Lgate*0.25
+
+
+y.mesh loc=-0.1                         spac=0.1
+y.mesh loc=-0.1+$Tpg                    spac=0.01
+y.mesh loc=-0.1+$Tpg+$Ttox              spac=$Ttox/6
+y.mesh loc=-0.1+$Tpg+$Ttox+$Tnit        spac=$Tnit*0.15
+y.mesh loc=-0.1+$Tpg+$Ttox+$Tnit+$Tbox  spac=$Tbox/6
+y.mesh loc=0.01   spac=0.003
+y.mesh loc=0.02   spac=0.005
+y.mesh loc=0.05   spac=0.01
+y.mesh loc=0.1    spac=0.1
+y.mesh loc=0.4    spac=0.5
+
+region number=1  y.min=-0.1   material=air
+region number=2  x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1 y.max=-0.1+$Tpg material=conductor
+
+#Oxide on the nitride
+region number=3  x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg y.max=-0.1+$Tpg+$Ttox material=$toxide
+
+#hafnium
+region number=4  x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg+$Ttox y.max=-0.1+$Tpg+$Ttox+$Tnit material=nitride
+
+#Oxide under the nitride
+region number=5  x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg+$Ttox+$Tnit y.max=-0.1+$Tpg+$Ttox+$Tnit+$Tbox  material=oxide
+
+#Substrate
+region number=6  y.min=-0.1+$Tpg+$Ttox+$Tnit+$Tbox   material=silicon
+
+
+electrode name=cgate x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1 y.max=-0.1+$Tpg
+electrode name=source x.min=0.0 x.max=@Lsc y.min=-0.1+$Tpg+$Ttox+$Tnit+$Tbox  y.max=-0.1+$Tpg+$Ttox+$Tnit+$Tbox 
+electrode name=drain  x.min=@Ldc x.max=@Ltotal y.min=-0.1+$Tpg+$Ttox+$Tnit+$Tbox  y.max=-0.1+$Tpg+$Ttox+$Tnit+$Tbox 
+electrode name=substrate bottom
+
+doping uniform conc=@Nsub p.type reg=6
+doping uniform conc=1e21 n.type reg=2
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.r=@Ls
+doping gauss n.type conc=5e20 char=0.03 lat.char=0.005 reg=6 x.l=@Ld
+
+interface n.i dynasonos
+
+
+#top oxide
+material material=$toxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 
+#bottom oxide
+material material=oxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e19 nv300=1e19 
+
+material material=nitride semiconductor nc300=1e19 nv300=1e19 mun=1.0e-1 mup=1.0e-2 mc=1.0 mv=1.0 taun0=1.0 taup0=1.0
+
+contact name=cgate workf=$cwf				
+
+nitridecharge nt.p=0.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit sigmat.n=${xs} sigman.p=0.0 sigmap.n=0.0
+
+method carriers=2
+
+probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-0.1+$Tpg+$Ttox y.max=-0.1+$Tpg+$Ttox+$Tnit
+
+######################## init_ structure######################
+models srh temperature=@temp print
+solve init
+output qfn qfp con.band val.band Band.param t.quantum e.field sonos.rates
+save outf=SONOS_300K_SEED_N5_initial.str
+
+
+solve prev
+solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1
+solve vdrain=0.1
+
+log outf=SONOS_300K_SEED_N5_initial.log
+solve vcgate=-1 vstep=0.1 name=cgate vfinal=3
+log off
+
+
+#################### Vt after PGM ##################
+solve init 
+solve prev
+
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=$Tpg+$Ttox-0.1 nit.ymax=$Tpg+$Ttox+$Tnit-0.1 nit.n=1e18
+log outf=SONOS_300K_SEED_N5_seed_charge.log
+solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ymax=-0.1+$Tpg+$Ttox+$Tnit nit.n=1e19
+log off
+
+
+output qfn qfp con.band val.band Band.param t.quantum e.field sonos.rates
+save outf=SONOS_300K_SEED_N5_PGM.str
+
+solve vcgate=0 vstep=0.1 name=cgate vfinal=2
+solve vdrain=0.1
+
+log outf=SONOS_300K_SEED_N5_PGM.log master
+solve vcgate=2 vstep=0.1 name=cgate vfinal=6
+log off
+# Return to the charged zero-bias solution saved before the DC read.
+load infile=SONOS_300K_SEED_N5_PGM.str master
+
+
+################## Retention ######################
+
+models mos srh pf.nitride temperature=@temp print
+
+log outf=SONOS_300K_SEED_N5_ret_entry.log
+solve previous vcgate=0 vdrain=0
+log off
+save outf=SONOS_300K_SEED_N5_ret_start.str
+
+#solve prev
+
+method lte2step tol.time=1.0e-4 tstep.incr=1.2 dt.max=1.0e7
+
+log outfile=SONOS_300K_SEED_N5_TRNS_Retention.log sonos.curr j.tun
+
+solve tstep=1e-6 tfinal=@Retime proj
+
+output qfn qfp con.band val.band Band.param t.quantum e.field sonos.rates
+save outf=SONOS_300K_SEED_N5_RETEN.str
+
+
+log off
+
+################ Tranfer curve after Retention ############
+
+models srh mos temperature=@temp print
+# Start the DC read from the retained zero-bias solution.
+solve previous vcgate=0 vdrain=0
+
+
+solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1
+
+solve vdrain=0 vstep=0.01 name=drain vfinal=0.1
+
+log outf=SONOS_300K_SEED_N5_RETEN.log master
+solve vcgate=-1 vstep=0.1 name=cgate vfinal=3
+
+log off
+quit	

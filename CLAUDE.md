@@ -109,6 +109,14 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   Q/Q0 10 y 0.635; electrons pile up at the blocking-oxide side (1.24e19 in the top row), so VT
   falls more than Q (58 % vs 63.5 %): use the read VT, not VT linear in Q (0.16 V too high).
 
+- Diag B1 (300 K): a static solve with PF.NITRIDE diverges (NaN) from a converged 1e19 state:
+  in static solves the trap occupancy is frozen but the PF emission term still feeds free electrons
+  into the nitride (no steady state). Keep PF.NITRIDE out of static solves (correct, not a bypass).
+- Diag B2/B3: after a transient, SOLVE INIT SONOS + SOLVE PREV leaves a stale initial guess (the
+  next solve at the SAME 0 V starts with a 1e-1.4 potential update and fails); without the
+  transient (B2) it works; METHOD reset does not help (B3b). save -> LOAD restarts from the saved
+  solution, so reads after transients use LOAD.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

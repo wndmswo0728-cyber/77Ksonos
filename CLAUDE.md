@@ -90,7 +90,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   after the PGM read it re-solved at Vg 8 V / VD 0.1 V with 1e19 trapped, failed, and the 77 K
   retention transient then hit NaN. Decks now reach 0 V by DC steps (RAMP_DOWN / gate steps)
   after every read or pulse that precedes a transient or a read; SOLVE INIT SONOS only at 0 V.
-- 300 K retention with -160 stopped at NIT.N 5e17 (64-bit reached 5.875e18): diag R3b-e open.
+- 300 K NIT.N stall is caused by PF.NITRIDE during the static injection (diag R3c without it:
+  1e19 in 3 Newton iterations per step; R3b ni.min 1e-40 failed; R3d without bbt.kl/trap.tunnel
+  barely passed). Diag R4: inject without PF.NITRIDE, re-specify MODELS with it before retention.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

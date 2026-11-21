@@ -74,6 +74,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   (mid-deck MODELS after METHOD) -> retention decks now use ONE model set at the top (same as
   P/E: srh pf.nitride + Si models); trapped electrons moved to the blocking-oxide side
   (2e18 in one row), unexplained by 77 K PF -> retention split at 1 s / 1e4 s with .str saves.
+- TAU.N/TAU.P are unused when PF.NITRIDE is on: diag R2a (tau 1e-4 s, team) and R2b (tau
+  removed) gave byte-identical 77 K results to 1 s. First-second loss (~8 %) = the nitride row
+  next to the tunnel oxide tunnels out; interior unchanged; blocking-side pile-up comes later.
 - Deck VT extract picks the global max gm (end of sweep); couple_atlas.py re-extracts VT at the
   first gm peak from the Id-Vg files. Python initial occupancy = ATLAS probe Q(0).
 - P/E decks end with an ERS-state retention (team review item 4): MW = VT_PGM(t) - VT_ERS(t).

@@ -111,17 +111,22 @@ output qfn qfp con.band val.band Band.param t.quantum
 save outf=T77K_PE_TANOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.str
 
 solve prev
-solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.0001
 solve vdrain=0.001
 solve name=drain vstep=0.001 vfinal=0.01
 solve name=drain vstep=0.005 vfinal=0.1
-
+save outf=T77K_PE_TANOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|_rd0.str
 log outf=T77K_PE_TANOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.log
-solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
 extract name="Vt_init" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANOS_PE_Vt.dat"
 extract name="Vt_init_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANOS_PE_Vt.dat"
 extract name="IdVg_init" curve(v."cgate",i."drain") outfile="T77K_TANOS_PE_init_IdVg.dat"
+log off
+load infile=T77K_PE_TANOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|_rd0.str master
+solve prev
+log outf=T77K_PE_TANOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_init_neg" curve(v."cgate",i."drain") outfile="T77K_TANOS_PE_init_IdVg_neg.dat"
 log off
 
 #################### PROGRAM #######################
@@ -157,17 +162,22 @@ models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 load infile=T77K_PE_TANOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.str master
 solve name=cgate vstep=-0.5 vfinal=0
 
-solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.0001
 solve vdrain=0.001
 solve name=drain vstep=0.001 vfinal=0.01
 solve name=drain vstep=0.005 vfinal=0.1
-
+save outf=T77K_PE_TANOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|_rd0.str
 log outf=T77K_PE_TANOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.log master
-solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
 extract name="Vt_PGM" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANOS_PE_Vt.dat"
 extract name="Vt_PGM_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANOS_PE_Vt.dat"
 extract name="IdVg_PGM" curve(v."cgate",i."drain") outfile="T77K_TANOS_PE_PGM_IdVg.dat"
+log off
+load infile=T77K_PE_TANOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|_rd0.str master
+solve prev
+log outf=T77K_PE_TANOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_PGM_neg" curve(v."cgate",i."drain") outfile="T77K_TANOS_PE_PGM_IdVg_neg.dat"
 log off
 
 #################### Erase #########################
@@ -205,17 +215,22 @@ models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 load infile=T77K_PE_TANOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.str master
 solve name=cgate vstep=0.5 vfinal=0
 
-solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.0001
 solve vdrain=0.001
 solve name=drain vstep=0.001 vfinal=0.01
 solve name=drain vstep=0.005 vfinal=0.1
-
+save outf=T77K_PE_TANOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|_rd0.str
 log outf=T77K_PE_TANOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.log master
-solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
 extract name="Vt_ERS" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANOS_PE_Vt.dat"
 extract name="Vt_ERS_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANOS_PE_Vt.dat"
 extract name="IdVg_ERS" curve(v."cgate",i."drain") outfile="T77K_TANOS_PE_ERS_IdVg.dat"
+log off
+load infile=T77K_PE_TANOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|_rd0.str master
+solve prev
+log outf=T77K_PE_TANOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_ERS_neg" curve(v."cgate",i."drain") outfile="T77K_TANOS_PE_ERS_IdVg_neg.dat"
 log off
 
 ################ ERS retention (added) ################
@@ -235,16 +250,21 @@ models srh temperature=@temp
 models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 load infile=T77K_PE_TANOS_ERS_RETEN.str master
 solve prev
-solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.0001
 solve vdrain=0.001
 solve name=drain vstep=0.001 vfinal=0.01
 solve name=drain vstep=0.005 vfinal=0.1
-
+save outf=T77K_PE_TANOS_ERS_RETEN_rd0.str
 log outf=T77K_PE_TANOS_ERS_RETEN.log master
-solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
 extract name="Vt_ERSRET" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANOS_PE_Vt.dat"
 extract name="Vt_ERSRET_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANOS_PE_Vt.dat"
 extract name="IdVg_ERSRET" curve(v."cgate",i."drain") outfile="T77K_TANOS_PE_ERSRET_IdVg.dat"
+log off
+load infile=T77K_PE_TANOS_ERS_RETEN_rd0.str master
+solve prev
+log outf=T77K_PE_TANOS_ERS_RETEN_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_ERSRET_neg" curve(v."cgate",i."drain") outfile="T77K_TANOS_PE_ERSRET_IdVg_neg.dat"
 log off
 quit

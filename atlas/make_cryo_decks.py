@@ -272,7 +272,7 @@ def prg_ers(src, T, dev):
                 f"save outf={m[0]}\n\n{NOPF}load infile={m[0]} master\nsolve name=cgate vstep={step} vfinal=0\n")
     s = sub(s, "################ Vt after ERS retention ################\n",
             "################ Vt after ERS retention ################\n" + NOPF)
-    return read_from_saved(s, "_ERS_RETEN")
+    return split_reads(read_from_saved(s, "_ERS_RETEN"))
 
 
 def retention(src, T, dev):
@@ -330,7 +330,40 @@ def retention(src, T, dev):
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("RET", tag, KIND) + "\nlog off\nquit")
     s = charge_ramp(s)
     s = drain_ramp(s)
-    return read_from_saved(prefix_outputs(s, tag, KIND), "_RETEN_nt_")
+    return split_reads(read_from_saved(prefix_outputs(s, tag, KIND), "_RETEN_nt_"))
+
+
+def split_reads(s):
+    """Every Id-Vg read as two sweeps that both START at Vg = 0 V:
+    up 0 -> Vrd_hi (VT), then, from the saved Vg = 0 / VD = 0.1 V state (LOAD), down 0 -> Vrd_lo.
+    At 77 K with 1e19 trapped, the old path (gate to -2 V first, then -2 -> 8 V) left the
+    channel off up to 8 V or stopped the sweep, WITH OR WITHOUT pf.nitride (diag B5a/b, B7, B8),
+    while reads that started at 0 V and went up turned the channel on normally (diag B6a/b/c).
+    The two Id-Vg files (_IdVg.dat and _IdVg_neg.dat) are merged by couple_atlas.py."""
+    pat = re.compile(
+        r"solve vcgate=0 vstep=-0\.1 name=cgate vfinal=\$Vrd_lo\n\n*"
+        + re.escape(DRAIN_RAMP) + r"\n*"
+        r"log outf=(?P<log>\S+?)\.log(?P<master> master)?\n"
+        r"solve vcgate=\$Vrd_lo vstep=\$Vrd_step name=cgate vfinal=\$Vrd_hi\n"
+        r"(?P<ext>(?:extract [^\n]*\n)+)")
+    def new(m):
+        log, ext = m.group("log"), m.group("ext")
+        ivg = re.search(r'name="(IdVg_\w+)" curve\(v\."cgate",i\."drain"\) outfile="(\S+)\.dat"', ext)
+        if not ivg:
+            sys.exit("IdVg extract not found in a read block")
+        start = f"{log}_rd0.str"
+        return (DRAIN_RAMP + f"save outf={start}\n"
+                f"log outf={log}.log{m.group('master') or ''}\n"
+                "solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + ext +
+                "log off\n"
+                f"load infile={start} master\nsolve prev\n"
+                f"log outf={log}_neg.log\n"
+                "solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo\n"
+                f'extract name="{ivg.group(1)}_neg" curve(v."cgate",i."drain") outfile="{ivg.group(2)}_neg.dat"\n')
+    s2, k = pat.subn(new, s)
+    if k == 0 or "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo" in s2:
+        sys.exit("read blocks not converted")
+    return s2
 
 
 def read_from_saved(s, key):

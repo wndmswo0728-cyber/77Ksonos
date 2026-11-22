@@ -103,14 +103,26 @@ def read_vt(path):
     return vals
 
 
+def read_idvg(path):
+    """Id-Vg of one read: the up sweep (<name>.dat, 0 -> Vrd_hi) merged with the down sweep
+    (<name>_neg.dat, 0 -> Vrd_lo) when present, sorted by Vg (reads start at 0 V both ways)."""
+    path = Path(path)
+    d = read_two_columns(path)
+    neg = path.with_name(path.stem + "_neg" + path.suffix)
+    if neg.exists():
+        n = read_two_columns(neg)
+        if len(n):
+            d = np.vstack([n[n[:, 0] < 0], d]) if len(d) else n
+    return d[np.argsort(d[:, 0])] if len(d) else d
+
+
 def vt_from_idvg(path):
     """Max-gm tangent VT at the FIRST gm peak (>= 30 % of the largest gm). The deck's
     extract takes the global gm maximum, which sat at the end of the sweep in the first
     77 K run (gm rises again above ~6 V)."""
-    d = read_two_columns(path)
+    d = read_idvg(path)
     if len(d) < 5:
         return None
-    d = d[np.argsort(d[:, 0])]
     v, i = d[:, 0], d[:, 1]
     g = np.gradient(i, v)
     thr = 0.3 * g.max()

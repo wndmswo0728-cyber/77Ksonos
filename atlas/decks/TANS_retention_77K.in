@@ -112,17 +112,22 @@ save outf=T77K_RET_TANS_initial.str
 
 
 solve prev
-solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.0001
 solve vdrain=0.001
 solve name=drain vstep=0.001 vfinal=0.01
 solve name=drain vstep=0.005 vfinal=0.1
-
+save outf=T77K_RET_TANS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|_rd0.str
 log outf=T77K_RET_TANS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
-solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
 extract name="Vt_init" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANS_RET_Vt.dat"
 extract name="Vt_init_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANS_RET_Vt.dat"
 extract name="IdVg_init" curve(v."cgate",i."drain") outfile="T77K_TANS_RET_init_IdVg.dat"
+log off
+load infile=T77K_RET_TANS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|_rd0.str master
+solve prev
+log outf=T77K_RET_TANS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_init_neg" curve(v."cgate",i."drain") outfile="T77K_TANS_RET_init_IdVg_neg.dat"
 log off
 
 
@@ -202,17 +207,22 @@ solve nit.xmin=@Lgate_left nit.xmax=@Lgate_right nit.ymin=-0.1+$Tpg+$Ttox nit.ym
 output qfn qfp con.band val.band Band.param t.quantum
 save outf=T77K_RET_TANS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
 
-solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
 solve vdrain=0.0001
 solve vdrain=0.001
 solve name=drain vstep=0.001 vfinal=0.01
 solve name=drain vstep=0.005 vfinal=0.1
-
+save outf=T77K_RET_TANS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|_rd0.str
 log outf=T77K_RET_TANS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
-solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
 extract name="Vt_PGM" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANS_RET_Vt.dat"
 extract name="Vt_PGM_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANS_RET_Vt.dat"
 extract name="IdVg_PGM" curve(v."cgate",i."drain") outfile="T77K_TANS_RET_PGM_IdVg.dat"
+log off
+load infile=T77K_RET_TANS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|_rd0.str master
+solve prev
+log outf=T77K_RET_TANS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_PGM_neg" curve(v."cgate",i."drain") outfile="T77K_TANS_RET_PGM_IdVg_neg.dat"
 log off
 solve name=drain vstep=-0.02 vfinal=0
 solve name=cgate vstep=-0.2 vfinal=0
@@ -252,18 +262,22 @@ load infile=T77K_RET_TANS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxi
 solve prev
 
 
-solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo
-
 solve vdrain=0.0001
 solve vdrain=0.001
 solve name=drain vstep=0.001 vfinal=0.01
 solve name=drain vstep=0.005 vfinal=0.1
-
+save outf=T77K_RET_TANS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|_rd0.str
 log outf=T77K_RET_TANS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
-solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
 extract name="Vt_RET" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANS_RET_Vt.dat"
 extract name="Vt_RET_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANS_RET_Vt.dat"
 extract name="IdVg_RET" curve(v."cgate",i."drain") outfile="T77K_TANS_RET_RET_IdVg.dat"
+log off
+load infile=T77K_RET_TANS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|_rd0.str master
+solve prev
+log outf=T77K_RET_TANS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_RET_neg" curve(v."cgate",i."drain") outfile="T77K_TANS_RET_RET_IdVg_neg.dat"
 
 log off
 quit	

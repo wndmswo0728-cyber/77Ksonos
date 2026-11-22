@@ -125,6 +125,12 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   with PF.NITRIDE active in static solves AND a read path through -2 V: a path-dependent Newton
   problem, not physics. Keep PF.NITRIDE out of static solves. Diag B7 checks the final read path.
 
+- Diag B7/B8 (77 K, final models, no PF.NITRIDE): the PGM read via -2 V still kept the channel off
+  up to 8 V -> the B5/B6 "PF.NITRIDE" condition was wrong; the trigger is the read path through
+  -2 V with 1e19 trapped at 77 K (0 V-start reads in B6 all fine; 300 K fine). All reads now start
+  at 0 V: up 0 -> 8 V, then LOAD the saved Vg=0 state and go down 0 -> -2 V (_IdVg_neg.dat; merged
+  by couple_atlas.py). Diag B9 (77 K, 300 K) checks it.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

@@ -145,6 +145,11 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   10 ns (1.49 h -> 35.7 min); -P 4 byte-identical (-> 23.5 min). P/E decks use both; Erase ramp keeps
   5e-12 (untested); retention decks unchanged.
 
+- 300 K P/E (P16 decks): static gate steps from the end-of-Program state (16 V) failed at every step
+  incl. a direct 16 -> 0 V solve (NaN in currents; frozen traps + high-field injection, no steady
+  state); the read log was empty. P/E decks now end each pulse with a transient fall edge (mirrored
+  rise, pf.nitride on, then 1 us at 0 V, TSTOP ... RELATIVE), save at 0 V, load, read. Not run yet.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

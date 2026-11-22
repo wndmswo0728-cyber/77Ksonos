@@ -150,6 +150,13 @@ method dt.min=1.0e-8
 solve tstop=1e-6 proj
 method dt.min=1.0e-7
 solve tstop=@TPGM proj
+# pulse fall edge (added): transient back to 0 V, traps keep capturing
+method dt.max=2e-11 dt.min=1e-25
+solve vcgate=$vcgate_split ramptime=9e-10 tstep=2e-12 tstop=9e-10 relative
+method dt.max=5e-12 dt.min=1e-25
+solve vcgate=0 ramptime=1e-10 tstep=1e-12 tstop=1e-10 relative
+method dt.max=1e-3 dt.min=1e-25
+solve tstop=1e-6 relative proj
 log off
 
 
@@ -161,7 +168,7 @@ save outf=T77K_PE_TANOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_A
 models srh temperature=@temp
 models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 load infile=T77K_PE_TANOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.str master
-solve name=cgate vstep=-0.5 vfinal=0
+solve prev
 
 solve vdrain=0.0001
 solve vdrain=0.001
@@ -205,6 +212,13 @@ method dt.min=1.0e-7
 solve tstop=1e-5 proj
 method dt.min=1.0e-6
 solve tstop=@TERS proj
+# pulse fall edge (added): transient back to 0 V, traps keep capturing
+method dt.max=5e-12 dt.min=1e-25
+solve vcgate=$ecgate_split ramptime=9e-10 tstep=2e-12 tstop=9e-10 relative
+method dt.max=5e-12 dt.min=1e-25
+solve vcgate=0 ramptime=1e-10 tstep=1e-12 tstop=1e-10 relative
+method dt.max=1e-3 dt.min=1e-25
+solve tstop=1e-6 relative proj
 log off
 
 #################### Vt after ERS #################
@@ -214,7 +228,7 @@ save outf=T77K_PE_TANOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_A
 models srh temperature=@temp
 models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx trap.tunnel
 load infile=T77K_PE_TANOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_Al2O3|_cwf_$cwf|.str master
-solve name=cgate vstep=0.5 vfinal=0
+solve prev
 
 solve vdrain=0.0001
 solve vdrain=0.001

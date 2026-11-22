@@ -206,7 +206,7 @@ def prg_ers(src, T, dev):
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("init", tag, KIND) + "log off\n")
     # (5) PGM read: charged nitride -> solve init sonos; same range; solve init moved after log off
     # SOLVE INIT SONOS keeps the bias (here Vg = 16 V); go to 0 V by DC steps instead.
-    s = re.sub(r"(save outf=\S*PGM\S*\n\n)solve init\n", r"\1solve name=cgate vstep=-0.5 vfinal=0\n", s, count=1)
+    s = re.sub(r"(save outf=\S*PGM\S*\n\n)solve init\n", r"\1", s, count=1)
     pg = re.search(r"solve vcgate=0 vstep=0\.1 name=cgate vfinal=1\nsolve vdrain=0\.1\n\n(log outf=\S*PGM\S* master)\n"
                    r"solve vcgate=\d+ vstep=0\.1 name=cgate vfinal=\d+\n\nsolve init\nlog off\n", s)
     if not pg:
@@ -219,7 +219,7 @@ def prg_ers(src, T, dev):
     s = sub(s, "#################### Erase #########################\nsolve init\n",
             "#################### Erase #########################\nsolve init sonos\n")
     # (7) ERS read
-    s = re.sub(r"(save outf=\S*ERS\S*\n\n)solve init\n", r"\1solve name=cgate vstep=0.5 vfinal=0\n", s, count=1)
+    s = re.sub(r"(save outf=\S*ERS\S*\n\n)solve init\n", r"\1", s, count=1)
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-2\nsolve vdrain=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\nsolve vdrain=0.1\n")
     s = sub(s, "solve vcgate=-2 vstep=0.1 name=cgate vfinal=7\n",
@@ -271,14 +271,35 @@ def prg_ers(src, T, dev):
             "#################### Erase #########################\n" + RAMP_DOWN + PF)
     s = sub(s, "################ ERS retention (added) ################\n" + RAMP_DOWN,
             "################ ERS retention (added) ################\n" + RAMP_DOWN + PF)
+    # (11) Pulse fall edge as a transient (diag: 300 K P/E run, 2026-11-22). Stepping the gate
+    # from the end-of-pulse state (16 V) to 0 V by STATIC solves failed at every step, also the
+    # direct 16 -> 0 V solve ("Not A Numbers found in currents", gate stayed at 16 V, read log
+    # empty): in a static solve the trap occupancy is frozen while the high-field tunnel
+    # injection still feeds the nitride (no steady state, as PF in B1). A real pulse returns to
+    # 0 V through its fall edge while the traps keep capturing; ATLAS solves that as a transient
+    # (pf.nitride on), mirrored on the rise (split at V/10, no PROJ on the ramp, 5 ps near VT),
+    # then 1 us at 0 V. The .str is saved at 0 V; the read loads it with no gate stepping.
+    # Program fall: 16 -> 1.6 V with DT.MAX 2e-11 (as the tested rise, P16); Erase fall: 5e-12
+    # on both segments (the Erase rise was not tested with 2e-11). TSTOP ... RELATIVE: manual
+    # SOLVE (TSTOP relative to the current time).
+    def fall(v, first_dt):
+        return ("solve tstop=@T{0} proj\n"
+                "# pulse fall edge (added): transient back to 0 V, traps keep capturing\n"
+                f"method dt.max={first_dt} dt.min=1e-25\n"
+                f"solve vcgate=${v}_split ramptime=9e-10 tstep=2e-12 tstop=9e-10 relative\n"
+                "method dt.max=5e-12 dt.min=1e-25\n"
+                "solve vcgate=0 ramptime=1e-10 tstep=1e-12 tstop=1e-10 relative\n"
+                "method dt.max=1e-3 dt.min=1e-25\n"
+                "solve tstop=1e-6 relative proj\n")
+    s = sub(s, "solve tstop=@TPGM proj\n", fall("vcgate", "2e-11").format("PGM"))
+    s = sub(s, "solve tstop=@TERS proj\n", fall("ecgate", "5e-12").format("ERS"))
     s = drain_ramp(s)
     s = prefix_outputs(s, tag, KIND)
-    for key, step in (("_PGM_nt_", "-0.5"), ("_ERS_nt_", "0.5")):
+    for key in ("_PGM_nt_", "_ERS_nt_"):
         m = re.findall(rf"save outf=(\S*{key}\S*\.str)\n", s)
         if len(m) != 1:
             sys.exit(f"saved {key} .str not found")
-        s = sub(s, f"save outf={m[0]}\n\nsolve name=cgate vstep={step} vfinal=0\n",
-                f"save outf={m[0]}\n\n{NOPF}load infile={m[0]} master\nsolve name=cgate vstep={step} vfinal=0\n")
+        s = sub(s, f"save outf={m[0]}\n\n", f"save outf={m[0]}\n\n{NOPF}load infile={m[0]} master\nsolve prev\n")
     s = sub(s, "################ Vt after ERS retention ################\n",
             "################ Vt after ERS retention ################\n" + NOPF)
     s = read_from_saved(s, "_ERS_RETEN")

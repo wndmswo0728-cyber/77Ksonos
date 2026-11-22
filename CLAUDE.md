@@ -181,6 +181,14 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   report the direct 3e8 s value. cc-VT = gm-VT within 4 mV. 77 K retention failed at the t1e3s snapshot
   load (Newton 25 at 0 V); t100s read ran at VD 0.011 V (drain ramp stalled). Waiting for .str/logs.
 
+- 77 K SONOS retention, FINAL deck (ATLAS-only, results/atlas/run3_77K_SONOS_RET): valid reads init/PGM/10 y
+  VT 0.7503/3.6959/1.8422 V (deck Vt_RET 7.17 is a wrong global-gm pick). Snapshot reads 1/10/100 s: channel
+  never on (invalid), t100s drain stalled at 0.011 V, t1e3s load + solve prev failed (Newton 25). Q/Q0 equals
+  300 K to 1e3 s, then 77 K loses MORE (3e8 s 0.453 vs 0.634). .str: top nitride row (blocking side) fills to
+  3.3e19, free electrons ~3e2 cm^-3 in the nitride CB during the transient at both T (not thermal). Suspect
+  free-electron drift; diag E3b (nitride mun 0.01, 77 K to 1e4 s), E2a/b/c (snapshot reads, with SOLVE INIT
+  SONOS after LOAD) in the 77 K retention folder. Do not tune toward the expected result.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

@@ -67,6 +67,8 @@ class Options:
     pf_b_hz: float = 1e13       # ATLAS PF.B
     fc_tunnel: bool = False     # Franck-Condon (phonon-assisted) trap<->electrode tunneling
     nit_mass: float = 0.5       # v4: tunneling mass in the Si3N4 gap (band injection path)
+    nit_offset: float = 2.0     # Si CB -> Si3N4 CB offset (eV), NOT calibrated; the nitride gap is
+                                # 5.1 eV, so the hole offset is 5.1 - Eg(Si) - nit_offset
     ode_method: str = "BDF"
     ode_rtol: float = 1e-5
     ode_atol: float = 1e-9
@@ -210,7 +212,7 @@ def simulate(device, opt, retention_from=None):
         return e**2*field**2/(16*np.pi**2*hbar*barrier)*np.exp(-action)
 
     # Approximate electron/hole injecting barriers (eV) and mass ratios.
-    left_phi = (2.0, 5.1-eg-2.) if not tunnel else (3.10, 9.-eg-3.10)
+    left_phi = (opt.nit_offset, 5.1-eg-opt.nit_offset) if not tunnel else (3.10, 9.-eg-3.10)
     right_phi = (3.10, 5.90) if device == "SONOS" else (3.10, 4.90)
     def mean_sqrt_barrier(a,b):
         # Integral of sqrt(max(U,0)) for linear U; stable at equal endpoints.
@@ -229,7 +231,7 @@ def simulate(device, opt, retention_from=None):
     # the turning point is inside the oxide (programming), 0 when there is none.
     ox_si = np.array([3.10, 9.-eg-3.10])                      # SiO2 band offsets to Si (e, h)
     ox_gate = ox_si if device == "SONOS" else np.array([2.55, 8.-eg-2.55])
-    nit_off = np.array([2.0, 5.1-eg-2.0])                     # Si3N4 band offsets to Si (e, h)
+    nit_off = np.array([opt.nit_offset, 5.1-eg-opt.nit_offset])  # Si3N4 band offsets to Si (e, h)
     nit_len = np.r_[dx/2, np.full(n-1, dx), dx/2]
     wkb_c = 2*np.sqrt(2*electron_mass*e)/hbar
 
@@ -300,7 +302,7 @@ def simulate(device, opt, retention_from=None):
         currents["PF_thermal"] = e*cap*np.sum(-signs*loss)
         # WKB escape from each localized site through actual intervening films.
         # Midpoint barrier in each linear-potential segment. Energies relative to Si band edge.
-        ns_offset = np.array([2.,5.1-eg-2.])[:,None]
+        ns_offset = np.array([opt.nit_offset,5.1-eg-opt.nit_offset])[:,None]
         trap_energy = ns_offset + energy
         phi_left_n = surface-disp[0]*tunnel/(3.9*epsilon_0)
         phi_right_n = gate + disp[-1]*8e-9/(block_k*epsilon_0)

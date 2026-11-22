@@ -75,8 +75,8 @@ def python_run(device, T, extra, occ0=OCC0):
     return t, q, dvt
 
 
-def survival_factor(device, T, full=FULL, occ0=OCC0):
-    t, qb, dvb = python_run(device, T, BASE, occ0)
+def survival_factor(device, T, full=FULL, occ0=OCC0, base=BASE):
+    t, qb, dvb = python_run(device, T, base, occ0)
     t2, qf, dvf = python_run(device, T, full, occ0)
     assert np.allclose(t, t2)
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -130,6 +130,38 @@ def vt_from_idvg(path):
         if g[k] >= thr and g[k] >= g[k-1] and g[k] >= g[k+1]:
             return float(v[k] - i[k] / g[k])
     return None
+
+
+CC_REFS = (1e-9, 1e-8, 1e-7)       # A (W = 1 um, L = 1 um, VD = 0.1 V)
+
+
+def vt_cc(path, i_ref):
+    """Constant-current VT: the gate voltage where |Id| first reaches i_ref going up in Vg
+    (log-linear interpolation). None if the current is already above i_ref at the lowest Vg
+    (leakage floor) or never reaches it. Independent of the gm peak, so a cross-check of the
+    max-gm VT (teammate package: max gm failed when Id flattened at 77 K)."""
+    d = read_idvg(path)
+    if len(d) < 3:
+        return None
+    v, i = d[:, 0], np.abs(d[:, 1])
+    if i[0] >= i_ref:
+        return None
+    k = np.where(i >= i_ref)[0]
+    if not len(k):
+        return None
+    k = k[0]
+    li = np.log10(np.maximum(i[k-1:k+1], 1e-300))
+    return float(np.interp(np.log10(i_ref), li, v[k-1:k+1]))
+
+
+def vt_methods(atlas_dir, T, device, kind, states):
+    """{state: {"gm": VT, "cc1e-09": VT, ...}} from the Id-Vg files that exist."""
+    out = {}
+    for st in states:
+        f = atlas_dir / f"T{T}K_{device}_{kind}_{st}_IdVg.dat"
+        if f.exists():
+            out[st] = {"gm": vt_from_idvg(f), **{f"cc{r:.0e}": vt_cc(f, r) for r in CC_REFS}}
+    return out
 
 
 def read_states(atlas_dir, T, device, kind, states):
@@ -241,6 +273,7 @@ def equilibrium_test(device, T, occ_pgm, occ_ers=None, full=FULL):
 
 
 def couple(device, T, atlas_dir, out_dir):
+    out_dir.mkdir(parents=True, exist_ok=True)
     qfile = atlas_dir / f"T{T}K_{device}_netcharge_vs_time.dat" if atlas_dir else None
     efile = atlas_dir / f"T{T}K_{device}_ERS_netcharge_vs_time.dat" if atlas_dir else None
     have_q = bool(qfile and qfile.exists())
@@ -298,6 +331,25 @@ def couple(device, T, atlas_dir, out_dir):
     else:
         res["atlas_status"] = "ATLAS 결과 없음 (Python 계수만)"
     res.update(paper_fit(atlas_dir, T, device))
+    if atlas_dir:                 # VT by max gm and by constant current, shift vs the fresh read
+        snaps = [k for k, _ in SNAP_T]
+        rows_vt = []
+        for kind, states in (("RET", ["init", "PGM", "RET"] + ["RET" + k for k in snaps]),
+                             ("PE", ["init", "PGM", "ERS", "ERSRET"] + ["ERS" + k for k in snaps])):
+            vm = vt_methods(atlas_dir, T, device, kind, states)
+            ref = vm.get("init", {})
+            for st, d in vm.items():
+                rows_vt.append(dict(kind=kind, state=st, **{f"VT_{m}_V": x for m, x in d.items()},
+                                    **{f"dVT_{m}_V": (x - ref[m]) if x is not None and ref.get(m) is not None
+                                       else None for m, x in d.items()}))
+        if rows_vt:
+            keys = list(dict.fromkeys(k for r in rows_vt for k in r))
+            with (out_dir / f"T{T}K_{device}_vt_methods.csv").open("w", newline="") as fh:
+                w = csv.DictWriter(fh, fieldnames=keys); w.writeheader(); w.writerows(rows_vt)
+            for r in rows_vt:
+                if r["kind"] == "RET" and r["state"] in ("PGM", "RET"):
+                    res.update({f"dVT_{r['state']}_{m}_V": r[f"dVT_{m}_V"]
+                                for m in ["gm"] + [f"cc{x:.0e}" for x in CC_REFS]})
     occ_e = None
     if efile and efile.exists():
         occ_e = occ_from_q(read_two_columns(efile)[0, 1])
@@ -316,20 +368,31 @@ SENS = [("기본 (a=1.5 nm, Ea=1.2 eV, ħω=64 meV, W_opt/W_T=2, 탈출=1, FC �
         ("W_opt/W_T = 2.2", {"pat_wopt_ratio": 2.2}),
         ("이온화 전자 탈출 2 %", {"pat_escape": 0.02}),
         ("hopping Ea = 0.9 eV", {"hop_ea": 0.9}),
-        ("hopping a = 3.0 nm", {"hop_distance_nm": 3.0})]
+        ("hopping a = 3.0 nm", {"hop_distance_nm": 3.0}),
+        # Si CB -> Si3N4 CB offset (not calibrated; teammate package used 1.45 eV, here 2.0 eV)
+        ("Si/SiN 오프셋 1.45 eV", {"nit_offset": 1.45}),
+        ("Si/SiN 오프셋 1.7 eV", {"nit_offset": 1.7}),
+        ("Si/SiN 오프셋 2.1 eV", {"nit_offset": 2.1})]
 
 
-def sensitivity(devices, temps, out_dir):
+DEVICE_KEYS = ("nit_offset",)     # device properties: applied to base AND full
+
+
+def sensitivity(devices, temps, out_dir, only=None):
     out = []
     for label, kw in SENS:
+        if only and not any(o in label for o in only.split(",")):
+            continue
         for dev in devices:
             for T in temps:
                 full = dict(FULL, **kw)
-                t, f, dvb, dvf = survival_factor(dev, T, full)
+                dev_kw = {k: v for k, v in kw.items() if k in DEVICE_KEYS}
+                t, f, dvb, dvf = survival_factor(dev, T, full, base=dict(BASE, **dev_kw))
                 out.append(dict(case=label, device=dev, T_K=T, F_10y=f[-1],
                                 py_full_dVt_10y_V=dvf[-1], py_base_dVt_10y_V=dvb[-1], dVt_start_V=dvb[0]))
                 print(out[-1], flush=True)
-    with (out_dir / "sensitivity.csv").open("w", newline="") as fh:
+    name = "sensitivity_offset.csv" if only and "오프셋" in only else ("sensitivity_subset.csv" if only else "sensitivity.csv")
+    with (out_dir / name).open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(out[0])); w.writeheader(); w.writerows(out)
     return out
 
@@ -341,12 +404,13 @@ def main():
     ap.add_argument("--devices", default="SONOS,TANOS,TANS")
     ap.add_argument("--temps", default="300,77")
     ap.add_argument("--sensitivity", action="store_true")
+    ap.add_argument("--only", default=None, help="comma-separated texts; run only sensitivity cases whose label contains one")
     a = ap.parse_args()
     devs = a.devices.upper().split(",")
     temps = [int(x) for x in a.temps.split(",")]
     a.out.mkdir(parents=True, exist_ok=True)
     if a.sensitivity:
-        sensitivity(devs, temps, a.out)
+        sensitivity(devs, temps, a.out, a.only)
         return
     res = []
     for d in devs:

@@ -164,6 +164,11 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   solve after the 1 s retention; D1a (^) read normally (VT_init 0.5348, VT_PGM 3.4799, VT 1 s 3.2018 V).
   The B2/B3 'stale initial guess' reading is superseded by this.
 
+- Teammate package review (C, A): couple_atlas.py also extracts constant-current VT (1e-9..1e-7 A)
+  -> T<T>K_<DEV>_vt_methods.csv; 300 K SONOS dVT agrees with max gm within 4 mV. Python nit_offset
+  (Si->Si3N4 CB, default 2.0 eV) sensitivity 1.45-2.1 eV: retention 10 y dVT changes <= 0.19 V, F <= 0.08,
+  77 K > 300 K in all cases (Python-only; Program comes from ATLAS).
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

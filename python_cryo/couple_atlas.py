@@ -208,7 +208,8 @@ SNAP_T = (("t1s", 1.0), ("t10s", 10.0), ("t100s", 100.0), ("t1e3s", 1e3), ("t1e4
 TEN_Y = 3.15576e8                 # 10 years in s (ATLAS Retime 3e8 s is 9.5 y)
 
 
-def paper_fit(atlas_dir, T, device):
+def paper_fit(atlas_dir, T, device, pgm_src=("RET", "RET", "RET"), ers_src=("PE", "ERS", "ERSRET"),
+              key=""):
     """ATLAS-only, Hur et al. method: VT read at 1, 10, 100, 1e3, 1e4 s after programming
     (and after erasing), fit alpha - beta*ln(t + gamma) on 1 s - 1e4 s, extrapolate to the
     end of the run (3e8 s) and to 10 y, and compare with the simulated read at 3e8 s.
@@ -218,12 +219,13 @@ def paper_fit(atlas_dir, T, device):
     loss of the row next to the tunnel oxide)."""
     if not atlas_dir:
         return {}
-    pgm = read_states(atlas_dir, T, device, "RET", ["RET" + k for k, _ in SNAP_T] + ["RET"])
-    ers = read_states(atlas_dir, T, device, "PE", ["ERS" + k for k, _ in SNAP_T] + ["ERSRET"])
+    (pk, pp_, pf), (ek, ep, ef) = pgm_src, ers_src      # (kind, state prefix, final state)
+    pgm = read_states(atlas_dir, T, device, pk, [pp_ + k for k, _ in SNAP_T] + [pf])
+    ers = read_states(atlas_dir, T, device, ek, [ep + k for k, _ in SNAP_T] + [ef])
     ts = np.array([t for _, t in SNAP_T])
     out = {}
     curves = {}
-    for name, d, pre, final in (("PGM", pgm, "RET", "RET"), ("ERS", ers, "ERS", "ERSRET")):
+    for name, d, pre, final in (("PGM", pgm, pp_, pf), ("ERS", ers, ep, ef)):
         v = [d.get(pre + k) for k, _ in SNAP_T]
         if any(x is None for x in v):
             out[f"fit_{name}_status"] = "snapshot reads missing"
@@ -252,7 +254,7 @@ def paper_fit(atlas_dir, T, device):
             out["MW_close_time_fit_s"] = float(np.exp(min(a / b, 700.0)) - g) if b > 0 else None
         if pgm.get("RET") is not None and ers.get("ERSRET") is not None:
             out["MW_3e8_read_V"] = pgm["RET"] - ers["ERSRET"]
-    return out
+    return {key + k: v for k, v in out.items()}
 
 
 def equilibrium_test(device, T, occ_pgm, occ_ers=None, full=FULL):
@@ -331,11 +333,15 @@ def couple(device, T, atlas_dir, out_dir):
     else:
         res["atlas_status"] = "ATLAS 결과 없음 (Python 계수만)"
     res.update(paper_fit(atlas_dir, T, device))
+    # paper pulse decks (+-6.5 V, 5 us after wake-up): PGM and ERS retention both from real pulses
+    res.update(paper_fit(atlas_dir, T, device, ("PP", "PGM", "PGMRET"), ("PP", "ERS", "ERSRET"), "PP_"))
     if atlas_dir:                 # VT by max gm and by constant current, shift vs the fresh read
         snaps = [k for k, _ in SNAP_T]
         rows_vt = []
         for kind, states in (("RET", ["init", "PGM", "RET"] + ["RET" + k for k in snaps]),
-                             ("PE", ["init", "PGM", "ERS", "ERSRET"] + ["ERS" + k for k in snaps])):
+                             ("PE", ["init", "PGM", "ERS", "ERSRET"] + ["ERS" + k for k in snaps]),
+                             ("PP", ["init", "PGM", "ERS", "PGMRET", "ERSRET"]
+                              + ["PGM" + k for k in snaps] + ["ERS" + k for k in snaps])):
             vm = vt_methods(atlas_dir, T, device, kind, states)
             ref = vm.get("init", {})
             for st, d in vm.items():

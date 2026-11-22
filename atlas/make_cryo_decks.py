@@ -462,6 +462,104 @@ def prefix_outputs(s, tag, kind):
     return s
 
 
+# ---------------------------------------------------------------------------------------
+# Paper pulse condition (Hur et al., Adv. Electron. Mater. 2023, 9, 2201299, section 2):
+# "Two wake-up pulses of +-6.5 V, 500 us were applied prior to pretesting"; write/erase
+# Vwrite = +-6.5 V with tpulse = 5 us (MW ~0.4 V at RT in the paper); retention at both
+# temperatures from the written states, MW(t) = VT_PGM(t) - VT_ERS(t).
+# Built from the P/E deck (same structure, models, reads, fall edges) with:
+#   - vcgate 6.5, ecgate -6.5, TPGM = TERS = 5 us;
+#   - wake-up +6.5 V then -6.5 V, 500 us each (our reading of "+-": one pulse of each sign,
+#     ending in the erased direction), each with the same rise/fall form, before the write;
+#   - every transient time RELATIVE (manual SOLVE: TSTOP ... RELATIVE), so no step depends on
+#     whether ATLAS restarts the time after DC solves;
+#   - two decks per device/temperature that run in parallel: _PAPER_PGM_ (init read, wake-up,
+#     write, PGM read, PGM retention 3e8 s with snapshot reads) and _PAPER_ERS_ (the same up to
+#     the PGM read, then erase, ERS read, ERS retention). Outputs carry _PP_ instead of _PE_.
+PAPER = dict(v=6.5, t_pulse=5e-6, t_wake=5e-4)
+
+
+def hold_steps(total):
+    """Relative hold steps after the 1 ns ramp: to 1e-8, 1e-7, 1e-6, (1e-5), total."""
+    marks = [m for m in (1e-8, 1e-7, 1e-6, 1e-5) if m < total] + [total]
+    out, prev, dtmin = "", 1e-9, ("1.0e-9", "1.0e-9", "1.0e-8", "1.0e-7", "1.0e-6")
+    for k, m in enumerate(marks):
+        out += f"method dt.max=1e-3 dt.min={dtmin[k]}\n" if k in (0, 2, 3, 4) else ""
+        out += f"solve tstop={m - prev:.6g} relative proj\n"
+        prev = m
+    return out
+
+
+def pulse_block(v, total, second_dt):
+    """Rise (split at V/10, no PROJ), hold, fall (mirrored), 1 us at 0 V; all relative."""
+    return (f"set {v}_split=${v}/10\n"
+            "method dt.max=5e-12 dt.min=1e-25\n"
+            f"solve vcgate=${v}_split ramptime=1e-10 tstep=1e-12 tstop=1e-10 relative\n"
+            f"method dt.max={second_dt} dt.min=1e-25\n"
+            f"solve vcgate=${v} ramptime=9e-10 tstep=2e-12 tstop=9e-10 relative\n"
+            + hold_steps(total) +
+            f"method dt.max={second_dt} dt.min=1e-25\n"
+            f"solve vcgate=${v}_split ramptime=9e-10 tstep=2e-12 tstop=9e-10 relative\n"
+            "method dt.max=5e-12 dt.min=1e-25\n"
+            "solve vcgate=0 ramptime=1e-10 tstep=1e-12 tstop=1e-10 relative\n"
+            "method dt.max=1e-3 dt.min=1e-25\n"
+            "solve tstop=1e-6 relative proj\n")
+
+
+def paper_decks(src, T, dev):
+    base = prg_ers(src, T, dev)
+    for a, b in (("set vcgate=16\n", f"set vcgate={PAPER['v']}\n"),
+                 ("set ecgate=-12\n", f"set ecgate=-{PAPER['v']}\n"),
+                 ("set TPGM=1.0e-4\n", f"set TPGM={PAPER['t_pulse']}\n"),
+                 ("set TERS=5.0e-4\n", f"set TERS={PAPER['t_pulse']}\n")):
+        base = sub(base, a, b)
+    # Program / Erase pulses: replace the whole rise-hold-fall sequence by the relative form
+    for v, tag, dt2 in (("vcgate", "TPGM", "2e-11"), ("ecgate", "TERS", "5e-12")):
+        m = re.search(rf"set {v}_split=\${v}/10\n.*?solve tstop=1e-6 relative proj\n", base, flags=re.S)
+        if not m:
+            sys.exit(f"{v} pulse block not found")
+        base = base.replace(m.group(0), pulse_block(v, PAPER["t_pulse"], dt2), 1)
+    # wake-up +6.5 V, -6.5 V (500 us each) before the write, in the same transient sequence
+    wake = ("# wake-up pulses (paper: +-6.5 V, 500 us before testing), then the write\n"
+            + pulse_block("vcgate", PAPER["t_wake"], "2e-11")
+            + pulse_block("ecgate", PAPER["t_wake"], "5e-12"))
+    base = sub(base, "# Charge up the Nitride region\n", wake + "# Charge up the Nitride region (write)\n")
+    # ERS retention: relative times
+    rel = retention_transient_relative
+    m = re.search(r"solve tstep=1e-6 tfinal=1 proj\n.*?solve tstop=@Retime proj\n", base, flags=re.S)
+    if not m:
+        sys.exit("ERS retention transient not found")
+    ers_save = re.search(r"save outf=(\S+)_t1s\.str\n", m.group(0)).group(1)
+    base = base.replace(m.group(0), rel(ers_save), 1)
+    # PGM deck: everything before the Erase, then the ERS retention section with ERS -> PGM
+    i_ers = base.index("#################### Erase")
+    i_ret = base.index("################ ERS retention (added)")
+    pgm = base[:i_ers] + base[i_ret:].replace("ERS", "PGM")
+    def pp(t):
+        t = re.sub(rf"T{T}K_PE_", f"T{T}K_PP_", t)
+        t = t.replace(f"T{T}K_{dev}_PE_", f"T{T}K_{dev}_PP_")
+        t = t.replace(f"T{T}K_{dev}_ERS_netcharge", f"T{T}K_{dev}_PP_ERS_netcharge")
+        t = t.replace(f"T{T}K_{dev}_PGM_netcharge", f"T{T}K_{dev}_PP_PGM_netcharge")
+        head = (f"# PAPER PULSE condition ({dev}, {T} K): wake-up +-6.5 V 500 us, write +6.5 V 5 us,"
+                " erase -6.5 V 5 us (Hur et al. 2023). Generated by make_cryo_decks.py.\n")
+        return head + t
+    # the two decks run in separate folders but their Vt.dat files must not share a name
+    pgm, ers = pp(pgm), pp(base)
+    vt = f'datafile="T{T}K_{dev}_PP_Vt.dat"'
+    return (pgm.replace(vt, f'datafile="T{T}K_{dev}_PP_Vt_pgmdeck.dat"'),
+            ers.replace(vt, f'datafile="T{T}K_{dev}_PP_Vt_ersdeck.dat"'))
+
+
+def retention_transient_relative(save_prefix):
+    """retention_transient with RELATIVE stops (same 1, 10, 100, 1e3, 1e4 s and 3e8 s marks)."""
+    out = "solve tstep=1e-6 tstop=1 relative proj\n" + f"save outf={save_prefix}_t1s.str\n"
+    prev = 1.0
+    for t, lab in SNAP[1:]:
+        out += f"solve tstop={float(t) - prev:.6g} relative proj\nsave outf={save_prefix}_t{lab}.str\n"
+        prev = float(t)
+    return out + f"solve tstop={3e8 - prev:.8g} relative proj\n"
+
+
 DEVICES = (("SONOS", "SONOS_PRG_ERS.in", "SONOS_retention.in"),
            ("TANOS", "TANOS.in", "TANOS_Retention.in"),
            ("TANS", "TANS.in", "TANS_Retention.in"))
@@ -473,7 +571,11 @@ def main(devices=DEVICES, temps=(300, 77)):
         for T in temps:
             (OUT / f"{dev}_PRG_ERS_{T}K.in").write_text(prg_ers((SRC / pe).read_text(), T, dev))
             (OUT / f"{dev}_retention_{T}K.in").write_text(retention((SRC / ret).read_text(), T, dev))
-            print("wrote", f"{dev}_PRG_ERS_{T}K.in", f"{dev}_retention_{T}K.in")
+            pgm, ers = paper_decks((SRC / pe).read_text(), T, dev)
+            (OUT / f"{dev}_PAPER_PGM_{T}K.in").write_text(pgm)
+            (OUT / f"{dev}_PAPER_ERS_{T}K.in").write_text(ers)
+            print("wrote", f"{dev}_PRG_ERS_{T}K.in", f"{dev}_retention_{T}K.in",
+                  f"{dev}_PAPER_PGM_{T}K.in", f"{dev}_PAPER_ERS_{T}K.in")
     # static bias trace of every deck (check_bias.py): reads at 0 / 0.1 V, NIT.N, pulses and
     # retention at 0 V, no DC step that points away from its target
     sys.path.insert(0, str(Path(__file__).resolve().parent))

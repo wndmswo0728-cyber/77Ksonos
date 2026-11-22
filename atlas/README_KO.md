@@ -364,3 +364,16 @@ R3c의 1e19, 0 V에서도 source→substrate 전류가 2.8e-11 A/µm다(77 K R1�
 | 2.0 eV (기본) | 1.421 / 2.499 (0.72 / 1.17) | 0.759 / 1.278 (0.83 / 1.15) | 0.555 / 0.910 (0.88 / 1.26) |
 | 2.1 eV | 1.412 / 2.496 (0.73 / 1.18) | 0.754 / 1.274 (0.84 / 1.17) | 0.552 / 0.910 (0.88 / 1.26) |
 (시작 ΔVT: SONOS 3.189 V, TANOS/TANS 1.681 V.) 보존 결과는 오프셋에 둔감하다(10 y ΔVT 변화 ≤ 0.19 V, F ≤ 0.08). 77 K > 300 K 순서는 모든 경우에 같다. 팀원 결과(창이 오프셋에 수천 배 의존)는 하부 산화막 0 nm 구조의 **Program**(±6.5 V 주입)이므로 여기와 다르다: 이 작업의 Program은 ATLAS가 계산하고 Python은 보존에만 쓴다.
+
+## 논문 펄스 조건 덱 (B, 2026-11-22, 아직 실행 안 함)
+- 논문(Hur 2023) 2절: "Two wake-up pulses of ±6.5 V, 500 µs were applied prior to pretesting", 쓰기·지우기 ±6.5 V, tpulse 5 µs(RT MW ≈0.4 V), 두 온도에서 보존, α − β·ln(t + γ) 외삽.
+- `atlas/decks/<DEV>_PAPER_{PGM,ERS}_{300,77}K.in` (3구조 × 2온도 × 2 = 12개, 생성기 `paper_decks`). P/E 덱과 같은 모델·읽기·하강 구간에 다음을 바꿨다:
+  - vcgate 6.5 V, ecgate −6.5 V, TPGM = TERS = 5 µs.
+  - 쓰기 전에 wake-up +6.5 V → −6.5 V(각 500 µs, 같은 상승·하강 형태). "±"를 부호마다 한 번씩으로 해석했다(지우기 방향으로 끝남).
+  - 모든 과도해석 시간을 `TSTOP … RELATIVE`로(정적 해 뒤 ATLAS가 시간을 0으로 돌리는지에 의존하지 않음).
+  - `_PAPER_PGM_`: 처음 읽기 → wake-up → 쓰기 → PGM 읽기 → PGM 보존 3e8 s(1~1e4 s 중간 읽기). `_PAPER_ERS_`: PGM 읽기까지 같음 → 지우기 → ERS 읽기 → ERS 보존. 둘을 동시에 돌린다. 이번에는 PGM 보존도 실제 펄스로 쓴 상태에서 시작한다(팀 조건 덱의 PGM 보존은 nit.n 주입).
+  - 출력은 `_PP_`(예: `T77K_SONOS_PP_PGMt1s_IdVg.dat`), Vt 파일은 `…_PP_Vt_pgmdeck.dat` / `…_PP_Vt_ersdeck.dat`.
+- D(두 번째 P/E 쌍): 논문 조건 덱은 wake-up 뒤에 쓰므로 "빈 트랩에서의 첫 쌍"이 아니다. 팀 조건 덱은 첫 쌍 기준으로 보고한다.
+- `couple_atlas.py`: `PP_` 접두어로 같은 논문식 분석(1 s–1e4 s 맞춤, 3e8 s 읽기와 비교, MW(t), decade당 손실)과 정전류 VT.
+- 참고: 우리 구조(질화막 7 nm, 블로킹 8 nm)는 논문 소자(질화막 3.5 nm 등)보다 두꺼워 6.5 V에서는 SONOS가 거의 써지지 않을 수 있다. 터널 산화막 1 nm인 TANS가 가장 잘 써질 것으로 예상(미확인).
+- Python 단독 P/E 정정: 앞에서 "ATLAS는 같은 조건에서 약 3 V"라고 한 것은 nit.n 주입(1e19) 결과였다. 실제 펄스 Program의 ATLAS ΔVT는 지금 도는 P/E 덱에서 처음 나온다. Python 단독 Program이 약한 원인은 (1) Python 자체 PF 방출이 optical_k = 4를 써서(ATLAS PF 식은 질화막 유전율 7.5) 300 K, 16 V에서 트랩을 비우는 것(7.5로 하면 SONOS 300 K PGM 0.028 → 0.36 V), (2) FN 포획 비율 0.05가 ATLAS(σ·N_t·두께 ≈ 0.3)보다 작은 것. 결합 계산(보존)에는 쓰이지 않으며, ATLAS P/E 결과가 나오면 그 값과 비교해 맞출지 정한다.

@@ -169,6 +169,12 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   (Si->Si3N4 CB, default 2.0 eV) sensitivity 1.45-2.1 eV: retention 10 y dVT changes <= 0.19 V, F <= 0.08,
   77 K > 300 K in all cases (Python-only; Program comes from ATLAS).
 
+- Paper pulse decks (not run): <DEV>_PAPER_{PGM,ERS}_{T}K.in from paper_decks(): wake-up +6.5/-6.5 V 500 us,
+  write +6.5 V / erase -6.5 V 5 us, all transient times RELATIVE, PGM and ERS retention from real pulses
+  (outputs _PP_). couple_atlas.py analyses them with prefix PP_. Python standalone P/E is weak (own PF
+  with optical_k 4 empties traps at 16 V/300 K; FN capture 0.05) - not used for results; compare with the
+  ATLAS pulse P/E before aligning. Earlier '~3 V in ATLAS' referred to nit.n injection, not a pulse.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

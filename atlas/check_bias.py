@@ -13,6 +13,7 @@ import sys
 
 VARS = {"$Vrd_hi": 8.0, "$Vrd_lo": -2.0, "$vcgate": 16.0, "$vcgate_split": 1.6,
         "$ecgate": -12.0, "$ecgate_split": -1.2, "$Vrd_step": 0.1, "-$Vrd_step": -0.1}
+# (pulse amplitudes only matter as "not 0"; the paper decks use +-6.5 V)
 
 
 def val(x):
@@ -45,9 +46,10 @@ def trace(path):
             else: vd = cur
         elif m := re.match(r"solve vdrain=(\S+)", l): vd = val(m[1])
         elif m := re.match(r"solve vcgate=(\S+) ramptime", l):
-            if "tfinal=1e-10" in l and "split" in l: out.append((i, "pulse rise starts at", vg, vd))
+            if "ramptime=1e-10" in l and "_split" in l: out.append((i, "pulse rise starts at", vg, vd))
             vg = val(m[1])
-        elif re.match(r"solve tstep=1e-6 tfinal=1 ", l): out.append((i, "retention starts at", vg, vd))
+        elif re.match(r"solve tstep=1e-6 (tfinal=1 |tstop=1 relative)", l):
+            out.append((i, "retention starts at", vg, vd))
         elif "nit.n=" in l and l.startswith("solve"): out.append((i, "nit.n at", vg, vd))
     for i, what, g, d in out:
         if what != "read sweep starts at" and (g, d) != (0.0, 0.0):

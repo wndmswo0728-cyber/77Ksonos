@@ -69,7 +69,12 @@ def numerics(s, T, parallel=False):
 RAMP_DOWN = ("solve name=drain vstep=-0.02 vfinal=0\n"
              "solve name=cgate vstep=-0.2 vfinal=0\n")
 
-NOPF = f"models srh temperature=@temp\n{SI_MODELS}\n"
+# ^pf.nitride (manual 2.5: logical parameters are set false only with ^): a MODELS statement
+# without pf.nitride did NOT switch it off after a transient that had it. Every static solve
+# after a pf.nitride transient failed at 300 K (post-retention read, Newton 25 at the same 0 V;
+# P/E steps after Program: NaN; B3a/b), while fresh runs that loaded the same states and never
+# had pf.nitride on converged (B2, R5b), and a static solve WITH pf.nitride diverges at 300 K (B1).
+NOPF = f"models srh ^pf.nitride temperature=@temp\n{SI_MODELS}\n"
 PF = f"models srh pf.nitride temperature=@temp\n{SI_MODELS}\n"
 
 DRAIN_RAMP = ("solve vdrain=0.0001\nsolve vdrain=0.001\n"
@@ -323,7 +328,7 @@ def retention(src, T, dev):
     # without it 1e19 in 3 Newton iterations per step, R3c). Re-specifying MODELS before the
     # retention works at 77 K and 300 K (diag R4). The three reads use the same models
     # (team review item 2: the original read after retention used `srh mos`).
-    s = models_before_method(s, f"models srh temperature=@temp\n{SI_MODELS}\n")
+    s = models_before_method(s, f"models srh ^pf.nitride temperature=@temp\n{SI_MODELS}\n")
     s, _ = transient_fixes(s)
     s = sub(s, "models mos srh pf.nitride temperature=@temp\n",
             f"# pf.nitride for the retention transient only (diag R3/R4)\nmodels srh pf.nitride temperature=@temp\n{SI_MODELS}\n")
@@ -352,7 +357,7 @@ def retention(src, T, dev):
             f'extract name="Qnit_vs_t" curve(time, probe."netcharge") outfile="{tag}_netcharge_vs_time.dat"\n')
     # (6) read after retention: charged nitride
     s = sub(s, "models srh mos\nsolve init\nsolve prev\n",
-            f"# same models as the initial and PGM reads (original: srh mos)\nmodels srh temperature=@temp\n{SI_MODELS}\nsolve init sonos\nsolve prev\n")
+            f"# same models as the initial and PGM reads (original: srh mos)\nmodels srh ^pf.nitride temperature=@temp\n{SI_MODELS}\nsolve init sonos\nsolve prev\n")
     s = sub(s, "solve vcgate=0 vstep=-0.1 name=cgate vfinal=-1\n\nsolve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n",
             "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\n\nsolve vdrain=0 vstep=0.01 name=drain vfinal=0.1\n")
     s = sub(s, "solve vcgate=-1 vstep=0.1 name=cgate vfinal=3\n\nlog off\nquit",

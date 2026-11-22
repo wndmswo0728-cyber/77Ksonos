@@ -156,6 +156,12 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   (Vg 0, VD 0.1) at the end. atlas/check_bias.py traces Vg/VD statically; make_cryo_decks.py runs it
   and stops on any problem. The FIRST 300 K retention result (VT 2.242 V at 10 y) stays valid.
 
+- 300 K retention (0 V fixed deck): post-retention LOAD + first static solve at 0 V failed (Newton 25).
+  Hypothesis: MODELS without pf.nitride does NOT switch it off after a pf.nitride transient (logicals
+  are set false only with ^, manual 2.5); static PF diverges at 300 K (B1), harmless at 77 K. Explains
+  B3a/b, the P/E post-Program NaN and this failure; fresh runs never with PF (B2, R5b) worked. Static
+  MODELS now 'srh ^pf.nitride'. Diag D1a (^) / D1b (no ^), 300 K, self-contained, checks it.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

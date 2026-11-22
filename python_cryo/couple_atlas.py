@@ -172,6 +172,74 @@ def log_interp(x, xp, fp):
     return np.interp(lx, lxp, fp)
 
 
+SNAP_T = (("t1s", 1.0), ("t10s", 10.0), ("t100s", 100.0), ("t1e3s", 1e3), ("t1e4s", 1e4))
+TEN_Y = 3.15576e8                 # 10 years in s (ATLAS Retime 3e8 s is 9.5 y)
+
+
+def paper_fit(atlas_dir, T, device):
+    """ATLAS-only, Hur et al. method: VT read at 1, 10, 100, 1e3, 1e4 s after programming
+    (and after erasing), fit alpha - beta*ln(t + gamma) on 1 s - 1e4 s, extrapolate to the
+    end of the run (3e8 s) and to 10 y, and compare with the simulated read at 3e8 s.
+    MW(t) = VT_PGM(t) - VT_ERS(t); VT_PGM(t) from the retention deck (nit.n injection),
+    VT_ERS(t) from the ERS retention of the P/E deck (real Erase pulse).
+    loss_per_decade = mean VT drop per decade between 1 s and 1e4 s (after the first-second
+    loss of the row next to the tunnel oxide)."""
+    if not atlas_dir:
+        return {}
+    pgm = read_states(atlas_dir, T, device, "RET", ["RET" + k for k, _ in SNAP_T] + ["RET"])
+    ers = read_states(atlas_dir, T, device, "PE", ["ERS" + k for k, _ in SNAP_T] + ["ERSRET"])
+    ts = np.array([t for _, t in SNAP_T])
+    out = {}
+    curves = {}
+    for name, d, pre, final in (("PGM", pgm, "RET", "RET"), ("ERS", ers, "ERS", "ERSRET")):
+        v = [d.get(pre + k) for k, _ in SNAP_T]
+        if any(x is None for x in v):
+            out[f"fit_{name}_status"] = "snapshot reads missing"
+            continue
+        v = np.array(v)
+        curves[name] = v
+        p = log_fit(ts, v)
+        out[f"VT_{name}_snap_V"] = [round(float(x), 4) for x in v]
+        out[f"VT_{name}_loss_per_decade_V"] = float((v[0] - v[-1]) / 4.0)
+        out[f"VT_{name}_3e8_read_V"] = d.get(final)
+        if p:
+            a, b, g = p
+            out[f"fit_{name}_alpha_beta_gamma"] = p
+            out[f"VT_{name}_3e8_fit_V"] = a - b*np.log(RETENTION_S + g)
+            out[f"VT_{name}_10y_fit_V"] = a - b*np.log(TEN_Y + g)
+            if d.get(final) is not None:
+                out[f"VT_{name}_3e8_fit_minus_read_V"] = out[f"VT_{name}_3e8_fit_V"] - d[final]
+    if "PGM" in curves and "ERS" in curves:
+        mw = curves["PGM"] - curves["ERS"]
+        out["MW_snap_V"] = [round(float(x), 4) for x in mw]
+        p = log_fit(ts, mw)
+        if p:
+            a, b, g = p
+            out["MW_10y_fit_V"] = a - b*np.log(TEN_Y + g)
+            # closing time of the fitted window: alpha - beta*ln(t+gamma) = 0
+            out["MW_close_time_fit_s"] = float(np.exp(min(a / b, 700.0)) - g) if b > 0 else None
+        if pgm.get("RET") is not None and ers.get("ERSRET") is not None:
+            out["MW_3e8_read_V"] = pgm["RET"] - ers["ERSRET"]
+    return out
+
+
+def equilibrium_test(device, T, occ_pgm, occ_ers=None, full=FULL):
+    """Python-only check at 0 V: from empty traps the net charge must stay ~0 (no spurious
+    charging), and from the PGM / ERS occupancies it must only relax (no sign change beyond
+    the empty-start level). Reports Q/Q0 and dVT at 1 s, 1e4 s and the end of the run."""
+    out = {}
+    starts = [("empty", (0.0, 0.0)), ("PGM", occ_pgm)] + ([("ERS", occ_ers)] if occ_ers else [])
+    for name, occ in starts:
+        t, q, dvt = python_run(device, T, full, occ)
+        k = [int(np.argmin(np.abs(np.log10(np.maximum(t, 1e-12)) - np.log10(x)))) for x in (1.0, 1e4)]
+        out[f"eq_{name}_dVt_1s_1e4s_end_V"] = [float(dvt[k[0]]), float(dvt[k[1]]), float(dvt[-1])]
+        if name != "empty" and abs(q[0]) > 0:
+            out[f"eq_{name}_Q_over_Q0_end"] = float(q[-1] / q[0])
+    e = out["eq_empty_dVt_1s_1e4s_end_V"]
+    out["eq_empty_pass"] = bool(max(abs(x) for x in e) < 0.01)   # < 10 mV of spurious shift
+    return out
+
+
 def couple(device, T, atlas_dir, out_dir):
     qfile = atlas_dir / f"T{T}K_{device}_netcharge_vs_time.dat" if atlas_dir else None
     efile = atlas_dir / f"T{T}K_{device}_ERS_netcharge_vs_time.dat" if atlas_dir else None
@@ -229,6 +297,11 @@ def couple(device, T, atlas_dir, out_dir):
                 res[f"logfit_{name}"] = log_fit(ta, curve)
     else:
         res["atlas_status"] = "ATLAS 결과 없음 (Python 계수만)"
+    res.update(paper_fit(atlas_dir, T, device))
+    occ_e = None
+    if efile and efile.exists():
+        occ_e = occ_from_q(read_two_columns(efile)[0, 1])
+    res.update(equilibrium_test(device, T, occ0, occ_e))
     out_dir.mkdir(parents=True, exist_ok=True)
     with (out_dir / f"T{T}K_{device}_coupled.csv").open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
@@ -281,6 +354,13 @@ def main():
             r = couple(d, T, a.atlas_dir if a.atlas_dir.exists() else None, a.out)
             res.append(r)
             print({k: (round(v, 4) if isinstance(v, float) else v) for k, v in r.items()}, flush=True)
+    for d in devs:                # loss-rate ratio after the first second (paper: 77 K << 300 K)
+        r = {x["T_K"]: x for x in res if x["device"] == d}
+        if 77 in r and 300 in r:
+            for st in ("PGM", "ERS"):
+                a_, b_ = r[77].get(f"VT_{st}_loss_per_decade_V"), r[300].get(f"VT_{st}_loss_per_decade_V")
+                if a_ is not None and b_:
+                    print(f"{d} {st}: VT loss/decade 1 s-1e4 s  77 K {a_:.4f} V, 300 K {b_:.4f} V, ratio {a_/b_:.3f}")
     keys = sorted({k for r in res for k in r}, key=lambda k: list(res[0]).index(k) if k in res[0] else 99)
     with (a.out / "summary.csv").open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=keys); w.writeheader(); w.writerows(res)

@@ -234,7 +234,7 @@ def prg_ers(src, T, dev):
         "solve init sonos\n"
         "method lte2step tol.time=1.0e-4 tstep.incr=1.2 dt.max=1.0e7\n"
         "log outfile=TRNS_ERS_Retention.log sonos.curr j.tun\n"
-        "solve tstep=1e-6 tfinal=@Retime proj\n"
+        + retention_transient(f"{dev}_ERS_RETEN") +
         f'extract name="Qnit_ERS_vs_t" curve(time, probe."netcharge") outfile="{tag}_ERS_netcharge_vs_time.dat"\n'
         f"save outf={dev}_ERS_RETEN.str\n"
         "log off\n\n"
@@ -272,7 +272,10 @@ def prg_ers(src, T, dev):
                 f"save outf={m[0]}\n\n{NOPF}load infile={m[0]} master\nsolve name=cgate vstep={step} vfinal=0\n")
     s = sub(s, "################ Vt after ERS retention ################\n",
             "################ Vt after ERS retention ################\n" + NOPF)
-    return split_reads(read_from_saved(s, "_ERS_RETEN"))
+    s = read_from_saved(s, "_ERS_RETEN")
+    T_ = tag.split("_")[0]
+    s = insert_before_quit(s, snapshot_reads(f"{T_}_{KIND}_{dev}_ERS_RETEN", f"{T_}_{KIND}_{dev}_ERS_RETEN", "ERS", tag, KIND))
+    return split_reads(s)
 
 
 def retention(src, T, dev):
@@ -315,11 +318,7 @@ def retention(src, T, dev):
     # to see when the trapped charge redistributes inside the nitride (first 77 K run:
     # it moved to the blocking-oxide side). Same time-step control, the solve continues.
     s = sub(s, "solve tstep=1e-6 tfinal=@Retime proj\n",
-            "solve tstep=1e-6 tfinal=1 proj\n"
-            f"save outf={dev}_RETEN_t1s.str\n"
-            "solve tstop=1e4 proj\n"
-            f"save outf={dev}_RETEN_t1e4s.str\n"
-            "solve tstop=@Retime proj\n"
+            retention_transient(f"{dev}_RETEN") +
             f'extract name="Qnit_vs_t" curve(time, probe."netcharge") outfile="{tag}_netcharge_vs_time.dat"\n')
     # (6) read after retention: charged nitride
     s = sub(s, "models srh mos\nsolve init\nsolve prev\n",
@@ -330,7 +329,43 @@ def retention(src, T, dev):
             "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n" + vt_extract("RET", tag, KIND) + "\nlog off\nquit")
     s = charge_ramp(s)
     s = drain_ramp(s)
-    return split_reads(read_from_saved(prefix_outputs(s, tag, KIND), "_RETEN_nt_"))
+    s = read_from_saved(prefix_outputs(s, tag, KIND), "_RETEN_nt_")
+    T_ = tag.split("_")[0]
+    s = insert_before_quit(s, snapshot_reads(f"{T_}_{KIND}_{dev}_RETEN", f"{T_}_{KIND}_{dev}_RETEN", "RET", tag, KIND))
+    return split_reads(s)
+
+
+# Retention snapshots (paper alignment, team review: fit alpha - beta*ln(t+gamma) on 1 s .. 1e4 s
+# with the READ VT, not VT linear in Q, which was 0.16 V off at 300 K because the charge centroid
+# moves). The retention transient is split at these times, a .str is saved at each, and at the
+# end of the run each one is LOADed and read like the other states.
+SNAP = (("1", "1s"), ("10", "10s"), ("100", "100s"), ("1e3", "1e3s"), ("1e4", "1e4s"))
+
+
+def retention_transient(save_prefix):
+    out = "solve tstep=1e-6 tfinal=1 proj\n" + f"save outf={save_prefix}_t1s.str\n"
+    for t, lab in SNAP[1:]:
+        out += f"solve tstop={t} proj\nsave outf={save_prefix}_t{lab}.str\n"
+    return out + "solve tstop=@Retime proj\n"
+
+
+def snapshot_reads(prefixed_save, log_prefix, state_prefix, tag, kind):
+    """Old-form read blocks (converted by split_reads) for every snapshot, each after a LOAD."""
+    out = "\n######## reads of the retention snapshots (LOAD each saved state) ########\n"
+    for _, lab in SNAP:
+        out += (f"load infile={prefixed_save}_t{lab}.str master\nsolve prev\n"
+                "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo\n" + DRAIN_RAMP +
+                f"log outf={log_prefix}_t{lab}.log master\n"
+                "solve vcgate=$Vrd_lo vstep=$Vrd_step name=cgate vfinal=$Vrd_hi\n"
+                + vt_extract(f"{state_prefix}t{lab}", tag, kind) + "log off\n")
+    return out
+
+
+def insert_before_quit(s, block):
+    i = s.rstrip().rfind("quit")
+    if i < 0:
+        sys.exit("quit not found")
+    return s[:i] + block + s[i:]
 
 
 def split_reads(s):
@@ -372,7 +407,8 @@ def read_from_saved(s, key):
     failed at the first gate step after SOLVE INIT SONOS; loading the saved .str (diag R5b)
     read the same state without problems, and diag R5a showed LOAD restores the trapped
     charge exactly (same netcharge and VT as the in-run PGM read)."""
-    m = re.findall(rf"save outf=(\S*{key}\S*\.str)\n", s)
+    m = [f for f in re.findall(rf"save outf=(\S*{key}\S*\.str)\n", s)
+         if not re.search(r"_t1\w*s\.str$", f)]          # not the retention snapshots
     if len(m) != 1:
         sys.exit(f"saved {key} .str not found")
     return sub(s, "solve init sonos\nsolve prev\n", f"load infile={m[0]} master\nsolve prev\n")

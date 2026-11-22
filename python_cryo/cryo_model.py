@@ -13,6 +13,14 @@ Added to flash_transport_v2.py (which stays unchanged in archive/):
     (PF) emission is never counted twice.
   * retention(device, opt, occupancy, seconds): 0 V retention from a given occupancy.
   * thermal_emission=False switches the PF/thermal term off (ATLAS already has PF.NITRIDE).
+v4: band (FN / direct) injection through an oxide now has to reach a nitride band state:
+  the WKB action continues through the Si3N4 gap after the oxide (mass nit_mass = 0.5 m0)
+  and is zero without a turning point in the nitride. Before, at 0 V and 300 K the oxide-
+  only formula injected electrons from the Si surface into the nitride with no reverse
+  process (no detailed balance): from EMPTY traps SONOS charged to +1.0 V in 10 years
+  (equilibrium test in couple_atlas.py). Retention from the programmed state, the programming
+  of SONOS/TANOS and all 77 K results are unchanged; TANS (1 nm oxide) Python-only
+  programming drops because the electron must also cross part of the nitride gap.
 """
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -58,6 +66,7 @@ class Options:
     pf_k: float = 7.5           # permittivity used in the PF rate that PAT is compared with (ATLAS: nitride)
     pf_b_hz: float = 1e13       # ATLAS PF.B
     fc_tunnel: bool = False     # Franck-Condon (phonon-assisted) trap<->electrode tunneling
+    nit_mass: float = 0.5       # v4: tunneling mass in the Si3N4 gap (band injection path)
     ode_method: str = "BDF"
     ode_rtol: float = 1e-5
     ode_atol: float = 1e-9
@@ -210,6 +219,42 @@ def simulate(device, opt, retention_from=None):
         fraction = np.where(np.minimum(a,b)>=0,1.,np.maximum(a,b)/np.maximum(np.abs(b-a),1e-100))
         return above*np.clip(fraction,0,1)
 
+    # v4: band injection through an oxide into the nitride. fn_supply integrates the WKB
+    # action over the oxide only (FN / trapezoidal direct tunneling), which assumes the
+    # carrier leaves the oxide in an allowed nitride band state. At low field (e.g. 0 V
+    # retention) it leaves the oxide still below the nitride band edge (SiO2/Si3N4 offset
+    # 1.1 eV) and must keep tunneling through the nitride gap; without a turning point inside
+    # the nitride there is no band state to enter (the direct trap path is the exchange term,
+    # which obeys detailed balance). band_reach returns exp(-extra action) in [0, 1]: 1 when
+    # the turning point is inside the oxide (programming), 0 when there is none.
+    ox_si = np.array([3.10, 9.-eg-3.10])                      # SiO2 band offsets to Si (e, h)
+    ox_gate = ox_si if device == "SONOS" else np.array([2.55, 8.-eg-2.55])
+    nit_off = np.array([2.0, 5.1-eg-2.0])                     # Si3N4 band offsets to Si (e, h)
+    nit_len = np.r_[dx/2, np.full(n-1, dx), dx/2]
+    wkb_c = 2*np.sqrt(2*electron_mass*e)/hbar
+
+    def band_reach(species, gate_side, disp, sign, barrier, field, width, mass):
+        if field <= 0:
+            return 1.0                                  # fn_supply is already 0
+        u = barrier - field*width                       # barrier left at the oxide exit (eV)
+        if u <= 0:
+            return 1.0                                  # turning point inside the oxide
+        u -= (ox_gate if gate_side else ox_si)[species] - nit_off[species]
+        if u <= 0:
+            return 1.0                                  # exits above the nitride band edge
+        d = disp[::-1] if gate_side else disp
+        f_n = (-sign if gate_side else sign)*d/eps_n      # field along the path, V/m
+        act = 0.0
+        for length, f in zip(nit_len, f_n):
+            u1 = u - f*length
+            if u1 <= 0:
+                act += wkb_c*np.sqrt(opt.nit_mass)*(2/3)*u**1.5/f
+                return float(np.exp(-act))
+            act += wkb_c*np.sqrt(opt.nit_mass)*length*(2/3)*(u**1.5-u1**1.5)/(u-u1) if u != u1 \
+                else wkb_c*np.sqrt(opt.nit_mass)*length*np.sqrt(u)
+            u = u1
+        return 0.0                                      # no nitride band state reachable
+
     def rates(y, vg, diagnostics=False):
         disp, phi, _, surface = fields(y, vg)
         local_f = 0.5*(disp[:-1]+disp[1:])/eps_n
@@ -329,6 +374,10 @@ def simulate(device, opt, retention_from=None):
                     else:
                         mass = 1.
                     current = fn_supply(field,barrier,mass,width)
+                    if gate_side or tunnel:
+                        # The carrier must reach a band state of the nitride: add the part of
+                        # the nitride gap it still has to cross after the oxide (v4).
+                        current *= band_reach(species, gate_side, disp, sign, barrier, field, width, mass)
                     if not gate_side:
                         # Incident Si flux limits the band-injection current.
                         carrier_density = mobile(ef0+surface)[species]
@@ -383,7 +432,7 @@ def simulate(device, opt, retention_from=None):
         return segment(name+"_fall",s,v,0,1e-9)
     if retention_from is not None:
         # 0 V retention from a given (electron, hole) occupancy, log-spaced output.
-        start = np.r_[np.full(n, retention_from[0]), np.full(n, retention_from[1])]
+        start = np.r_[np.full(n, float(retention_from[0])), np.full(n, float(retention_from[1]))]
         final = segment("retention", start, 0, 0, opt.retention_s)
         return history, {"start": record("start", 0, start, 0), "retained": record("retained", 0, final, 0)}
     fresh = np.zeros(2*n)

@@ -242,6 +242,12 @@ log outfile=T77K_RET_TRNS_Retention_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_
 
 solve tstep=1e-6 tfinal=1 proj
 save outf=T77K_RET_TANOS_RETEN_t1s.str
+solve tstop=10 proj
+save outf=T77K_RET_TANOS_RETEN_t10s.str
+solve tstop=100 proj
+save outf=T77K_RET_TANOS_RETEN_t100s.str
+solve tstop=1e3 proj
+save outf=T77K_RET_TANOS_RETEN_t1e3s.str
 solve tstop=1e4 proj
 save outf=T77K_RET_TANOS_RETEN_t1e4s.str
 solve tstop=@Retime proj
@@ -279,5 +285,102 @@ log outf=T77K_RET_TANOS_RETEN_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide
 solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
 extract name="IdVg_RET_neg" curve(v."cgate",i."drain") outfile="T77K_TANOS_RET_RET_IdVg_neg.dat"
 
+log off
+
+######## reads of the retention snapshots (LOAD each saved state) ########
+load infile=T77K_RET_TANOS_RETEN_t1s.str master
+solve prev
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+save outf=T77K_RET_TANOS_RETEN_t1s_rd0.str
+log outf=T77K_RET_TANOS_RETEN_t1s.log master
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+extract name="Vt_RETt1s" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANOS_RET_Vt.dat"
+extract name="Vt_RETt1s_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANOS_RET_Vt.dat"
+extract name="IdVg_RETt1s" curve(v."cgate",i."drain") outfile="T77K_TANOS_RET_RETt1s_IdVg.dat"
+log off
+load infile=T77K_RET_TANOS_RETEN_t1s_rd0.str master
+solve prev
+log outf=T77K_RET_TANOS_RETEN_t1s_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_RETt1s_neg" curve(v."cgate",i."drain") outfile="T77K_TANOS_RET_RETt1s_IdVg_neg.dat"
+log off
+load infile=T77K_RET_TANOS_RETEN_t10s.str master
+solve prev
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+save outf=T77K_RET_TANOS_RETEN_t10s_rd0.str
+log outf=T77K_RET_TANOS_RETEN_t10s.log master
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+extract name="Vt_RETt10s" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANOS_RET_Vt.dat"
+extract name="Vt_RETt10s_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANOS_RET_Vt.dat"
+extract name="IdVg_RETt10s" curve(v."cgate",i."drain") outfile="T77K_TANOS_RET_RETt10s_IdVg.dat"
+log off
+load infile=T77K_RET_TANOS_RETEN_t10s_rd0.str master
+solve prev
+log outf=T77K_RET_TANOS_RETEN_t10s_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_RETt10s_neg" curve(v."cgate",i."drain") outfile="T77K_TANOS_RET_RETt10s_IdVg_neg.dat"
+log off
+load infile=T77K_RET_TANOS_RETEN_t100s.str master
+solve prev
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+save outf=T77K_RET_TANOS_RETEN_t100s_rd0.str
+log outf=T77K_RET_TANOS_RETEN_t100s.log master
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+extract name="Vt_RETt100s" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANOS_RET_Vt.dat"
+extract name="Vt_RETt100s_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANOS_RET_Vt.dat"
+extract name="IdVg_RETt100s" curve(v."cgate",i."drain") outfile="T77K_TANOS_RET_RETt100s_IdVg.dat"
+log off
+load infile=T77K_RET_TANOS_RETEN_t100s_rd0.str master
+solve prev
+log outf=T77K_RET_TANOS_RETEN_t100s_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_RETt100s_neg" curve(v."cgate",i."drain") outfile="T77K_TANOS_RET_RETt100s_IdVg_neg.dat"
+log off
+load infile=T77K_RET_TANOS_RETEN_t1e3s.str master
+solve prev
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+save outf=T77K_RET_TANOS_RETEN_t1e3s_rd0.str
+log outf=T77K_RET_TANOS_RETEN_t1e3s.log master
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+extract name="Vt_RETt1e3s" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANOS_RET_Vt.dat"
+extract name="Vt_RETt1e3s_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANOS_RET_Vt.dat"
+extract name="IdVg_RETt1e3s" curve(v."cgate",i."drain") outfile="T77K_TANOS_RET_RETt1e3s_IdVg.dat"
+log off
+load infile=T77K_RET_TANOS_RETEN_t1e3s_rd0.str master
+solve prev
+log outf=T77K_RET_TANOS_RETEN_t1e3s_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_RETt1e3s_neg" curve(v."cgate",i."drain") outfile="T77K_TANOS_RET_RETt1e3s_IdVg_neg.dat"
+log off
+load infile=T77K_RET_TANOS_RETEN_t1e4s.str master
+solve prev
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+save outf=T77K_RET_TANOS_RETEN_t1e4s_rd0.str
+log outf=T77K_RET_TANOS_RETEN_t1e4s.log master
+solve vcgate=0 vstep=$Vrd_step name=cgate vfinal=$Vrd_hi
+extract name="Vt_RETt1e4s" xintercept(maxslope(curve(v."cgate",i."drain"))) datafile="T77K_TANOS_RET_Vt.dat"
+extract name="Vt_RETt1e4s_vd2" xintercept(maxslope(curve(v."cgate",i."drain"))) - ave(v."drain")/2 datafile="T77K_TANOS_RET_Vt.dat"
+extract name="IdVg_RETt1e4s" curve(v."cgate",i."drain") outfile="T77K_TANOS_RET_RETt1e4s_IdVg.dat"
+log off
+load infile=T77K_RET_TANOS_RETEN_t1e4s_rd0.str master
+solve prev
+log outf=T77K_RET_TANOS_RETEN_t1e4s_neg.log
+solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo
+extract name="IdVg_RETt1e4s_neg" curve(v."cgate",i."drain") outfile="T77K_TANOS_RET_RETt1e4s_IdVg_neg.dat"
 log off
 quit	

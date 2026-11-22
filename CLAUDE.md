@@ -131,6 +131,16 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   at 0 V: up 0 -> 8 V, then LOAD the saved Vg=0 state and go down 0 -> -2 V (_IdVg_neg.dat; merged
   by couple_atlas.py). Diag B9 (77 K, 300 K) checks it.
 
+- Diag B9 (77 K VT 3.6959 V, 300 K 3.4795 V): 0 V-start reads work; in-run read = load read. Checks done.
+- Retention transients stop at 1, 10, 100, 1e3, 1e4 s (save .str, continue with tstop) and the deck
+  end LOAD-reads each (states RETt1s..RETt1e4s, ERSt1s..ERSt1e4s). couple_atlas.py: paper_fit (fit
+  1 s-1e4 s with alpha - beta*ln(t+gamma), extrapolate, compare with the 3e8 s read; MW(t)), loss per
+  decade after 1 s, and a Python equilibrium test (empty/PGM/ERS starts at 0 V).
+- Python v4: the equilibrium test found the oxide-only FN/direct band injection charging EMPTY traps
+  to +1.0 V in 10 y at 300 K (no reverse process; carrier left the oxide below the nitride band edge).
+  Band injection now continues the WKB action through the Si3N4 gap (nit_mass 0.5) and is 0 without a
+  turning point in the nitride. Empty starts stay at 0; PGM-start retention unchanged.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

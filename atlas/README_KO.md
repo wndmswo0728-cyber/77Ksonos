@@ -346,3 +346,4 @@ R3c의 1e19, 0 V에서도 source→substrate 전류가 2.8e-11 A/µm다(77 K R1�
   - 앞의 "과도해석 뒤 오래된 초기값"(B2/B3), "고전계 주입으로 정상 상태 없음"(P/E) 해석은 이 원인으로 함께 설명된다.
 - **수정:** 정적 해용 MODELS를 `models srh ^pf.nitride temperature=@temp`로(모든 덱). 켜져 있지 않으면 아무 영향 없음. P/E의 하강 구간(과도해석)은 실제 펄스 모양이므로 유지.
 - **확인:** `diag/SONOS_300K_diag_D1{a,b}_pf_off.in`(자기완결형) — 최종 보존 덱을 1 s 보존 뒤 읽기까지만 실행. a = `^pf.nitride`, b = 이전 덱(`^` 없음). a가 읽고 b가 실패하면 확정.
+- **D1 결과 (300 K, ATLAS 단독) → 원인 확정:** D1b(`^` 없음)는 1 s 보존 뒤 load한 첫 정적 해에서 Newton 25회 실패(본 실행과 같음). D1a(`^pf.nitride`)는 같은 지점에서 수렴하고 읽기 끝까지 완료: VT_init 0.5348, VT_PGM 3.4799(이전과 같음), VT_RET(1 s) 3.2018 V(덱 extract 값). → MODELS에서 빼는 것만으로는 `pf.nitride`가 꺼지지 않는다. `^pf.nitride`가 필요하다. 이전의 B2/B3("오래된 초기값") 해석은 이것으로 바뀐다.

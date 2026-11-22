@@ -160,7 +160,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   Hypothesis: MODELS without pf.nitride does NOT switch it off after a pf.nitride transient (logicals
   are set false only with ^, manual 2.5); static PF diverges at 300 K (B1), harmless at 77 K. Explains
   B3a/b, the P/E post-Program NaN and this failure; fresh runs never with PF (B2, R5b) worked. Static
-  MODELS now 'srh ^pf.nitride'. Diag D1a (^) / D1b (no ^), 300 K, self-contained, checks it.
+  MODELS now 'srh ^pf.nitride'. CONFIRMED by diag D1 (300 K): D1b (no ^) failed at the first static
+  solve after the 1 s retention; D1a (^) read normally (VT_init 0.5348, VT_PGM 3.4799, VT 1 s 3.2018 V).
+  The B2/B3 'stale initial guess' reading is superseded by this.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

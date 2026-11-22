@@ -141,6 +141,10 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   Band injection now continues the WKB action through the Si3N4 gap (nit_mass 0.5) and is 0 without a
   turning point in the nitride. Empty starts stay at 0; PGM-start retention unchanged.
 
+- Diag P16 (77 K Program ramp to 10 ns): DT.MAX 2e-11 on the 2nd segment = 5e-12 within 0.03 % at
+  10 ns (1.49 h -> 35.7 min); -P 4 byte-identical (-> 23.5 min). P/E decks use both; Erase ramp keeps
+  5e-12 (untested); retention decks unchanged.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

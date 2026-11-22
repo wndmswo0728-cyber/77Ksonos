@@ -39,7 +39,7 @@ SI_MODELS = "models region=6 fermidirac incomplete ioniz cvt bbt.kl bbt.hurkx tr
 NI_MIN = "1e-60"   # cm^-3; below the 300 K n_i of SiO2 (~1e-57), so 300 K is unchanged
 
 
-def numerics(s, T):
+def numerics(s, T, parallel=False):
     """77 K convergence aids (no change in the physical models).
     - SOLVE INIT failed at 77 K (Gummel oscillation): the insulators that DYNASONOS treats
       as wide-gap semiconductors (Eg 9 eV) have n_i ~ 1e-276 cm^-3 at 77 K, which underflows
@@ -54,7 +54,10 @@ def numerics(s, T):
         # 160-bit arithmetic at 77 K. With 64-bit the init/read converged but the first
         # Program time step stopped with "NaN or Inf in SONOS tunnel current": exp(E/kT)
         # terms exceed the 64-bit range at kT = 6.6 meV (manual 21.11). -256 if needed.
-        s, k = re.subn(r"^go atlas\s*$", 'go atlas simflags="-160"', s, flags=re.M)
+        # -P 4 (manual 2.3.4, parallel assembly/solve) only in the P/E decks: diag P16a vs P16b
+        # (77 K Program ramp to 10 ns) gave byte-identical netcharge, 35.7 -> 23.5 min.
+        flags = "-160 -P 4" if parallel else "-160"
+        s, k = re.subn(r"^go atlas\s*$", f'go atlas simflags="{flags}"', s, flags=re.M)
         if k != 1:
             sys.exit("go atlas line not found")
     return s
@@ -102,11 +105,17 @@ def transient_fixes(s):
     # DT.MAX 5e-12 over the whole 1 ns ramp and NO PROJ on the ramp solves. With PROJ the
     # extrapolated guess made the tunnel current NaN near Vg 2.1-2.4 V at 77 K for every
     # time step tried (P12, P13, P13b, P15b); PROJ is kept for the constant-bias hold.
+    # (e) Diag P16 (77 K, final models): Program second segment (1.6 -> 16 V) with DT.MAX 2e-11
+    # instead of 5e-12 gave netcharge within 0.03 % at 10 ns (5 % at 1 ns, where the charge is
+    # 2e-19 C/um, ~1e-4 of the 10 ns value) in 35.7 min instead of 1.49 h. Applied to the
+    # Program ramp only; the Erase ramp keeps 5e-12 (not tested with 2e-11).
     def split(m):
         v = m.group(1)                       # vcgate or ecgate
+        second = "method dt.max=2e-11\n" if v == "vcgate" else ""
         return (f"set {v}_split=${v}/10\n"
                 f"method dt.max=5e-12\n"
                 f"solve vcgate=${v}_split ramptime=1e-10 tstep=1e-12 tfinal=1e-10\n"
+                + second +
                 f"solve vcgate=${v} ramptime=9e-10 tstep=2e-12 tfinal=1e-9\n"
                 f"method dt.max=1e-3 dt.min=1.0e-9\n")
     s, k = re.subn(r"solve vcgate=\$([ve]cgate) ramptime=1e-9 tstep=1e-12 tfinal=1e-9( proj)?\nmethod dt\.min=1\.0e-9\n",
@@ -179,7 +188,7 @@ def prg_ers(src, T, dev):
     KIND = "PE"
     s = src
     s = sub(s, "set temp=300", f"set temp={T}\n" + READ_HEADER)
-    s = numerics(s, T)
+    s = numerics(s, T, parallel=True)
     # (1) temperature: the original never applies $temp in this deck (ATLAS default 300 K).
     # (2) 77 K Si statistics (Fermi-Dirac + freeze-out, IONIZ keeps 5e20 S/D ionized).
     # (3) PF.NITRIDE: temperature-dependent trap emission instead of the constant TAU only.

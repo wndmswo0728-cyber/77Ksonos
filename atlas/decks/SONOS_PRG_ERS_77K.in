@@ -3,7 +3,7 @@
 assign name=xs n.value=1.0e-14 ratio=0.1
 
 
-go atlas simflags="-160"
+go atlas simflags="-160 -P 4"
 TITLE planar device simulation
 #
 set Nsub=1e17
@@ -141,6 +141,7 @@ log outf=T77K_PE_TRNS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$to
 set vcgate_split=$vcgate/10
 method dt.max=5e-12
 solve vcgate=$vcgate_split ramptime=1e-10 tstep=1e-12 tfinal=1e-10
+method dt.max=2e-11
 solve vcgate=$vcgate ramptime=9e-10 tstep=2e-12 tfinal=1e-9
 method dt.max=1e-3 dt.min=1.0e-9
 solve tstop=1.0e-8 proj

@@ -150,6 +150,12 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   state); the read log was empty. P/E decks now end each pulse with a transient fall edge (mirrored
   rise, pf.nitride on, then 1 us at 0 V, TSTOP ... RELATIVE), save at 0 V, load, read. Not run yet.
 
+- MY DECK BUG (2026-11-22): after the split reads every read ENDED at Vg = -2 V and RAMP_DOWN's gate
+  step (vstep=-0.2 to 0 V) cannot move up from -2 V, so the 300 K retention ran 3e8 s at Vg = -2 V
+  (invalid) and the P/E pulses/ERS retention started at -2 V. Each read block now LOADs its _rd0.str
+  (Vg 0, VD 0.1) at the end. atlas/check_bias.py traces Vg/VD statically; make_cryo_decks.py runs it
+  and stops on any problem. The FIRST 300 K retention result (VT 2.242 V at 10 y) stays valid.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

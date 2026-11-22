@@ -404,13 +404,14 @@ def split_reads(s):
     At 77 K with 1e19 trapped, the old path (gate to -2 V first, then -2 -> 8 V) left the
     channel off up to 8 V or stopped the sweep, WITH OR WITHOUT pf.nitride (diag B5a/b, B7, B8),
     while reads that started at 0 V and went up turned the channel on normally (diag B6a/b/c).
-    The two Id-Vg files (_IdVg.dat and _IdVg_neg.dat) are merged by couple_atlas.py."""
+    The two Id-Vg files (_IdVg.dat and _IdVg_neg.dat) are merged by couple_atlas.py.
+    The block ends by loading the start state again, so the next step starts at Vg = 0 V."""
     pat = re.compile(
         r"solve vcgate=0 vstep=-0\.1 name=cgate vfinal=\$Vrd_lo\n\n*"
         + re.escape(DRAIN_RAMP) + r"\n*"
         r"log outf=(?P<log>\S+?)\.log(?P<master> master)?\n"
         r"solve vcgate=\$Vrd_lo vstep=\$Vrd_step name=cgate vfinal=\$Vrd_hi\n"
-        r"(?P<ext>(?:extract [^\n]*\n)+)")
+        r"(?P<ext>(?:extract [^\n]*\n)+)\n*log off\n")
     def new(m):
         log, ext = m.group("log"), m.group("ext")
         ivg = re.search(r'name="(IdVg_\w+)" curve\(v\."cgate",i\."drain"\) outfile="(\S+)\.dat"', ext)
@@ -424,7 +425,12 @@ def split_reads(s):
                 f"load infile={start} master\nsolve prev\n"
                 f"log outf={log}_neg.log\n"
                 "solve vcgate=0 vstep=-$Vrd_step name=cgate vfinal=$Vrd_lo\n"
-                f'extract name="{ivg.group(1)}_neg" curve(v."cgate",i."drain") outfile="{ivg.group(2)}_neg.dat"\n')
+                f'extract name="{ivg.group(1)}_neg" curve(v."cgate",i."drain") outfile="{ivg.group(2)}_neg.dat"\n'
+                "log off\n"
+                # Back to the read start state (Vg = 0, VD = 0.1 V). Without this the deck stayed
+                # at Vg = -2 V: RAMP_DOWN steps the gate with vstep=-0.2 toward 0 V, which does
+                # nothing from -2 V, and the 300 K retention ran 3e8 s at Vg = -2 V (2026-11-22).
+                f"load infile={start} master\nsolve prev\n")
     s2, k = pat.subn(new, s)
     if k == 0 or "solve vcgate=0 vstep=-0.1 name=cgate vfinal=$Vrd_lo" in s2:
         sys.exit("read blocks not converted")
@@ -463,6 +469,15 @@ def main(devices=DEVICES, temps=(300, 77)):
             (OUT / f"{dev}_PRG_ERS_{T}K.in").write_text(prg_ers((SRC / pe).read_text(), T, dev))
             (OUT / f"{dev}_retention_{T}K.in").write_text(retention((SRC / ret).read_text(), T, dev))
             print("wrote", f"{dev}_PRG_ERS_{T}K.in", f"{dev}_retention_{T}K.in")
+    # static bias trace of every deck (check_bias.py): reads at 0 / 0.1 V, NIT.N, pulses and
+    # retention at 0 V, no DC step that points away from its target
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from check_bias import trace
+    for f in sorted(OUT.glob("*.in")):
+        _, bad = trace(f)
+        if bad:
+            sys.exit(f"bias check failed: {f.name} {bad}")
+    print("bias check OK")
 
 
 if __name__ == "__main__":

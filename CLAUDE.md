@@ -175,6 +175,12 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   with optical_k 4 empties traps at 16 V/300 K; FN capture 0.05) - not used for results; compare with the
   ATLAS pulse P/E before aligning. Earlier '~3 V in ATLAS' referred to nit.n injection, not a pulse.
 
+- 300 K SONOS retention, FINAL deck (ATLAS-only, results/atlas/run3_300K_SONOS_RET): VT 0.5336/3.4795/
+  2.2401 V (10 y); snapshots 1 s..1e4 s 3.2005/3.1943/3.1369/2.8562/2.6340 V; loss concentrated 100 s-1e4 s.
+  Paper log fit on 1 s-1e4 s predicts 1.400 V at 3e8 s vs 2.240 simulated (0.84 V too pessimistic):
+  report the direct 3e8 s value. cc-VT = gm-VT within 4 mV. 77 K retention failed at the t1e3s snapshot
+  load (Newton 25 at 0 V); t100s read ran at VD 0.011 V (drain ramp stalled). Waiting for .str/logs.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

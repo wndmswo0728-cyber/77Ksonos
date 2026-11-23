@@ -125,12 +125,12 @@ method dt.max=5e-12
 solve vcgate=$vcgate_split ramptime=1e-10 tstep=1e-12 tfinal=1e-10
 method dt.max=2e-11
 solve vcgate=$vcgate ramptime=9e-10 tstep=2e-12 tfinal=1e-9
-method dt.max=1e-3 dt.min=1e-25
+method dt.max=1e-3 dt.min=1e-25 cx.tol=1e-4
 solve tstop=1.0e-8 proj
 solve tstop=1.0e-7 proj
-method dt.min=1.0e-8
+method dt.min=1.0e-8 cx.tol=1e-4
 solve tstop=1e-6 proj
-method dt.min=1.0e-7
+method dt.min=1.0e-7 cx.tol=1e-4
 solve tstop=@TPGM proj
 log off
 
@@ -156,16 +156,16 @@ solve init
 
 #Charge out the Nitride region
 log outf=TRNS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
-method dt.min=1e-25
+method dt.min=1e-25 cx.tol=1e-4
 solve vcgate=$ecgate ramptime=1e-9 tstep=1e-12 tfinal=1e-9
-method dt.min=1e-25
+method dt.min=1e-25 cx.tol=1e-4
 solve tstop=1.0e-8 proj
 solve tstop=1.0e-7 proj
-method dt.min=1.0e-8
+method dt.min=1.0e-8 cx.tol=1e-4
 solve tstop=1e-6 proj
-method dt.min=1.0e-7
+method dt.min=1.0e-7 cx.tol=1e-4
 solve tstop=1e-5 proj
-method dt.min=1.0e-6
+method dt.min=1.0e-6 cx.tol=1e-4
 solve tstop=@TERS proj
 log off
 

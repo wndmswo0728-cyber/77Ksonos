@@ -156,8 +156,9 @@ solve init
 
 #Charge out the Nitride region
 log outf=TRNS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
+method dt.min=1e-25
 solve vcgate=$ecgate ramptime=1e-9 tstep=1e-12 tfinal=1e-9
-method dt.min=1.0e-9
+method dt.min=1e-25
 solve tstop=1.0e-8 proj
 solve tstop=1.0e-7 proj
 method dt.min=1.0e-8

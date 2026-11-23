@@ -125,7 +125,7 @@ method dt.max=5e-12
 solve vcgate=$vcgate_split ramptime=1e-10 tstep=1e-12 tfinal=1e-10
 method dt.max=2e-11
 solve vcgate=$vcgate ramptime=9e-10 tstep=2e-12 tfinal=1e-9
-method dt.max=1e-3 dt.min=1.0e-9
+method dt.max=1e-3 dt.min=1e-25
 solve tstop=1.0e-8 proj
 solve tstop=1.0e-7 proj
 method dt.min=1.0e-8

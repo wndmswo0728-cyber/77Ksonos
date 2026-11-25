@@ -190,8 +190,8 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   SONOS after LOAD) in the 77 K retention folder. Do not tune toward the expected result.
 
 - 77 K ERS stall (V2 decks, atlas/V2_sonos/77/test_mesh, fresh device ramp 0 -> -12 V in 1 ns): stalls at -8.07 V (A),
-  -8.85 V without hole traps (H1, p converges, n does not), -8.2 V with S/D 50 nm outside the gate (H2) -> not hole traps,
-  not the gate-edge n+ overlap. Failing pattern: n x-norm stuck at -0.301 (n can only halve per Newton iteration) and
+  -8.85 V without hole traps (H1, p converges, n does not), -8.2 V with S/D 50 nm outside the gate (H2), -8.2 V with bottom-oxide mv=10 (H3, hole tunneling
+  mass; manual: MC/MV are the tunnel-oxide masses) -> not hole traps, not the gate-edge n+ overlap, not hole tunneling. Failing pattern: n x-norm stuck at -0.301 (n can only halve per Newton iteration) and
   n/p rhs nearly equal. PGM-state .str at -6.6 V (77 K): free n 1e2..1e10 and p 1e9..1e12 cm^-3 in the nitride bands,
   n piled at the tunnel-oxide side (oxide n 60+ orders lower; 1 eV CB offset blocks thermionic escape at 77 K).
   TEST_S_save_{77,300}K.in save the fresh-device state at -6.0/-7.2/-7.8/-8.04 V with SONOS.RATES/RECOMB to locate it.

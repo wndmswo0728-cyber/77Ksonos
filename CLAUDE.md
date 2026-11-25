@@ -195,6 +195,13 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   n/p rhs nearly equal. PGM-state .str at -6.6 V (77 K): free n 1e2..1e10 and p 1e9..1e12 cm^-3 in the nitride bands,
   n piled at the tunnel-oxide side (oxide n 60+ orders lower; 1 eV CB offset blocks thermionic escape at 77 K).
   TEST_S_save_{77,300}K.in save the fresh-device state at -6.0/-7.2/-7.8/-8.04 V with SONOS.RATES/RECOMB to locate it.
+- TEST_S result (fresh device, same Vg, 77 vs 300 K): gate-side (blocking oxide) SONOS rates identical at both T (gate
+  injection is fine). At 77 K only, the tunnel-oxide side shows free n/p 1e9..1e12 in the nitride, trapped n/p ~1e13..1e15,
+  trap rates 1e23..1e25 (300 K: free carriers <1e-9, rates <1e3); minority electrons in p-Si median 1e7..1e8 at 77 K
+  (equilibrium ~1e-57) vs 1e2.9 at 300 K (= equilibrium). Reading: unresolved minority carriers below the CLIM.DD cut-off
+  (manual: solutions below it are not required to converge, "false solution") feed DYNASONOS Si<->nitride exchange.
+  clim.dd=4.5e13 was MY addition (commit 0d2a22d, = Si default); original V2 had none and also stalled (-7.1 V, PGM state).
+  TEST_T1 (clim.dd 1e8) / TEST_T2 (5e-17 = 300 K default ratio to ni) test this; they also save the 0 V initial state.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

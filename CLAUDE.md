@@ -202,6 +202,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   (manual: solutions below it are not required to converge, "false solution") feed DYNASONOS Si<->nitride exchange.
   clim.dd=4.5e13 was MY addition (commit 0d2a22d, = Si default); original V2 had none and also stalled (-7.1 V, PGM state).
   TEST_T1 (clim.dd 1e8) / TEST_T2 (5e-17 = 300 K default ratio to ni) test this; they also save the 0 V initial state.
+- TEST_T1/T2 result: lowering clim.dd makes the 77 K ramp unusable. After 3.1 h T1 (1e8) was at Vg -0.07 V (dt 1.6e-14 s),
+  T2 (5e-17) at -1.03 V (dt 2.3e-15 s); n rhs floors at 1e-14..1e-15 (criterion 5e-18), n x-norm up to +2.9. The default
+  cut-off cannot be lowered at 77 K; the init0V .str files (static 0 V) are still to be checked for minority n.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

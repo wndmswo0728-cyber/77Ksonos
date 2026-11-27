@@ -205,6 +205,12 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
 - TEST_T1/T2 result: lowering clim.dd makes the 77 K ramp unusable. After 3.1 h T1 (1e8) was at Vg -0.07 V (dt 1.6e-14 s),
   T2 (5e-17) at -1.03 V (dt 2.3e-15 s); n rhs floors at 1e-14..1e-15 (criterion 5e-18), n x-norm up to +2.9. The default
   cut-off cannot be lowered at 77 K; the init0V .str files (static 0 V) are still to be checked for minority n.
+- Why the 77 K exchange is non-physical (TEST_S77 -6 V .str band edges; code 114 = Ec, 113 = Ev, eV): nitride hole-trap level
+  (Ev_nit + 1.2) lies inside the Si gap (manual: tunneling that starts/ends in the channel gap is zero); nitride Ev is 1.05 eV
+  below Si Ev, so hole injection ~exp(-1.05/kT) = 1e-18 (300 K) vs 1e-69 (77 K); ATLAS gives the reverse (1e-5 vs 1e23).
+  Exact internal term not identifiable from outputs. Workaround in progress: temperature scan with the PF split decks
+  (atlas/V2_sonos/tscan/<T>/, only `set temp` differs: 200/150/120/100 K) to find the lowest T where ERS converges and the
+  VT_ERS(T) trend; report 77 K ERS as extrapolated if flat.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

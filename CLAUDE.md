@@ -222,6 +222,10 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   n/p rhs equal) from about -7.2 V (100 K, ~0.01 V/min at 42 min) and -7.8 V (120 K, ~0.003 V/min). Stall onset vs T
   (PGM state, ERS_PF): 77 K -7.1..-7.2 V, 100 K -7.2 V, 120 K -7.8 V, 300 K none. If they crawl through, check the
   .str for spurious tunnel-oxide-side trapping before using VT_ERS.
+- tscan 300 K result (results/atlas/tscan_300K_SONOS_PF, ATLAS-only, verified): VT init/PGM/ERS 0.6073/3.4290/1.6770 V
+  (gm), MW 1.752 V; netcharge -8.357e-15 -> -3.208e-15 C/um (61.6 % removed). Erase = trap-to-channel tunneling from the
+  rows next to the tunnel oxide (interior rows unchanged, holes small): physically T-independent, which supports
+  extrapolating VT_ERS(T). Older no-PF V2 300 K deck gave PGM 3.509 / ERS 1.395 V (tau.n 1e-4 s emission).
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

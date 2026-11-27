@@ -238,6 +238,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   Cooled 300 K states read at 77 K behave like the native V2 77 K reads (same -0.124 V shift; MW 1.752 V = 300 K).
   PGM charge falls with T in V2 (-8.36 -> -5.32e-15 C/um, 300 -> 77 K). All V2 77 K numbers are suspect until
   TEST_O1 (read, 77/300 K) and TEST_O2 (77 K fresh erase ramp) with MODELS moved before CONTACT are checked.
+- 300 K erase without thermal emission (results/atlas/tscan_300K_SONOS_noTE, ATLAS-only, verified): VT_ERS 1.6896 vs
+  1.6770 V with PF (12.6 mV), charge removed 61.14 vs 61.61 %; electron profiles identical, difference = holes trapped
+  only with PF on. The 300 K erase is tunneling; thermal emission bound for a 77 K ERS assumption: ~13 mV.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

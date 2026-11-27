@@ -231,6 +231,13 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   SONOS_ERS_300K_noTE.in = 300 K ERS_PF with tau.n/tau.p removed and ^pf.nitride in the transient (no thermal emission;
   bounds the thermal part that is absent at 77 K). tscan/cool77/SONOS_COOL77_from300K.in loads ../300 PGM0V, ../300 ERS and
   ../300noTE NOTE_ERS at temperature=77, solve init, and runs the PGM_PF/ERS_PF reads (COOL77_*.log). Not run yet.
+- V2 TEMPERATURE NOT FULLY APPLIED (strong evidence, results/atlas/tscan_native_reads): every V2 read has SS 91-94
+  mV/dec from 300 K down to 77 K (physics ~22-26 at 77 K; make_cryo 77 K retention deck 25.9) and VT_init FALLS on
+  cooling (0.607 -> 0.484 V; retention deck +0.22 V), while mobility (Id) does follow T. V2 decks put MODELS ...
+  temperature= after CONTACT/NITRIDECHARGE/METHOD; manual 2.5.2 order is MATERIAL -> MODELS -> CONTACT -> METHOD.
+  Cooled 300 K states read at 77 K behave like the native V2 77 K reads (same -0.124 V shift; MW 1.752 V = 300 K).
+  PGM charge falls with T in V2 (-8.36 -> -5.32e-15 C/um, 300 -> 77 K). All V2 77 K numbers are suspect until
+  TEST_O1 (read, 77/300 K) and TEST_O2 (77 K fresh erase ramp) with MODELS moved before CONTACT are checked.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

@@ -215,6 +215,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   830/832 = tunneling generation terms. Gate side 830/832 identical at both T; tunnel-oxide side 77 K 1e22.7/1e22.8 vs
   300 K 1e1.4/1e-4.5 (-6 V). The documented equations (3-586/3-589) with the .str band edges give ~0 there, so the deviation
   is in undocumented internals (Fermi factor s, equilibrium emission e_eq, sub-cut-off carrier handling).
+- tscan run 1: PGM_PF finished at 300/120/100 K (ERS running). 150 K and 200 K PGM_PF stalled right after the ramp
+  (16 V hold, t ~1.03-1.06 ns, dt 3e-13/4e-14 s): n x-norm floor -3.6..-4.0 vs criterion -4 (cx.tol 1e-4), rhs n ~1e-12.
+  Fallback decks <T>K_tol5e-4.in change only cx.tol 1e-4 -> 5e-4 on PGM_PF lines 129/132/134 (hold + PGM read).
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

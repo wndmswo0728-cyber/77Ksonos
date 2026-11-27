@@ -245,6 +245,10 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   (n/p x-norm +3..+10, psi capped, "Cannot trap"), unlike the V2-order run: with the fix the run is really at 77 K and
   needs SOLVE INIT SONOS (manual: prevents large carrier concentrations in a charged nitride at SOLVE INIT). v2 deck:
   load -> [solve init (ERS files were saved at -12 V)] -> solve init sonos -> solve prev; outputs COOL77s_*.
+- CONFIRMED (TEST_O1, 2026-11-28): with MODELS ... temperature= before CONTACT/METHOD the 77 K fresh read gives SS 22.1
+  mV/dec, VT_cc 0.701 V (V2 order: 93.2 mV/dec, 0.217 V); 300 K is unchanged (0.432 vs 0.435 V, 90.6 vs 90.8). So every
+  V2-order result below 300 K (77 K PGM/ERS, the ERS stall, tscan 100-200 K, the first cool77) was a mixed 77/300 K
+  calculation and is invalid; 300 K V2 results stay valid. 77 K decks must insert the MODELS line before CONTACT.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

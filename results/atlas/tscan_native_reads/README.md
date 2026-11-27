@@ -10,3 +10,12 @@
 SS does not scale with T (physics: ~22-26 mV/dec at 77 K; the make_cryo 77 K retention deck gave 25.9) and VT_init
 falls on cooling (retention deck: +0.22 V). Suspect: the V2 decks set MODELS ... temperature= AFTER CONTACT/METHOD
 (manual 2.5.2: models set in the wrong order may not be used). Test decks TEST_O1 (read) / TEST_O2 (erase ramp).
+
+## TEST_O1 (MODELS moved before CONTACT/METHOD) - CONFIRMED
+| read (fresh device, 0-2 V) | VT cc 1e-7 A | SS | Id(0 V) |
+|---|---|---|---|
+| V2 300 K | 0.435 V | 90.8 mV/dec | 2.2e-12 A |
+| O1 300 K | 0.432 V | 90.6 mV/dec | 2.2e-12 A |
+| V2 77 K | 0.217 V | 93.2 mV/dec | 5.0e-10 A |
+| O1 77 K | 0.701 V | 22.1 mV/dec | 1.8e-35 A |
+300 K is unchanged; at 77 K the order fix gives the physical swing and a VT that rises on cooling (+0.27 V).

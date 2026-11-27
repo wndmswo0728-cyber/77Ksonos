@@ -226,6 +226,11 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   (gm), MW 1.752 V; netcharge -8.357e-15 -> -3.208e-15 C/um (61.6 % removed). Erase = trap-to-channel tunneling from the
   rows next to the tunnel oxide (interior rows unchanged, holes small): physically T-independent, which supports
   extrapolating VT_ERS(T). Older no-PF V2 300 K deck gave PGM 3.509 / ERS 1.395 V (tau.n 1e-4 s emission).
+- tscan run 2: ERS_PF stalls with the 77 K pattern at 100, 120, 150 and 200 K (user report); only 300 K completes, so no
+  VT_ERS(T) trend. Fallback (ASSUMPTION, label it): 77 K ERS state = 300 K erase charge read at 77 K. tscan/300noTE/
+  SONOS_ERS_300K_noTE.in = 300 K ERS_PF with tau.n/tau.p removed and ^pf.nitride in the transient (no thermal emission;
+  bounds the thermal part that is absent at 77 K). tscan/cool77/SONOS_COOL77_from300K.in loads ../300 PGM0V, ../300 ERS and
+  ../300noTE NOTE_ERS at temperature=77, solve init, and runs the PGM_PF/ERS_PF reads (COOL77_*.log). Not run yet.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

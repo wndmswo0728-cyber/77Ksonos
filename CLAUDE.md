@@ -211,6 +211,10 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   Exact internal term not identifiable from outputs. Workaround in progress: temperature scan with the PF split decks
   (atlas/V2_sonos/tscan/<T>/, only `set temp` differs: 200/150/120/100 K) to find the lowest T where ERS converges and the
   VT_ERS(T) trend; report 77 K ERS as extrapolated if flat.
+- SONOS.RATES codes (TEST_S): 833 = free-hole capture (matches sigmat.p*vth*p*(NT.P-pt) within x3 at 77 and 300 K);
+  830/832 = tunneling generation terms. Gate side 830/832 identical at both T; tunnel-oxide side 77 K 1e22.7/1e22.8 vs
+  300 K 1e1.4/1e-4.5 (-6 V). The documented equations (3-586/3-589) with the .str band edges give ~0 there, so the deviation
+  is in undocumented internals (Fermi factor s, equilibrium emission e_eq, sub-cut-off carrier handling).
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

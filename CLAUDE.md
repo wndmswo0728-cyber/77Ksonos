@@ -241,6 +241,10 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
 - 300 K erase without thermal emission (results/atlas/tscan_300K_SONOS_noTE, ATLAS-only, verified): VT_ERS 1.6896 vs
   1.6770 V with PF (12.6 mV), charge removed 61.14 vs 61.61 %; electron profiles identical, difference = holes trapped
   only with PF on. The 300 K erase is tunneling; thermal emission bound for a 77 K ERS assumption: ~13 mV.
+- Order-fixed cool77 (MODELS before CONTACT): load 300 K PGM0V + plain SOLVE INIT at 77 K -> first Newton solve diverged
+  (n/p x-norm +3..+10, psi capped, "Cannot trap"), unlike the V2-order run: with the fix the run is really at 77 K and
+  needs SOLVE INIT SONOS (manual: prevents large carrier concentrations in a charged nitride at SOLVE INIT). v2 deck:
+  load -> [solve init (ERS files were saved at -12 V)] -> solve init sonos -> solve prev; outputs COOL77s_*.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

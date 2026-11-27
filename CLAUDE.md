@@ -249,6 +249,11 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   mV/dec, VT_cc 0.701 V (V2 order: 93.2 mV/dec, 0.217 V); 300 K is unchanged (0.432 vs 0.435 V, 90.6 vs 90.8). So every
   V2-order result below 300 K (77 K PGM/ERS, the ERS stall, tscan 100-200 K, the first cool77) was a mixed 77/300 K
   calculation and is invalid; 300 K V2 results stay valid. 77 K decks must insert the MODELS line before CONTACT.
+- cool77 v2 (order fixed): PGM300 block (load PGM0V -> solve init sonos -> solve prev -> read to 8 V) WORKED at true 77 K
+  (Id(8 V) 6.9e-3 A). ERS300 block (load ERS saved at -12 V -> plain solve init -> solve init sonos -> solve prev) diverged
+  in solve prev (n x-norm +3..+6): plain SOLVE INIT at 77 K with a charged nitride poisons the guess. v3: SONOS_ERS0V_make
+  _300K.in brings both 300 K ERS states to 0 V with SOLVE INIT at 300 K (as PGM_PF does for PGM0V); SONOS_COOL77_ERS
+  _order_v3.in loads them at 77 K with solve init sonos only and reads 0 -> 7 V (no -2 V excursion).
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

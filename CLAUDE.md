@@ -218,6 +218,10 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
 - tscan run 1: PGM_PF finished at 300/120/100 K (ERS running). 150 K and 200 K PGM_PF stalled right after the ramp
   (16 V hold, t ~1.03-1.06 ns, dt 3e-13/4e-14 s): n x-norm floor -3.6..-4.0 vs criterion -4 (cx.tol 1e-4), rhs n ~1e-12.
   Fallback decks <T>K_tol5e-4.in change only cx.tol 1e-4 -> 5e-4 on PGM_PF lines 129/132/134 (hold + PGM read).
+- tscan run 1 ERS: 300 K ERS_PF finished. 100 K and 120 K ERS_PF show the 77 K stall pattern (n x-norm -0.301 halving,
+  n/p rhs equal) from about -7.2 V (100 K, ~0.01 V/min at 42 min) and -7.8 V (120 K, ~0.003 V/min). Stall onset vs T
+  (PGM state, ERS_PF): 77 K -7.1..-7.2 V, 100 K -7.2 V, 120 K -7.8 V, 300 K none. If they crawl through, check the
+  .str for spurious tunnel-oxide-side trapping before using VT_ERS.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

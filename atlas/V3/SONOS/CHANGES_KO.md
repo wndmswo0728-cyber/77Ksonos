@@ -4,8 +4,8 @@
 
 - 원래 코드: 팀의 `SONOS_PRG_ERS.in`. 아래 "원래 N"은 이 파일의 줄 번호.
 - 현재 코드: 온도당 덱 하나.
-  - `tscan/77fix/SONOS_PE_77K.in`
-  - `tscan/300fix/SONOS_PE_300K.in`
+  - `V3/SONOS/77/SONOS_PE_77K.in`
+  - `V3/SONOS/300/SONOS_PE_300K.in`
   - 두 덱은 29번째 줄 `set temp=`만 다르다. 아래 "현재 N"은 이 덱의 줄 번호.
 - 덱 하나가 순서대로 한다: 새 소자 읽기 → Program → PGM 읽기 → Erase → ERS 읽기.
 - 출력 파일 (`…`는 `nt_5e+19|_Et_1.2|_Tbox_0.003|_Nsub_1e+17|_toxide_sio2|_cwf_4.05|_temp_77|`, 300 K 덱은 `_temp_300|`):
@@ -232,7 +232,7 @@ log off
   - 게이트 충전 전류는 C·dV/dt = 2.4e-15 F × 1e7 V/s = 2.4e-8 A다.
 - `cx.tol=1e-5`(기본값)를 적은 이유: 앞의 Erase 블록에서 1e-4로 바꿨기 때문에, 검증 때와 같은 기본값으로 되돌린다.
 - 끝 전압의 이유: PGM 6 V, ERS 5 V. VT와 gm 최댓값을 지나도록 했다(77 K PGM VT 2.40 V·gm 최대 2.73 V, ERS 1.78 V·2.11 V).
-- 분석은 Id = (I_drain − I_source)/2로 한다(`tscan/tread_vt.py`).
+- 분석은 Id = (I_drain − I_source)/2로 한다(`atlas/V2_sonos/tscan/tread_vt.py`).
   - 이유: 게이트 충전 전류는 소스와 드레인에 같은 방향으로 반씩 흐르므로, 차이를 반으로 나누면 없어진다.
   - 1e-9 A 아래에는 약 3e-10 A의 바닥이 남는다. 그래서 VT는 gm 방식과 1e-8/1e-7 A 기준으로 뽑는다.
 - 검증:
@@ -244,7 +244,7 @@ log off
 
 | 원래 | 현재 | 이유 |
 |---|---|---|
-| (온도마다 `set temp`만 바꿔 같은 덱 사용) | 온도당 덱 하나(77fix, 300fix). 29번째 줄만 다름 | 두 온도의 계산 절차가 완전히 같아야 비교가 맞다 |
+| (온도마다 `set temp`만 바꿔 같은 덱 사용) | 온도당 덱 하나(V3/SONOS/77, V3/SONOS/300). 29번째 줄만 다름 | 두 온도의 계산 절차가 완전히 같아야 비교가 맞다 |
 | 읽기 로그 `SONOS_PGM_….log`, `SONOS_ERS_….log` | `TREAD_PGM_….log`, `TREAD_ERS_….log` | 읽기 방식이 바뀌어(트랜지언트) 이름을 구분 |
 | 파일 이름 끝 `_cwf_$cwf|` | `_cwf_$cwf|_temp_$temp|` (출력·불러오기 11곳) | 파일 이름만으로 온도를 구분 |
 | 원래 147 `solve init` 뒤 `log off` | 삭제 | 문제 6과 같은 이유. Erase는 저장한 Program 상태에서 시작 |

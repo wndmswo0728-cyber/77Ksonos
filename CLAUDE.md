@@ -298,6 +298,8 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   LOAD absolute times (time restarts at 0 after LOAD; RELATIVE right after LOAD used the previous transient's end); RELATIVE only
   for fall edges; reads with cx.tol=1e-5 (default, as validated). File names end with _temp_$temp| (e.g. ..._cwf_4.05|_temp_77|.log).
   CHANGES_KO.md lists every change vs the original and why. Not run.
+- V3 LAYOUT (user server and repo): atlas/V3/SONOS/77/SONOS_PE_77K.in, atlas/V3/SONOS/300/SONOS_PE_300K.in (-P 6, file names end
+  with _temp_$temp|), change list atlas/V3/SONOS/CHANGES_KO.md. These replace tscan/77fix and tscan/300fix. Not run yet.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

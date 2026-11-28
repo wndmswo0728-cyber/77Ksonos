@@ -255,6 +255,13 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   _300K.in brings both 300 K ERS states to 0 V with SOLVE INIT at 300 K (as PGM_PF does for PGM0V); SONOS_COOL77_ERS
   _order_v3.in loads them at 77 K with solve init sonos only and reads 0 -> 7 V (no -2 V excursion).
 
+- TEST_O2 (order fixed, fresh 77 K Erase ramp) reached -12 V at 1 ns with no stall (results/atlas/order_fix_77K): the 77 K ERS
+  stall was the V2 MODELS order. cool77 v3: PGM300 read at true 77 K VT_gm 3.706 / VT_cc 3.516 V, SS 22.4 (300 K 3.429 V gm). ERS reads
+  with the drain ramp at Vg = 0 failed (PF: stop at 0.63 V; noTE: false 2.6 mA state at Vg = 0). Charged states loaded at 77 K show a
+  1e-13 A zero-bias S/D current (fresh 1e-35 A). v4 uses the PGM300 order (gate 0 -> 1 V, drain ramp at 1 V, read 1 -> 7 V). tscan/77fix:
+  300 K PGM_PF/ERS_PF + MODELS before CONTACT, O1 fresh read, solve prev after solve init, transient fall edges (make_cryo form) instead
+  of SOLVE INIT after the pulses, LOAD + solve prev reads in the v4 order, Erase times RELATIVE. Not run yet.
+
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
 - Do not tune models toward the expected conclusion; add mechanisms to both

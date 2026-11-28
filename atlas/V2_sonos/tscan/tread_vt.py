@@ -7,7 +7,8 @@ Usage: python3 tread_vt.py <log> [<log> ...]
 - Id = (I_drain - I_source)/2: removes the gate displacement current of a transient read
   (it splits equally between source and drain) and the equal zero-bias S/D floor.
 - VT_gm: first gm peak >= 30 % of max gm, linear extrapolation. VT_cc at 1e-9/1e-8/1e-7 A.
-- SS: minimum swing between 1e-13 and 1e-8 A. 77 K physical limit 2.303 kT/q = 15.3 mV/dec;
+- SS: minimum swing between 1e-13 and 1e-8 A (transient logs: 1e-8..1e-6 A, because below ~1e-9 A the
+  source/drain displacement asymmetry (~3e-10 A) sets a floor; fresh2 check: VT_cc(1e-9) 5 mV off, 1e-7 0.5 mV). 77 K physical limit 2.303 kT/q = 15.3 mV/dec;
   a smaller value means a jump between solution branches, not a device result.
 - netcharge: first and last row of the gate sweep (a change shows read disturb).
 - max gm: must be the same for every state at one temperature (trapped charge only shifts VT):
@@ -50,12 +51,13 @@ def analyse(path):
         return float(np.interp(np.log10(ref), np.log10(cur[k - 1:k + 1]), vg[k - 1:k + 1]))
 
     lc = np.log10(np.maximum(cur, 1e-300))
+    lo, hi = (1e-8, 1e-6) if off else (1e-13, 1e-8)   # transient: displacement floor ~3e-10 A below 1e-9 A
     sw = [(vg[k + 1] - vg[k]) / (lc[k + 1] - lc[k]) * 1e3
-          for k in range(len(vg) - 1) if 1e-13 < cur[k] < 1e-8 and lc[k + 1] > lc[k]]
+          for k in range(len(vg) - 1) if lo < cur[k] < hi and lc[k + 1] > lc[k]]
     print(f'{path}\n  rows {len(vg)}  Vg {vg[0]:.3f}..{vg[-1]:.3f} V  VD {vd.max():.4f} V  max gm {g.max():.3e} A/V at {vg[int(np.argmax(g))]:.2f} V'
           f'\n  VT_gm {vt_gm:.4f} V   VT_cc 1e-9/1e-8/1e-7 A: {vt_cc(1e-9):.4f} / {vt_cc(1e-8):.4f} / {vt_cc(1e-7):.4f} V'
           f'\n  SS_min {min(sw) if sw else float("nan"):.1f} mV/dec   Id(Vg_end) {cur[-1]:.3e} A   max common-mode (Id+Is)/2 {common:.2e} A'
-          f'\n  netcharge first {q[0]:.5e}  last {q[-1]:.5e}  change {100 * (q[-1] - q[0]) / q[0] if q[0] else 0:.3f} %')
+          f'\n  netcharge first {q[0]:.5e}  last {q[-1]:.5e}  change {(f'{100 * (q[-1] - q[0]) / q[0]:.3f} %') if abs(q[0]) > 1e-20 else 'n/a (no trapped charge)'}')
 
 
 if __name__ == '__main__':

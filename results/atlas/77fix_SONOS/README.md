@@ -8,7 +8,7 @@ Same pulses as 300 K (results/atlas/tscan_300K_SONOS_PF): Program +16 V 100 us, 
 | fresh VT gm / cc(1e-7 A) | 0.6073 / 0.4350 V | 0.7801 / 0.7020 V (static, = TEST_O1) | verified |
 | max gm | 2.44e-5 A/V | 1.922e-4 (fresh), 1.925e-4 (PGM, transient) A/V | gm check passed |
 | PGM netcharge | -8.357e-15 C/um | -4.971e-15 C/um (59 %) | verified |
-| VT_PGM gm / cc(1e-7 A) | 3.4290 / 3.2572 V | 2.3998 / 2.3204 V (transient); static 2.4053 / 2.3341 V | verified (static and transient agree, 5.5 mV gm) |
+| VT_PGM gm / cc(1e-7 A) | 3.4290 / 3.2572 V | 2.3998 / 2.3204 V (transient); static 2.4053 / 2.3341 V | verified (static and transient agree, 5.5 mV gm; transient method validated by fresh2) |
 | ERS netcharge | -3.208e-15 C/um (61.6 % removed) | -3.155e-15 C/um (36.5 % removed) | verified |
 | VT_ERS | 1.6770 / 1.5007 V | transient read running (T77fix_ERS) | not run yet |
 
@@ -26,3 +26,8 @@ Notes
 - Charge-moment estimate (1-D, mid channel; 300 K check within 14 %): VT_ERS(77 K, gm) ~ 1.7-1.8 V, MW ~ 0.6-0.7 V. Estimate only.
 - 77fix read deck: the ERS block holds Vg = 0 until t = 6.4e-7 s (relative TSTOP after a LOAD in the same run apparently used the
   previous block's end time, 6.2e-7 s; the drain ramp itself ended at 1e-8 s). Charge change during the hold 0.003 %.
+
+Transient-read validation (COOL77t2_FRESH_transient_read_check.log, tscan/cool77/SONOS_COOL77_TREAD_fresh2.in, fresh device at 77 K,
+static O1 drain ramp + transient gate sweep): VT_gm 0.7802 V (static TEST_O1 0.7802), VT_cc 1e-7 A 0.7009 (0.7014), 1e-8 A 0.6759
+(0.6776), max gm 1.923e-4 (1.923e-4) A/V, Id at 1/1.5/2 V equal within 0.1 %. Below ~1e-9 A the transient curve sits on a ~3e-10 A
+displacement-asymmetry floor (VT_cc 1e-9 A 5 mV off), so SS is taken from 1e-8..1e-6 A in transient logs. Method verified.

@@ -279,6 +279,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   0.607/3.429. Transient read = static read (5.5 mV gm) and gm 1.925e-4 = fresh -> verified. ERS charge -3.155e-15 (36.5 % removed;
   300 K 61.6 %). ERS transient read running; static ERS read failed. In one run, a relative TSTOP after LOAD seems to use the previous
   block's end time (ERS block holds Vg 0 to 6.4e-7 s): put each transient read in its own deck or check the time column.
+- TRANSIENT READ VERIFIED (fresh2, 77 K fresh device): VT_gm 0.7802 V = static O1 0.7802, VT_cc(1e-7 A) 0.7009 vs 0.7014, gm equal,
+  Id equal within 0.1 % above 1e-7 A; below ~1e-9 A a ~3e-10 A displacement floor (use gm and cc 1e-8/1e-7 A; tread_vt.py takes SS
+  from 1e-8..1e-6 A for transient logs). So the 77fix PGM read (2.400 V gm) is valid; the ERS transient read will be too.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

@@ -24,7 +24,7 @@ set Tpg=0.08
 set TPGM=1.0e-4
 set TERS=5.0e-4
 set Retime=3e8
-set temp=300
+set temp=77
 
 set Ltotal=$Lgate*3
 set Lgate_mid=$Ltotal/2
@@ -99,7 +99,7 @@ contact name=cgate workf=$cwf
 
 nitridecharge nt.p=1.0e19 nt.n=@Nnit tau.n=1.0e-4 tau.p=1.0e-4 elec.depth=@Enit hole.depth=@Enit sigmat.n=$xs sigman.p=0.0 sigmap.n=0.0
 
-method carriers=2 clim.dd=4.5e13
+method carriers=2
 
 probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tnit-$Tbox y.max=-$Tbox
 
@@ -110,18 +110,8 @@ probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right
 ######## per step), no PROJ, ^pf.nitride as in all reads. The trap occupancy is free to change, so netcharge in the log shows
 ######## whether the read disturbs the state. Gate displacement current splits between source and drain; the analysis uses
 ######## Id = (I_drain - I_source)/2, which removes it (and the 1e-13 A zero-bias floor). Every log row is one time step. ####
-######## 77fix READ deck: run in tscan/77fix AFTER SONOS_ERS_PF_77K_fix.in. Loads the 77 K PGM and ERS states (saved at 0 V
-######## after the transient fall edges; full solutions, so load -> solve prev as in the 77fix decks). Outputs T77fix_*. ####
-#### PGM: 77 K Program state ####
-models srh ^pf.nitride temperature=@temp
-load infile=SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master
-solve prev
-method dt.max=1e-9 dt.min=1e-25
-log outf=T77fix_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
-solve vdrain=0.1 ramptime=1e-8 tstep=1e-12 tstop=2e-8 relative
-solve vcgate=6.0 ramptime=6.0e-07 tstep=1e-12 tstop=6.0e-07 relative
-log off
-
+######## READ ERS deck: run in tscan/77fix AFTER SONOS_ERS_PF_77K_fix.in.
+######## One read per deck: in one run a relative TSTOP after LOAD used the previous block's end time. Output T77fix_ERS_*. ####
 #### ERS: 77 K Erase state ####
 models srh ^pf.nitride temperature=@temp
 load infile=SONOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master

@@ -289,6 +289,10 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
 - tscan/300fix: the three 77fix decks with only `set temp=300` changed (diff = line 27), so the 300 K/77 K MW comparison uses
   identical procedures (fall edges, reads). 300 K V2 results stay valid (O1: order has no effect at 300 K); 300fix checks the
   procedure difference (expected MW ~1.75 V). Run order PGM -> ERS -> READ in one folder. Not run yet.
+- Deck cleanup (all runs will be redone): ERS decks without the -6.6 V ramp split/saves and without clim.dd (single 1 ns ramp,
+  dt.max 5e-12, relative); the read deck split into SONOS_READ_PGM_/SONOS_READ_ERS_<T>K_fix.in (one read per run: no relative-time
+  carry-over); 300fix regenerated (only set temp differs). Full line-by-line comparison with the original deck and the reason for
+  every change: atlas/V2_sonos/tscan/CHANGES_KO.md. Not run yet.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

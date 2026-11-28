@@ -8,6 +8,15 @@ All runs: V2 SONOS deck, `models srh temperature=77` inserted before CONTACT/MET
 | COOL77s_PGM300.log | 300 K PGM state (tscan/300 PGM0V) read at true 77 K: load -> solve init sonos -> solve prev, gate 0 -> 1 V, drain ramp at 1 V, Vg 1 -> 8 V | verified: VT_gm 3.706 V, VT_cc(1e-7 A) 3.516 V, SS 22.4 mV/dec, netcharge -8.357e-15 C/um (= 300 K PGM) |
 | COOL77s_ERS300_v3_failed.log | 300 K PF Erase state read at 77 K, drain ramp at Vg = 0 (cool77 v3) | failed: stopped at Vg 0.63 V (Newton 25, Cannot trap) |
 | COOL77s_ERS300noTE_v3_false.log | 300 K no-thermal-emission Erase state read at 77 K, drain ramp at Vg = 0 (cool77 v3) | invalid: between VD 0.03 and 0.04 V at Vg = 0 the solution jumped to 2.6 mA (channel on at Vg = 0, flat in Vg) |
+| COOL77s4_ERS300_v4_off.log | same state, v4 order (gate 0 -> 1 V, drain ramp at 1 V, Vg 1 -> 7 V) | invalid: channel never turns on, (Id-Is)/2 = 7e-15 A at 7 V |
+| COOL77s4_ERS300noTE_v4_false.log | same state as noTE above, v4 order | invalid: gate ramp stopped at 0.59 V, drain ramp at 5.2 mV; current jumps 3e-13 -> 1.3e-6 A between 0.94 and 1.00 V (<= 8.3 mV/dec, below the 77 K limit 15.3 mV/dec); VT 0.98 V |
+
+Derived 77 K ERS VT (electrostatic superposition, ATLAS-only inputs, NOT a direct read)
+- Same trapped charge -> same VT shift at both T, checked on the PGM state with VT_cc(1e-7 A):
+  dVT_PGM = 3.2572 - 0.4350 = 2.8222 V (300 K) vs 3.5164 - 0.7014 = 2.8150 V (77 K): 7 mV apart (1e-9 A: 12.6 mV).
+- VT_ERS(77 K) = VT_fresh(77 K) + dVT_ERS(300 K): PF state 0.7014 + 1.0657 = 1.767 V; noTE state 0.7014 + 1.0802 = 1.782 V.
+- MW (cc 1e-7 A): 77 K 3.516 - 1.767 = 1.749 V; 300 K 3.257 - 1.501 = 1.757 V. Assumes the 77 K erase leaves the 300 K charge.
+- Direct check: transient reads (tscan/cool77/SONOS_COOL77_TREAD_check.in validates on fresh and PGM300; _ERS.in reads both ERS states).
 
 Notes
 - Loaded charged states at 77 K show a 1e-13 A source/drain current at zero bias (fresh 77 K device: 1e-35 A). It sets the

@@ -261,6 +261,12 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   1e-13 A zero-bias S/D current (fresh 1e-35 A). v4 uses the PGM300 order (gate 0 -> 1 V, drain ramp at 1 V, read 1 -> 7 V). tscan/77fix:
   300 K PGM_PF/ERS_PF + MODELS before CONTACT, O1 fresh read, solve prev after solve init, transient fall edges (make_cryo form) instead
   of SOLVE INIT after the pulses, LOAD + solve prev reads in the v4 order, Erase times RELATIVE. Not run yet.
+- cool77 v4 ERS reads also invalid (PF: channel never on to 7 V; noTE: gate ramp stopped at 0.59 V, jump 3e-13 -> 1.3e-6 A in
+  58 mV, below the 77 K SS limit 15.3 mV/dec). Static 77 K reads of charged states are path-dependent (only PGM300 worked).
+  Superposition check: dVT_PGM (cc 1e-7 A) 2.8222 V at 300 K vs 2.8150 V at 77 K -> derived VT_ERS(77 K) 1.767 V (PF) / 1.782 V
+  (noTE), MW 1.749 V vs 1.757 V at 300 K (derived, not a read). New: transient reads (drain 10 ns, gate 10 V/us, dt.max 1 ns,
+  Id = (I_d - I_s)/2 removes displacement current; tscan/tread_vt.py): cool77/SONOS_COOL77_TREAD_check.in (fresh + PGM300,
+  must match static 0.701 / 3.516 V), _TREAD_ERS.in, 77fix/SONOS_READ_77K_fix_tread.in. Not run yet.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

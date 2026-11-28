@@ -10,6 +10,9 @@ Usage: python3 tread_vt.py <log> [<log> ...]
 - SS: minimum swing between 1e-13 and 1e-8 A. 77 K physical limit 2.303 kT/q = 15.3 mV/dec;
   a smaller value means a jump between solution branches, not a device result.
 - netcharge: first and last row of the gate sweep (a change shows read disturb).
+- max gm: must be the same for every state at one temperature (trapped charge only shifts VT):
+  300 K V2 fresh/PGM/ERS 2.44e-5 A/V; 77 K V2 fresh (TEST_O1) 1.92e-4 A/V. The static 77 K PGM300 read
+  gave 2.03e-3 A/V (10x), so it is not a valid read.
 """
 import sys
 import numpy as np
@@ -49,7 +52,7 @@ def analyse(path):
     lc = np.log10(np.maximum(cur, 1e-300))
     sw = [(vg[k + 1] - vg[k]) / (lc[k + 1] - lc[k]) * 1e3
           for k in range(len(vg) - 1) if 1e-13 < cur[k] < 1e-8 and lc[k + 1] > lc[k]]
-    print(f'{path}\n  rows {len(vg)}  Vg {vg[0]:.3f}..{vg[-1]:.3f} V  VD {vd.max():.4f} V'
+    print(f'{path}\n  rows {len(vg)}  Vg {vg[0]:.3f}..{vg[-1]:.3f} V  VD {vd.max():.4f} V  max gm {g.max():.3e} A/V at {vg[int(np.argmax(g))]:.2f} V'
           f'\n  VT_gm {vt_gm:.4f} V   VT_cc 1e-9/1e-8/1e-7 A: {vt_cc(1e-9):.4f} / {vt_cc(1e-8):.4f} / {vt_cc(1e-7):.4f} V'
           f'\n  SS_min {min(sw) if sw else float("nan"):.1f} mV/dec   Id(Vg_end) {cur[-1]:.3e} A   max common-mode (Id+Is)/2 {common:.2e} A'
           f'\n  netcharge first {q[0]:.5e}  last {q[-1]:.5e}  change {100 * (q[-1] - q[0]) / q[0] if q[0] else 0:.3f} %')

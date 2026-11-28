@@ -18,6 +18,20 @@ Derived 77 K ERS VT (electrostatic superposition, ATLAS-only inputs, NOT a direc
 - MW (cc 1e-7 A): 77 K 3.516 - 1.767 = 1.749 V; 300 K 3.257 - 1.501 = 1.757 V. Assumes the 77 K erase leaves the 300 K charge.
 - Direct check: transient reads (tscan/cool77/SONOS_COOL77_TREAD_check.in validates on fresh and PGM300; _ERS.in reads both ERS states).
 
+Correction (2026-11-28, gm check): at one temperature the max gm must be equal for all states (trapped charge only shifts
+VT). 300 K V2 fresh/PGM/ERS: 2.444/2.447/2.445e-5 A/V; make_cryo 77 K init/PGM: 5.335/5.372e-5 A/V. The static V2 77 K
+PGM300 read has 2.03e-3 A/V vs 1.92e-4 A/V for the fresh 77 K read (TEST_O1): 10.5x, so COOL77s_PGM300 is NOT a valid read
+(VT 3.706/3.516 V withdrawn). Superposition is instead checked with the make_cryo retention decks (valid, equal gm):
+dVT_PGM = 3.4795 - 0.5336 = 2.9459 V (300 K) vs 3.6959 - 0.7503 = 2.9456 V (77 K), 0.3 mV apart. Superposition values
+(same charge as 300 K, derived): VT_PGM 0.7014 + 2.8222 = 3.524 V, VT_ERS 1.767 V (PF) / 1.782 V (noTE); the MW then
+equals the 300 K MW by construction, so the 77 K MW must come from the 77 K-native states (tscan/77fix).
+
+Transient reads (user run, 2026-11-28): SONOS_COOL77_TREAD_check.in and _TREAD_ERS.in both stalled right after the transient
+drain ramp (t = 1.003e-8 s, Vg 0, VD 0.1 V, dt 1.5e-14..6e-14 s, 5.4 h; at that rate 46-160 days to finish). The 77fix read
+(77 K-native PGM state saved after the fall edge, load -> solve prev) passed the same drain ramp and sweeps normally
+(Vg 4.3 V after 1.45 h, dt 1 ns, gate displacement current 2.39e-8 A = C dV/dt with C = 2.4e-15 F, gm ~1.9e-4 A/V like the
+fresh 77 K device). FRESH2 deck validates the transient gate sweep after a static drain ramp.
+
 Notes
 - Loaded charged states at 77 K show a 1e-13 A source/drain current at zero bias (fresh 77 K device: 1e-35 A). It sets the
   subthreshold floor; VT (gm, 1e-7 A) is above it.

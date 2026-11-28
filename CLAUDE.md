@@ -267,6 +267,12 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   (noTE), MW 1.749 V vs 1.757 V at 300 K (derived, not a read). New: transient reads (drain 10 ns, gate 10 V/us, dt.max 1 ns,
   Id = (I_d - I_s)/2 removes displacement current; tscan/tread_vt.py): cool77/SONOS_COOL77_TREAD_check.in (fresh + PGM300,
   must match static 0.701 / 3.516 V), _TREAD_ERS.in, 77fix/SONOS_READ_77K_fix_tread.in. Not run yet.
+- gm CHECK (max gm equal for all states at one T): 300 K V2 2.44e-5 A/V for fresh/PGM/ERS, make_cryo 77 K init/PGM 5.3e-5;
+  the static V2 77 K PGM300 read has 2.03e-3 vs fresh 1.92e-4 A/V (10.5x) -> NOT valid (its VT 3.706/3.516 V withdrawn).
+  Superposition holds with valid reads (make_cryo dVT_PGM 2.9459 V at 300 K vs 2.9456 V at 77 K). Transient reads: cool77
+  TREAD_check/_ERS stalled after the transient drain ramp (t 1.003e-8 s, Vg 0, dt ~1e-14 s, 5.4 h); the 77fix read (77 K-native
+  PGM state, load -> solve prev) passed it and sweeps normally (gm ~1.9e-4 A/V). cool77/SONOS_COOL77_TREAD_fresh2.in: static O1
+  drain ramp + transient gate sweep on the fresh device (validation vs TEST_O1). Not run yet.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

@@ -3,7 +3,7 @@
 assign name=xs n.value=1.0e-14 ratio=0.1
 
 
-go atlas simflags="-160 -P 4"
+go atlas simflags="-160 -P 6"
 TITLE planar device simulation
 # SONOS P/E, one deck per temperature (only set temp differs between SONOS_PE_77K.in and SONOS_PE_300K.in).
 # Changes vs the original SONOS_PRG_ERS.in and their reasons: CHANGES_KO.md

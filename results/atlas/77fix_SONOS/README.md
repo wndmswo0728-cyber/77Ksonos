@@ -10,7 +10,8 @@ Same pulses as 300 K (results/atlas/tscan_300K_SONOS_PF): Program +16 V 100 us, 
 | PGM netcharge | -8.357e-15 C/um | -4.971e-15 C/um (59 %) | verified |
 | VT_PGM gm / cc(1e-7 A) | 3.4290 / 3.2572 V | 2.3998 / 2.3204 V (transient); static 2.4053 / 2.3341 V | verified (static and transient agree, 5.5 mV gm; transient method validated by fresh2) |
 | ERS netcharge | -3.208e-15 C/um (61.6 % removed) | -3.155e-15 C/um (36.5 % removed) | verified |
-| VT_ERS | 1.6770 / 1.5007 V | transient read running (T77fix_ERS) | not run yet |
+| VT_ERS gm / cc(1e-7 A) | 1.6770 / 1.5007 V | 1.7833 / 1.7040 V (transient; gm 1.924e-4, read disturb -0.05 %) | verified |
+| MW gm / cc(1e-7 A) | 1.752 / 1.757 V | 0.617 / 0.616 V (35 % of 300 K) | verified |
 
 Notes
 - Program injection at 77 K is ~6x lower at the start (dQ/dt -1.38e-10 vs -8.26e-10 C/s/um at 10 ns) and the 77 K charge is still
@@ -31,3 +32,7 @@ Transient-read validation (COOL77t2_FRESH_transient_read_check.log, tscan/cool77
 static O1 drain ramp + transient gate sweep): VT_gm 0.7802 V (static TEST_O1 0.7802), VT_cc 1e-7 A 0.7009 (0.7014), 1e-8 A 0.6759
 (0.6776), max gm 1.923e-4 (1.923e-4) A/V, Id at 1/1.5/2 V equal within 0.1 %. Below ~1e-9 A the transient curve sits on a ~3e-10 A
 displacement-asymmetry floor (VT_cc 1e-9 A 5 mV off), so SS is taken from 1e-8..1e-6 A in transient logs. Method verified.
+
+ERS read (T77fix_ERS.log): the gate sweep started at t = 6.4e-7 s, as predicted (relative TSTOP after LOAD used the previous block's
+end time 6.2e-7 s + 2e-8 s). VT_ERS 1.7833 V gm, 1.7040 V cc(1e-7 A); the charge-moment estimate (1.7-1.8 V, MW 0.6-0.7 V) agreed.
+dVT_ERS (from fresh) 1.003 V at 77 K vs 1.070 V at 300 K; dVT_PGM 1.620 V vs 2.822 V: the MW loss at 77 K comes from the Program.

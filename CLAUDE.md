@@ -282,6 +282,10 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
 - TRANSIENT READ VERIFIED (fresh2, 77 K fresh device): VT_gm 0.7802 V = static O1 0.7802, VT_cc(1e-7 A) 0.7009 vs 0.7014, gm equal,
   Id equal within 0.1 % above 1e-7 A; below ~1e-9 A a ~3e-10 A displacement floor (use gm and cc 1e-8/1e-7 A; tread_vt.py takes SS
   from 1e-8..1e-6 A for transient logs). So the 77fix PGM read (2.400 V gm) is valid; the ERS transient read will be too.
+- 77 K MW (ATLAS-only, verified, results/atlas/77fix_SONOS): VT_ERS 1.7833 V gm / 1.7040 cc (transient read, gm 1.924e-4, disturb
+  -0.05 %); MW 0.617 V (gm) / 0.616 V (cc) at 77 K vs 1.752 / 1.757 V at 300 K with the same +16 V 100 us / -12 V 500 us pulses.
+  dVT_ERS 1.003 vs 1.070 V, dVT_PGM 1.620 vs 2.822 V: the 77 K MW loss is the weaker Program. Relative-time carry-over confirmed
+  (ERS gate sweep began at 6.4e-7 s).
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

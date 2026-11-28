@@ -273,6 +273,12 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   TREAD_check/_ERS stalled after the transient drain ramp (t 1.003e-8 s, Vg 0, dt ~1e-14 s, 5.4 h); the 77fix read (77 K-native
   PGM state, load -> solve prev) passed it and sweeps normally (gm ~1.9e-4 A/V). cool77/SONOS_COOL77_TREAD_fresh2.in: static O1
   drain ramp + transient gate sweep on the fresh device (validation vs TEST_O1). Not run yet.
+- 77fix RESULT (ATLAS-only, results/atlas/77fix_SONOS): 77 K Program/Erase at 77 K with the 300 K pulses ran (1.52 h / 1.86 h, no Newton
+  failures in the transients). PGM charge -4.971e-15 C/um (300 K -8.357e-15; injection ~6x lower at the start, still rising at 100 us,
+  spread over the nitride instead of filling the tunnel-side rows). VT fresh/PGM 0.780/2.400 V gm (cc 0.702/2.320) vs 300 K
+  0.607/3.429. Transient read = static read (5.5 mV gm) and gm 1.925e-4 = fresh -> verified. ERS charge -3.155e-15 (36.5 % removed;
+  300 K 61.6 %). ERS transient read running; static ERS read failed. In one run, a relative TSTOP after LOAD seems to use the previous
+  block's end time (ERS block holds Vg 0 to 6.4e-7 s): put each transient read in its own deck or check the time column.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

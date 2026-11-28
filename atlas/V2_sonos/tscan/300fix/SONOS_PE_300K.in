@@ -5,6 +5,8 @@ assign name=xs n.value=1.0e-14 ratio=0.1
 
 go atlas simflags="-160 -P 4"
 TITLE planar device simulation
+# SONOS P/E, one deck per temperature (only set temp differs between SONOS_PE_77K.in and SONOS_PE_300K.in).
+# Changes vs the original SONOS_PRG_ERS.in and their reasons: CHANGES_KO.md
 #
 set Nsub=1e17
 set Tbox=0.003
@@ -24,7 +26,7 @@ set Tpg=0.08
 set TPGM=1.0e-4
 set TERS=5.0e-4
 set Retime=3e8
-set temp=77
+set temp=300
 
 set Ltotal=$Lgate*3
 set Lgate_mid=$Ltotal/2
@@ -92,7 +94,7 @@ material material=oxide semiconductor taun0=1.0 taup0=1.0 mc=0.3 mv=1.0 nc300=1e
 
 material material=nitride semiconductor nc300=1e19 nv300=1e19 mun=1.0e-1 mup=1.0e-2 mc=1.0 mv=1.0 taun0=1.0 taup0=1.0 ni.min=1e-60
 
-# 77fix (1): MODELS (with temperature) before CONTACT/METHOD, manual 2.5.2 order; same line as TEST_O1/O2 (verified at 77 K)
+# MODELS with temperature= before CONTACT/METHOD (manual 2.5.2 order); in the original position 77 K was only partly applied
 models srh temperature=@temp
 
 contact name=cgate workf=$cwf		
@@ -103,34 +105,96 @@ method carriers=2
 
 probe name=netcharge sonos.charge integrate x.min=@Lgate_left x.max=@Lgate_right y.min=-$Tnit-$Tbox y.max=-$Tbox
 
-######## start: 0 V state saved by SONOS_PGM_PF_77K_fix.in ####
-# (run this deck in the same folder, after SONOS_PGM_PF_77K_fix.in has finished)
-# 77fix: loads SONOS_PGM_*.str (saved at 0 V after the Program fall edge; there is no PGM0V file at 77 K)
+######## init_ structure####
+models srh temperature=@temp
+solve init
+output qfn qfp con.band val.band Band.param t.quantum
+save outf=SONOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
+
+solve prev
+# drain in small steps (one 0.1 V step diverges at 77 K); read from 0 V
+solve vdrain=0.0001
+solve vdrain=0.001
+solve name=drain vstep=0.001 vfinal=0.01
+solve name=drain vstep=0.005 vfinal=0.1
+
+log outf=SONOS_initial_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
+solve vcgate=0 vstep=0.1 name=cgate vfinal=6
+log off
+
+#################### PROGRAM #######################
+
+solve init
+# full solution at 0 V before the Program transient
+solve prev
+
+# Charge up the Nitride region
+models srh pf.nitride temperature=@temp
+log outf=TRNS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
+set vcgate_split=$vcgate/10
+method dt.max=5e-12
+solve vcgate=$vcgate_split ramptime=1e-10 tstep=1e-12 tfinal=1e-10
+method dt.max=2e-11
+solve vcgate=$vcgate ramptime=9e-10 tstep=2e-12 tfinal=1e-9
+method dt.max=1e-3 dt.min=1e-25 cx.tol=1e-4
+solve tstop=1.0e-8 proj
+solve tstop=1.0e-7 proj
+method dt.min=1.0e-8 cx.tol=1e-4
+solve tstop=1e-6 proj
+method dt.min=1.0e-7 cx.tol=1e-4
+solve tstop=@TPGM proj
+# pulse fall edge as a transient (SOLVE INIT after the pulse fails at 77 K with charged nitride): mirrored rise,
+# then 1 us at 0 V; the state is saved at 0 V
+method dt.max=2e-11 dt.min=1e-25
+solve vcgate=$vcgate_split ramptime=9e-10 tstep=2e-12 tstop=9e-10 relative
+method dt.max=5e-12 dt.min=1e-25
+solve vcgate=0 ramptime=1e-10 tstep=1e-12 tstop=1e-10 relative
+method dt.max=1e-3 dt.min=1e-25
+solve tstop=1e-6 relative proj
+log off
+
+
+#################### Vt after PGM ################## 
+
+output qfn qfp con.band val.band Band.param t.quantum
+save outf=SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
+
+#################### Vt after PGM (transient read) ####################
+# static reads of charged states fail at 77 K; this read was checked against the static read on the fresh device
+models srh ^pf.nitride temperature=@temp
+load infile=SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master
+solve prev
+method dt.max=1e-9 dt.min=1e-25 cx.tol=1e-5
+log outf=TREAD_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
+solve vdrain=0.1 ramptime=1e-8 tstep=1e-12 tstop=2e-8
+solve vcgate=6.0 ramptime=6.0e-07 tstep=1e-12 tstop=6.20e-07
+log off
+
+#################### Erase #########################
+# starts from the Program state saved at 0 V
 models srh ^pf.nitride temperature=@temp
 load infile=SONOS_PGM_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master
 solve prev
 
-#################### Erase #########################
 #Charge out the Nitride region
-# 77fix (5): all Erase transient times RELATIVE (manual SOLVE: TSTOP ... RELATIVE), same end times as the 300 K deck
-# (1e-9, 1e-8, 1e-7, 1e-6, 1e-5, TERS after the start). The 300 K deck loaded a state saved after static solves;
-# this deck loads a state saved right after a transient, so absolute times might not start at 0.
+# Absolute times as in the original deck: after LOAD the time starts again at 0 (seen in every run), but a RELATIVE
+# TSTOP right after a LOAD used the end time of the previous transient in the same run (77fix read deck). RELATIVE is
+# used only for the fall edge, which directly follows a transient.
 models srh pf.nitride temperature=@temp
 log outf=TRNS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log
 method dt.max=5e-12 dt.min=1e-25 cx.tol=1e-4
-solve vcgate=$ecgate ramptime=1e-9 tstep=1e-12 tstop=1e-9 relative
+solve vcgate=$ecgate ramptime=1e-9 tstep=1e-12 tfinal=1e-9
 method dt.max=1e-3 dt.min=1e-25 cx.tol=1e-4
-solve tstop=9e-9 relative proj
-solve tstop=9e-8 relative proj
+solve tstop=1.0e-8 proj
+solve tstop=1.0e-7 proj
 method dt.min=1.0e-8 cx.tol=1e-4
-solve tstop=9e-7 relative proj
+solve tstop=1e-6 proj
 method dt.min=1.0e-7 cx.tol=1e-4
-solve tstop=9e-6 relative proj
+solve tstop=1e-5 proj
 method dt.min=1.0e-6 cx.tol=1e-4
-# 4.9e-4 = TERS (5e-4) - 1e-5: ends at TERS after the start, as the 300 K deck
-solve tstop=4.9e-4 relative proj
-# 77fix (3): pulse fall edge as a transient (same form as make_cryo_decks.py fall()): a static step back from the pulse
-# bias would need SOLVE INIT, which fails at 77 K with charged nitride; mirrored rise, then 1 us at 0 V; .str saved at 0 V
+solve tstop=@TERS proj
+# pulse fall edge as a transient (SOLVE INIT after the pulse fails at 77 K with charged nitride): mirrored rise,
+# then 1 us at 0 V; the state is saved at 0 V
 set ecgate_fall=$ecgate/10
 method dt.max=5e-12 dt.min=1e-25 cx.tol=1e-4
 solve vcgate=$ecgate_fall ramptime=9e-10 tstep=2e-12 tstop=9e-10 relative
@@ -143,20 +207,15 @@ log off
 output qfn qfp con.band val.band Band.param t.quantum
 save outf=SONOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str
 
-# 77fix (4): read from the saved 0 V state (load -> solve prev), bias order of the cool77 PGM300 block that
-# converged at 77 K: gate 0 -> 1 V at VD = 0, small drain ramp at Vg = 1 V, then Vg 1 -> 7 V (no plain SOLVE INIT
-# with charged nitride at 77 K, no -2 V excursion, no single 0.1 V drain step)
+#################### Vt after ERS (transient read) ####################
+# static reads of charged states fail at 77 K; this read was checked against the static read on the fresh device
 models srh ^pf.nitride temperature=@temp
 load infile=SONOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.str master
 solve prev
-
-solve vcgate=0 vstep=0.1 name=cgate vfinal=1
-solve vdrain=0.0001
-solve vdrain=0.001
-solve name=drain vstep=0.001 vfinal=0.01
-solve name=drain vstep=0.005 vfinal=0.1
-
-log outf=SONOS_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
-solve vcgate=1 vstep=0.1 name=cgate vfinal=7
+method dt.max=1e-9 dt.min=1e-25 cx.tol=1e-5
+log outf=TREAD_ERS_nt_$Nnit|_Et_$Enit|_Tbox_$Tbox|_Nsub_$Nsub|_toxide_$toxide|_cwf_$cwf|.log master
+solve vdrain=0.1 ramptime=1e-8 tstep=1e-12 tstop=2e-8
+solve vcgate=5.0 ramptime=5.0e-07 tstep=1e-12 tstop=5.20e-07
 log off
+
 quit

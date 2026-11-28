@@ -300,6 +300,10 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   CHANGES_KO.md lists every change vs the original and why. Not run.
 - V3 LAYOUT (user server and repo): atlas/V3/SONOS/77/SONOS_PE_77K.in, atlas/V3/SONOS/300/SONOS_PE_300K.in (-P 6, file names end
   with _temp_$temp|), change list atlas/V3/SONOS/CHANGES_KO.md. These replace tscan/77fix and tscan/300fix. Not run yet.
+- atlas/V3/check_deck.py (static deck check: variables, MODELS order, save/load names, pf.nitride on/off per solve, METHOD values,
+  bias and time trace incl. the RELATIVE-after-LOAD trap): SONOS_PE_77K/300K 0 problems; all 22 transient segments identical to the
+  77fix decks that ran (Erase split merged; read drain hold 2e-8 s); non-comment diffs only -P 6, _temp_ names, clim.dd. Run times
+  (77 K, -P 4): fresh read 0.07 h, Program 1.06 h, Erase 1.69 h, transient reads ~2.0 h (PGM) + ~1.6 h (ERS) -> ~6.4 h total.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

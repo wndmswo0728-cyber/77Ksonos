@@ -286,6 +286,9 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
   -0.05 %); MW 0.617 V (gm) / 0.616 V (cc) at 77 K vs 1.752 / 1.757 V at 300 K with the same +16 V 100 us / -12 V 500 us pulses.
   dVT_ERS 1.003 vs 1.070 V, dVT_PGM 1.620 vs 2.822 V: the 77 K MW loss is the weaker Program. Relative-time carry-over confirmed
   (ERS gate sweep began at 6.4e-7 s).
+- tscan/300fix: the three 77fix decks with only `set temp=300` changed (diff = line 27), so the 300 K/77 K MW comparison uses
+  identical procedures (fall edges, reads). 300 K V2 results stay valid (O1: order has no effect at 300 K); 300fix checks the
+  procedure difference (expected MW ~1.75 V). Run order PGM -> ERS -> READ in one folder. Not run yet.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.

@@ -8,7 +8,7 @@
   - `tscan/300fix/SONOS_PE_300K.in`
   - 두 덱은 29번째 줄 `set temp=`만 다르다. 아래 "현재 N"은 이 덱의 줄 번호.
 - 덱 하나가 순서대로 한다: 새 소자 읽기 → Program → PGM 읽기 → Erase → ERS 읽기.
-- 출력 파일 (`…`는 `nt_5e+19|_Et_1.2|_Tbox_0.003|_Nsub_1e+17|_toxide_sio2|_cwf_4.05|`):
+- 출력 파일 (`…`는 `nt_5e+19|_Et_1.2|_Tbox_0.003|_Nsub_1e+17|_toxide_sio2|_cwf_4.05|_temp_77|`, 300 K 덱은 `_temp_300|`):
 
 | 파일 | 내용 |
 |---|---|
@@ -246,6 +246,7 @@ log off
 |---|---|---|
 | (온도마다 `set temp`만 바꿔 같은 덱 사용) | 온도당 덱 하나(77fix, 300fix). 29번째 줄만 다름 | 두 온도의 계산 절차가 완전히 같아야 비교가 맞다 |
 | 읽기 로그 `SONOS_PGM_….log`, `SONOS_ERS_….log` | `TREAD_PGM_….log`, `TREAD_ERS_….log` | 읽기 방식이 바뀌어(트랜지언트) 이름을 구분 |
+| 파일 이름 끝 `_cwf_$cwf|` | `_cwf_$cwf|_temp_$temp|` (출력·불러오기 11곳) | 파일 이름만으로 온도를 구분 |
 | 원래 147 `solve init` 뒤 `log off` | 삭제 | 문제 6과 같은 이유. Erase는 저장한 Program 상태에서 시작 |
 | 7~8번 줄 | 설명 주석 2줄 추가 | 덱 설명 (계산에 영향 없음) |
 

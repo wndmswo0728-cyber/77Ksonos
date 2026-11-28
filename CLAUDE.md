@@ -296,7 +296,8 @@ ERS -12 V 500 us, read VD = 0.1 V, retention 3e8 s at 0 V.
 - ONE DECK PER TEMPERATURE: tscan/77fix/SONOS_PE_77K.in and tscan/300fix/SONOS_PE_300K.in (only line 29 set temp differs):
   fresh read -> Program -> TREAD_PGM -> Erase (from the saved PGM state) -> TREAD_ERS. Static PGM/ERS reads dropped; after each
   LOAD absolute times (time restarts at 0 after LOAD; RELATIVE right after LOAD used the previous transient's end); RELATIVE only
-  for fall edges; reads with cx.tol=1e-5 (default, as validated). CHANGES_KO.md lists every change vs the original and why. Not run.
+  for fall edges; reads with cx.tol=1e-5 (default, as validated). File names end with _temp_$temp| (e.g. ..._cwf_4.05|_temp_77|.log).
+  CHANGES_KO.md lists every change vs the original and why. Not run.
 
 ## Rules for this project
 - Keep the original 300 K decks unchanged; derive everything through make_cryo_decks.py.
